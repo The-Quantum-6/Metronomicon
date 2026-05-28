@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import reactLogo from './assets/react.svg'
 import viteLogo from './assets/vite.svg'
 import heroImg from './assets/hero.png'
@@ -6,6 +6,14 @@ import './App.css'
 
 function App() {
   const [count, setCount] = useState(0)
+
+  const [ting, setTing] = useState<string>();
+
+  useEffect(() => {
+    fetch("/api/")
+      .then(response => response.text())
+      .then(data => setTing(data));
+  }, []);
 
   return (
     <>
@@ -21,6 +29,7 @@ function App() {
             Edit <code>src/App.tsx</code> and save to test <code>HMR</code>
           </p>
         </div>
+        <h1>{ting}</h1>
         <button
           type="button"
           className="counter"
