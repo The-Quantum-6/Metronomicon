@@ -1,0 +1,108 @@
+name: Build and push to Docker Hub with :dev tag
+on:
+  workflow_dispatch:
+  push:
+    branches: [testing] # TODO: CHANGE THIS TO MAIN BEFORE MERGING
+    # Only runs when files in these dirs are changed
+    paths:
+      - 'frontend/**'
+      - 'backend/**'
+
+jobs:
+  # 1. Detect which components changed and build a dynamic matrix
+  changes:
+    name: Detect changed components
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.set.outputs.matrix }}
+    steps:
+      - name: Checkout source code
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0 # Full history so path diffing works reliably
+
+      - name: Filter changed paths
+        id: filter
+        uses: dorny/paths-filter@v4
+        with:
+          filters: |
+            frontend:
+              - 'frontend/**'
+            backend:
+              - 'backend/**'
+
+      - name: Build matrix
+        id: set
+        run: |
+          components=()
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            # Manual run: build everything
+            components=(frontend backend)
+          else
+            [ "${{ steps.filter.outputs.frontend }}" = "true" ] && components+=(frontend)
+            [ "${{ steps.filter.outputs.backend }}" = "true" ] && components+=(backend)
+          fi
+          if [ ${#components[@]} -eq 0 ]; then
+            json='[]'
+          else
+            json=$(printf '%s\n' "${components[@]}" | jq -R . | jq -cs .)
+          fi
+          echo "matrix=$json" >> "$GITHUB_OUTPUT"
+          echo "Components to build: $json"
+
+  # 2. Build and push each changed component
+  build-push:
+    name: Build & push ${{ matrix.component }}
+    needs: changes
+    if: needs.changes.outputs.matrix != '[]'
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false # A frontend failure shouldn't cancel the backend build
+      matrix:
+        component: ${{ fromJSON(needs.changes.outputs.matrix) }}
+    steps:
+      # 1. Checkout source code
+      - name: Checkout source code
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      # 2. Extract metadata
+      - name: Extract metadata
+        id: meta
+        run: |
+          echo "REPO_NAME=${GITHUB_REPOSITORY##*/}" >> "$GITHUB_OUTPUT"
+          echo "SHORT_SHA=${GITHUB_SHA::7}" >> "$GITHUB_OUTPUT"
+
+      # 3. Set up Docker Buildx
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v4
+
+      # 4. Cache Docker layers (per component to avoid collisions)
+      - name: Cache Docker layers
+        uses: actions/cache@v5
+        with:
+          path: /tmp/.buildx-cache-${{ matrix.component }}
+          key: ${{ runner.os }}-buildx-${{ matrix.component }}-${{ github.sha }}
+          restore-keys: ${{ runner.os }}-buildx-${{ matrix.component }}-
+
+      # 5. Login to Docker Hub
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v4
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      # 6. Build and push the component image
+      - name: Build and push ${{ matrix.component }} image
+        uses: docker/build-push-action@v7
+        with:
+          context: ./${{ matrix.component }}
+          file: ./${{ matrix.component }}/Dockerfile
+          push: true
+          platforms: linux/amd64
+          tags: |
+            ${{ secrets.DOCKER_USERNAME }}/${{ secrets.DOCKERHUB_PROJECT_NAME }}-${{ matrix.component }}:dev
+            ${{ secrets.DOCKER_USERNAME }}/${{ secrets.DOCKERHUB_PROJECT_NAME }}-${{ matrix.component }}:${{ steps.meta.outputs.SHORT_SHA }}
+          cache-from: type=local,src=/tmp/.buildx-cache-${{ matrix.component }}
+          cache-to: type=local,dest=/tmp/.buildx-cache-${{ matrix.component }},mode=max
