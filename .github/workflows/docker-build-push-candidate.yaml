@@ -10,6 +10,9 @@ jobs:
   build-push:
     name: Build & push ${{ matrix.component }}
     runs-on: ubuntu-latest
+    concurrency:
+      group: docker-candidate-${{ matrix.component }}
+      cancel-in-progress: true
     strategy:
       fail-fast: false # A frontend failure shouldn't cancel the backend build
       matrix:
