@@ -7,6 +7,8 @@ on:
     paths:
       - 'frontend/**'
       - 'backend/**'
+  pull-request:
+    branches: [main]
 
 jobs:
   # 1. Detect which components changed and build a dynamic matrix
