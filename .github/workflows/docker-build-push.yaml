@@ -57,6 +57,9 @@ jobs:
     needs: changes
     if: needs.changes.outputs.matrix != '[]'
     runs-on: ubuntu-latest
+    concurrency:
+      group: docker-dev-${{ matrix.component }}
+      cancel-in-progress: true
     strategy:
       fail-fast: false # A frontend failure shouldn't cancel the backend build
       matrix:
