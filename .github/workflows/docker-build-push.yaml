@@ -23,9 +23,9 @@ jobs:
 
       - name: Filter changed paths
         id: filter
+        if: github.event_name != 'workflow_dispatch'
         uses: dorny/paths-filter@v4
         with:
-          # base: main is imlicit here, since main is the default branch. This means comparing is done to last commit before push.
           filters: |
             frontend:
               - 'frontend/**'
