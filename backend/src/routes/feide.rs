@@ -1,6 +1,8 @@
 use axum::{Router, routing::get};
 
-pub fn router() -> Router {
+use sqlx::PgPool;
+
+pub fn router() -> Router<PgPool> {
     Router::new()
         .route("/login", get(login_send))
         .route("/login/callback", get(login_callback))
