@@ -1,3 +1,5 @@
+mod routes;
+
 use axum::{
     Router, extract::State, routing::get
 };
@@ -15,6 +17,7 @@ async fn main() {
         .route("/", get(|| async { "Hello, World!" }))
         .route("/upload", get(upload))
         .route("/fetch", get(fetch))
+        .merge(routes::app_router())
         .with_state(db);
     
     let listener = tokio::net::TcpListener::bind("0.0.0.0:3000").await.unwrap();
