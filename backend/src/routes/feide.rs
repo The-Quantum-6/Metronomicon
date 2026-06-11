@@ -15,6 +15,8 @@ struct CallbackCode {
     code: String,
 }
 
+
+
 async fn login_send() -> Redirect {
     let client_id = std::env::var("FEIDE_CLIENT_ID").expect("FEIDE_CLIENT_ID must be set");
     let redirect_uri = "http://localhost:3000/login/callback";
@@ -60,6 +62,17 @@ async fn get_token(code: String) -> String {
         .await
         .expect("Token request should succeed");
 
-    return response.text().await.expect("Token");
+    return user_info(response.json::<serde_json::Value>().await.expect("Token response should be JSON")["access_token"].as_str().unwrap().to_string()).await;
 }
-async fn user_info() -> &'static str { "fetch user info" }
+async fn user_info(token: String) -> serde_json::Value { 
+    let endpoint = "https://auth.dataporten.no/openid/userinfo";
+    let client = reqwest::Client::new();
+    let response = client
+        .get(endpoint)
+        .header("Authorization", format!("Bearer {}", token))
+        .send()
+        .await
+        .expect("User info request should succeed");
+
+    return response.json().await.expect("User info");
+}
