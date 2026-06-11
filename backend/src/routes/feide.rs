@@ -9,6 +9,12 @@ pub fn router() -> Router<PgPool> {
         .route("/user", get(user_info))
 }
 
-async fn login_send() -> &'static str { "send login request" }
+async fn login_send() -> &'static str {
+    let response_type = "code";
+    let client_id = std::env::var("FEIDE_CLIENT_ID").expect("FEIDE_CLIENT_ID must be set");
+    let redirect_uri="http://localhost:3000/login/callback";
+    let scope="openid";
+    let state="whatever";
+}
 async fn login_callback() -> &'static str { "handle login callback" }
 async fn user_info() -> &'static str { "fetch user info" }
