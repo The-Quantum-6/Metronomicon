@@ -1,5 +1,6 @@
-use axum::{Router, routing::get, routing::post, extract::{Query, Json}, response::Redirect};
+use axum::{Router, routing::get, extract::{Query}, response::Redirect};
 use base64::{Engine, engine::general_purpose::STANDARD};
+use reqwest::Client;
 use serde::Deserialize;
 use sqlx::PgPool;
 
@@ -13,6 +14,11 @@ pub fn router() -> Router<PgPool> {
 #[derive(Deserialize)]
 struct CallbackCode {
     code: String,
+}
+
+#[derive(Deserialize)]
+struct AccessToken {
+    access_token: String,
 }
 
 
@@ -31,15 +37,16 @@ async fn login_send() -> Redirect {
     Redirect::temporary(&auth_url)
 }
 
-async fn login_callback(Query(params): Query<CallbackCode>) -> String { 
+async fn login_callback(Query(params): Query<CallbackCode>) -> Redirect { 
     let code = params.code;
     if !code.is_empty() {
-        return get_token(code).await;
+        let access_token = get_token(code).await;
+        return Redirect::temporary(&format!("/user?access_token={}", access_token.access_token));
     }
-    "Invalid code".into()
+    Redirect::temporary("/login")
 }
 
-async fn get_token(code: String) -> String {
+async fn get_token(code: String) -> AccessToken {
     let client_id = std::env::var("FEIDE_CLIENT_ID").expect("FEIDE_CLIENT_ID must be set");
     let client_secret = std::env::var("FEIDE_SECRET").expect("FEIDE_SECRET must be set");
     let redirect_uri = "http://localhost:3000/login/callback";
@@ -47,7 +54,7 @@ async fn get_token(code: String) -> String {
 
     let credentials = STANDARD.encode(format!("{}:{}", client_id, client_secret));
 
-    let client = reqwest::Client::new();
+    let client = Client::new();
     let response = client
         .post(token_url)
         .header("Authorization", format!("Basic {}", credentials))
@@ -62,11 +69,20 @@ async fn get_token(code: String) -> String {
         .await
         .expect("Token request should succeed");
 
-    return user_info(response.json::<serde_json::Value>().await.expect("Token response should be JSON")["access_token"].as_str().unwrap().to_string()).await;
+    return response.json().await.expect("Token response should be valid JSON");
 }
-async fn user_info(token: String) -> serde_json::Value { 
+
+async fn user_info(Query(params): Query<AccessToken>) -> String {
+    let token = params.access_token;
+    if !token.is_empty() {
+        return fetch_user_info(token).await;
+    }
+    "Invalid token".into()
+}
+
+async fn fetch_user_info(token: String) -> String { 
     let endpoint = "https://auth.dataporten.no/openid/userinfo";
-    let client = reqwest::Client::new();
+    let client = Client::new();
     let response = client
         .get(endpoint)
         .header("Authorization", format!("Bearer {}", token))
@@ -74,5 +90,5 @@ async fn user_info(token: String) -> serde_json::Value {
         .await
         .expect("User info request should succeed");
 
-    return response.json().await.expect("User info");
+    return response.text().await.unwrap_or_default();
 }
