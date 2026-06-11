@@ -1,7 +1,7 @@
-use axum::{Router, routing::get, extract::{Query}, response::Redirect, Json};
+use axum::{Router, extract::Query, response::Redirect, routing::get};
 use base64::{Engine, engine::general_purpose::STANDARD};
 use reqwest::Client;
-use serde::{Deserialize, Serialize};
+use serde::{Deserialize};
 use sqlx::PgPool;
 
 pub fn router() -> Router<PgPool> {
@@ -23,9 +23,9 @@ struct AccessToken {
 async fn login_send() -> Redirect {
     let client_id: String = std::env::var("FEIDE_CLIENT_ID").expect("FEIDE_CLIENT_ID must be set");
     let redirect_uri: &str = "http://localhost:3000/login/callback";
-    let response_type: &str="code";
-    let scope: &str="openid";
-    let state: &str="whatever";
+    let response_type: &str = "code";
+    let scope: &str = "openid";
+    let state: &str = "whatever";
     let auth_url: String = format!(
         "https://auth.dataporten.no/oauth/authorization?response_type={}&client_id={}&redirect_uri={}&scope={}&state={}",
         response_type, client_id, redirect_uri, scope, state
@@ -34,7 +34,7 @@ async fn login_send() -> Redirect {
     Redirect::temporary(&auth_url)
 }
 
-async fn login_callback(Query(params): Query<CallbackCode>) -> Redirect { 
+async fn login_callback(Query(params): Query<CallbackCode>) -> Redirect {
     let code: String = params.code;
     if !code.is_empty() {
         let access_token: AccessToken = get_token(code).await;
@@ -67,5 +67,8 @@ async fn get_token(code: String) -> AccessToken {
         .await
         .expect("Token request should succeed");
 
-    response.json().await.expect("Token response should be valid JSON")
+    response
+        .json()
+        .await
+        .expect("Token response should be valid JSON")
 }

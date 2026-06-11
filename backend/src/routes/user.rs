@@ -1,16 +1,14 @@
-use axum::{Router, routing::get, extract::{Query}, Json};
-use sqlx::PgPool;
-use serde::{Deserialize, Serialize};
+use axum::{Json, Router, extract::Query, routing::get};
 use reqwest::Client;
+use serde::{Deserialize, Serialize};
+use sqlx::PgPool;
 
 pub fn router() -> Router<PgPool> {
-    Router::new()
-    .route("/user", get(user_info))
-
+    Router::new().route("/user", get(user_info))
 }
 
 #[derive(Deserialize, Serialize)]
-struct User{
+struct User {
     sub: String,
     name: String,
 }
@@ -26,10 +24,13 @@ async fn user_info(Query(params): Query<AccessToken>) -> Json<User> {
         let user: User = fetch_user_info(token).await;
         return Json(user);
     }
-    Json(User { sub: "unknown".to_string(), name: "Unknown User".to_string() })
+    Json(User {
+        sub: "unknown".to_string(),
+        name: "Unknown User".to_string(),
+    })
 }
 
-async fn fetch_user_info(token: String) -> User { 
+async fn fetch_user_info(token: String) -> User {
     let endpoint: &str = "https://auth.dataporten.no/openid/userinfo";
     let client: Client = Client::new();
     let response: reqwest::Response = client
@@ -39,5 +40,8 @@ async fn fetch_user_info(token: String) -> User {
         .await
         .expect("User info request should succeed");
 
-    response.json().await.expect("User info response should be valid JSON")
+    response
+        .json()
+        .await
+        .expect("User info response should be valid JSON")
 }
