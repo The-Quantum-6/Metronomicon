@@ -1,7 +1,7 @@
-use axum::{Router, routing::get, extract::{Query}, response::Redirect};
+use axum::{Router, routing::get, extract::{Query}, response::Redirect, Json};
 use base64::{Engine, engine::general_purpose::STANDARD};
 use reqwest::Client;
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use sqlx::PgPool;
 
 pub fn router() -> Router<PgPool> {
@@ -21,6 +21,11 @@ struct AccessToken {
     access_token: String,
 }
 
+#[derive(Deserialize, Serialize)]
+struct User{
+    sub: String,
+    name: String,
+}
 
 async fn login_send() -> Redirect {
     let client_id = std::env::var("FEIDE_CLIENT_ID").expect("FEIDE_CLIENT_ID must be set");
@@ -46,12 +51,13 @@ async fn login_callback(Query(params): Query<CallbackCode>) -> Redirect {
     Redirect::temporary("/login")
 }
 
-async fn user_info(Query(params): Query<AccessToken>) -> String {
+async fn user_info(Query(params): Query<AccessToken>) -> Json<User> {
     let token = params.access_token;
     if !token.is_empty() {
-        fetch_user_info(token).await;
+        let user = fetch_user_info(token).await;
+        return Json(user);
     }
-    "Invalid token".into()
+    Json(User { sub: "unknown".to_string(), name: "Unknown User".to_string() })
 }
 
 async fn get_token(code: String) -> AccessToken {
@@ -77,10 +83,10 @@ async fn get_token(code: String) -> AccessToken {
         .await
         .expect("Token request should succeed");
 
-    response.json().await.expect("Token response should be valid JSON");
+    response.json().await.expect("Token response should be valid JSON")
 }
 
-async fn fetch_user_info(token: String) -> String { 
+async fn fetch_user_info(token: String) -> User { 
     let endpoint = "https://auth.dataporten.no/openid/userinfo";
     let client = Client::new();
     let response = client
@@ -90,5 +96,5 @@ async fn fetch_user_info(token: String) -> String {
         .await
         .expect("User info request should succeed");
 
-    response.text().await.unwrap_or_default();
+    response.json().await.expect("User info response should be valid JSON")
 }
