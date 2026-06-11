@@ -8,7 +8,6 @@ pub fn router() -> Router<PgPool> {
     Router::new()
         .route("/login/feide", get(login_send))
         .route("/login/callback", get(login_callback))
-        .route("/user", get(user_info))
 }
 
 #[derive(Deserialize)]
@@ -21,19 +20,13 @@ struct AccessToken {
     access_token: String,
 }
 
-#[derive(Deserialize, Serialize)]
-struct User{
-    sub: String,
-    name: String,
-}
-
 async fn login_send() -> Redirect {
-    let client_id = std::env::var("FEIDE_CLIENT_ID").expect("FEIDE_CLIENT_ID must be set");
-    let redirect_uri = "http://localhost:3000/login/callback";
-    let response_type="code";
-    let scope="openid";
-    let state="whatever";
-    let auth_url = format!(
+    let client_id: String = std::env::var("FEIDE_CLIENT_ID").expect("FEIDE_CLIENT_ID must be set");
+    let redirect_uri: &str = "http://localhost:3000/login/callback";
+    let response_type: &str="code";
+    let scope: &str="openid";
+    let state: &str="whatever";
+    let auth_url: String = format!(
         "https://auth.dataporten.no/oauth/authorization?response_type={}&client_id={}&redirect_uri={}&scope={}&state={}",
         response_type, client_id, redirect_uri, scope, state
     );
@@ -42,34 +35,25 @@ async fn login_send() -> Redirect {
 }
 
 async fn login_callback(Query(params): Query<CallbackCode>) -> Redirect { 
-    let code = params.code;
+    let code: String = params.code;
     if !code.is_empty() {
-        let access_token = get_token(code).await;
+        let access_token: AccessToken = get_token(code).await;
         // redirect to only /user, then get accesstoken from cookies in future
         return Redirect::temporary(&format!("/user?access_token={}", access_token.access_token));
     }
     Redirect::temporary("/login")
 }
 
-async fn user_info(Query(params): Query<AccessToken>) -> Json<User> {
-    let token = params.access_token;
-    if !token.is_empty() {
-        let user = fetch_user_info(token).await;
-        return Json(user);
-    }
-    Json(User { sub: "unknown".to_string(), name: "Unknown User".to_string() })
-}
-
 async fn get_token(code: String) -> AccessToken {
-    let client_id = std::env::var("FEIDE_CLIENT_ID").expect("FEIDE_CLIENT_ID must be set");
-    let client_secret = std::env::var("FEIDE_SECRET").expect("FEIDE_SECRET must be set");
-    let redirect_uri = "http://localhost:3000/login/callback";
-    let token_url = "https://auth.dataporten.no/oauth/token";
+    let client_id: String = std::env::var("FEIDE_CLIENT_ID").expect("FEIDE_CLIENT_ID must be set");
+    let client_secret: String = std::env::var("FEIDE_SECRET").expect("FEIDE_SECRET must be set");
+    let redirect_uri: &str = "http://localhost:3000/login/callback";
+    let token_url: &str = "https://auth.dataporten.no/oauth/token";
 
     let credentials = STANDARD.encode(format!("{}:{}", client_id, client_secret));
 
-    let client = Client::new();
-    let response = client
+    let client: Client = Client::new();
+    let response: reqwest::Response = client
         .post(token_url)
         .header("Authorization", format!("Basic {}", credentials))
         .header("Content-Type", "application/x-www-form-urlencoded")
@@ -84,17 +68,4 @@ async fn get_token(code: String) -> AccessToken {
         .expect("Token request should succeed");
 
     response.json().await.expect("Token response should be valid JSON")
-}
-
-async fn fetch_user_info(token: String) -> User { 
-    let endpoint = "https://auth.dataporten.no/openid/userinfo";
-    let client = Client::new();
-    let response = client
-        .get(endpoint)
-        .header("Authorization", format!("Bearer {}", token))
-        .send()
-        .await
-        .expect("User info request should succeed");
-
-    response.json().await.expect("User info response should be valid JSON")
 }
