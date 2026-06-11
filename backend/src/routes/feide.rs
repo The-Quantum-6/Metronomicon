@@ -6,7 +6,7 @@ use sqlx::PgPool;
 
 pub fn router() -> Router<PgPool> {
     Router::new()
-        .route("/login", get(login_send))
+        .route("/login/feide", get(login_send))
         .route("/login/callback", get(login_callback))
         .route("/user", get(user_info))
 }
