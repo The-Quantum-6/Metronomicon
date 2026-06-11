@@ -22,7 +22,6 @@ struct AccessToken {
 }
 
 
-
 async fn login_send() -> Redirect {
     let client_id = std::env::var("FEIDE_CLIENT_ID").expect("FEIDE_CLIENT_ID must be set");
     let redirect_uri = "http://localhost:3000/login/callback";
@@ -41,9 +40,18 @@ async fn login_callback(Query(params): Query<CallbackCode>) -> Redirect {
     let code = params.code;
     if !code.is_empty() {
         let access_token = get_token(code).await;
+        // redirect to only /user, then get accesstoken from cookies in future
         return Redirect::temporary(&format!("/user?access_token={}", access_token.access_token));
     }
     Redirect::temporary("/login")
+}
+
+async fn user_info(Query(params): Query<AccessToken>) -> String {
+    let token = params.access_token;
+    if !token.is_empty() {
+        fetch_user_info(token).await;
+    }
+    "Invalid token".into()
 }
 
 async fn get_token(code: String) -> AccessToken {
@@ -69,15 +77,7 @@ async fn get_token(code: String) -> AccessToken {
         .await
         .expect("Token request should succeed");
 
-    return response.json().await.expect("Token response should be valid JSON");
-}
-
-async fn user_info(Query(params): Query<AccessToken>) -> String {
-    let token = params.access_token;
-    if !token.is_empty() {
-        return fetch_user_info(token).await;
-    }
-    "Invalid token".into()
+    response.json().await.expect("Token response should be valid JSON");
 }
 
 async fn fetch_user_info(token: String) -> String { 
@@ -90,5 +90,5 @@ async fn fetch_user_info(token: String) -> String {
         .await
         .expect("User info request should succeed");
 
-    return response.text().await.unwrap_or_default();
+    response.text().await.unwrap_or_default();
 }
