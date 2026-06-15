@@ -3,6 +3,8 @@ use base64::{Engine, engine::general_purpose::STANDARD};
 use reqwest::Client;
 use serde::{Deserialize};
 use sqlx::PgPool;
+use rand::distr::Alphanumeric;
+use rand::RngExt;
 
 pub fn router() -> Router<PgPool> {
     Router::new()
@@ -13,6 +15,7 @@ pub fn router() -> Router<PgPool> {
 #[derive(Deserialize)]
 struct CallbackCode {
     code: String,
+    state: String,
 }
 
 #[derive(Deserialize)]
@@ -25,7 +28,13 @@ async fn login_send() -> Redirect {
     let redirect_uri: &str = "http://localhost:3000/login/callback";
     let response_type: &str = "code";
     let scope: &str = "openid";
-    let state: &str = "whatever";
+
+    let rand: String = rand::rng()
+        .sample_iter(Alphanumeric)
+        .take(64)
+        .map(char::from)
+        .collect();
+    let state: &str = &rand;
     let auth_url: String = format!(
         "https://auth.dataporten.no/oauth/authorization?response_type={}&client_id={}&redirect_uri={}&scope={}&state={}",
         response_type, client_id, redirect_uri, scope, state
