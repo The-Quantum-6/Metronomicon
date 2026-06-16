@@ -1,6 +1,6 @@
 mod routes;
 
-use axum::{Router, extract::State, routing::get};
+use axum::{Router, routing::get};
 use sqlx::postgres::PgPoolOptions;
 
 #[tokio::main]
