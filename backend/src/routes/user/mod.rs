@@ -1,4 +1,3 @@
-
 pub mod user_endpoint;
 
 use axum::Router;
