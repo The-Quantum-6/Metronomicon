@@ -9,7 +9,7 @@ declare global {
   }
 }
 
-const rawBase = window.__APP_CONFIG__?.apiBaseUrl ?? "/api";
+const rawBase = window.__APP_CONFIG__?.apiBaseUrl ?? "http://localhost:3000";
 
 // Normalize: strip trailing slash so callers can compose paths predictably.
 export const apiBaseUrl = rawBase.replace(/\/+$/, "");

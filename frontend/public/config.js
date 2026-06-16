@@ -3,5 +3,5 @@
 // API_BASE_URL environment variable (see docker-entrypoint.sh).
 // The value here is the default used during local `vite dev`.
 window.__APP_CONFIG__ = {
-  apiBaseUrl: "/api",
+  apiBaseUrl: "http://localhost:3000",
 };
