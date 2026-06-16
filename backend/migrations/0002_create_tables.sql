@@ -1,4 +1,4 @@
-CREATE TABLE IF NOT EXISTS subject (
+CREATE TABLE IF NOT EXISTS course (
     id UUID PRIMARY KEY DEFAULT uuidv7(),
     content TEXT,
     name TEXT NOT NULL,
