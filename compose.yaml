@@ -16,8 +16,6 @@ services:
       - backend
     env_file:
       - .env
-    environment:
-      - API_BASE_URL=${API_BASE_URL:-/api}
     restart: unless-stopped
 
   proxy:
