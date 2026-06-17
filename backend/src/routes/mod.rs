@@ -2,8 +2,9 @@ pub mod user;
 pub mod auth;
 
 use axum::Router;
-use sqlx::PgPool;
 
-pub fn router() -> Router<PgPool> {
+use crate::state::AppState;
+
+pub fn router() -> Router<AppState> {
     Router::new().merge(user::router()).merge(auth::router())
 }
