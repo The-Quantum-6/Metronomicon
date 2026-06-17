@@ -4,6 +4,7 @@ mod state;
 use state::AppState;
 use axum::{Router, routing::get};
 use sqlx::postgres::PgPoolOptions;
+use tower_http::cors::CorsLayer;
 
 use tower_sessions::{SessionManagerLayer, cookie::SameSite};
 use tower_sessions_sqlx_store::PostgresStore;
@@ -36,6 +37,18 @@ async fn main() {
         .layer(session_layer)
         .with_state(state);
 
+    let environment = std::env::var("ENVIRONMENT").unwrap_or_default();
+
+    let app = Router::new()
+        .route("/", get(|| async { "Hello, World!" }))
+        .with_state(db);
+
+    let app = if environment == "dev" {
+        app.layer(CorsLayer::permissive())
+    } else {
+        app // no permissive layer outside dev
+    };
+    
     let listener = tokio::net::TcpListener::bind("0.0.0.0:3000").await.unwrap();
     axum::serve(listener, app).await.unwrap();
 }
