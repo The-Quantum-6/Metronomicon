@@ -1,10 +1,9 @@
-use axum::extract::FromRef;
 use openidconnect::{
     ClientId, ClientSecret, EndpointMaybeSet, EndpointNotSet, EndpointSet, IssuerUrl, RedirectUrl,
     core::{CoreClient, CoreProviderMetadata},
-    reqwest::{Client, ClientBuilder, redirect},
+    reqwest::{Client},
 };
-use sqlx::{Pool, Postgres, postgres::types::Oid};
+use sqlx::{Pool, Postgres};
 
 
 pub type OidcClient = CoreClient<

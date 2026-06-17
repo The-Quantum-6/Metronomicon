@@ -1,4 +1,4 @@
-use axum::{Json, Router, extract::Query, routing::get};
+use axum::{Json, Router, routing::get};
 use reqwest::Client;
 use serde::{Deserialize, Serialize};
 use tower_sessions::Session;
@@ -12,11 +12,6 @@ pub fn router() -> Router<AppState> {
 struct User {
     sub: String,
     name: String,
-}
-
-#[derive(Deserialize)]
-struct AccessToken {
-    access_token: String,
 }
 
 async fn user_info(session: Session) -> Json<User> {

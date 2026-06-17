@@ -1,8 +1,8 @@
 use axum::{Router, extract::{Query, State}, response::Redirect, routing::get};
 use openidconnect::{
-    AuthorizationCode, CsrfToken, Nonce, PkceCodeChallenge, PkceCodeVerifier, Scope, OAuth2TokenResponse, TokenResponse
+    AuthorizationCode, CsrfToken, Nonce, PkceCodeChallenge, Scope, TokenResponse
 };
-use openidconnect::core::{CoreAuthenticationFlow, CoreClient};
+use openidconnect::core::{CoreAuthenticationFlow};
 use serde::Deserialize;
 use tower_sessions::Session;
 use crate::state::AppState;
