@@ -2,7 +2,7 @@ use axum::{Json, Router, extract::Query, routing::get};
 use reqwest::Client;
 use serde::{Deserialize, Serialize};
 use sqlx::PgPool;
-
+use tower_sessions::Session;
 pub fn router() -> Router<PgPool> {
     Router::new().route("/user", get(user_info))
 }
@@ -18,11 +18,13 @@ struct AccessToken {
     access_token: String,
 }
 
-async fn user_info(Query(params): Query<AccessToken>) -> Json<User> {
-    let token: String = params.access_token;
-    if !token.is_empty() {
-        let user: User = fetch_user_info(token).await;
-        return Json(user);
+async fn user_info(session: Session) -> Json<User> {
+    let userinfo = session.get::<String>("user_sub").await.unwrap_or(None);
+    if let Some(sub) = userinfo {
+        return Json(User {
+            sub: sub.clone(),
+            name: format!("User {}", sub),
+        });
     }
     Json(User {
         sub: "unknown".to_string(),
