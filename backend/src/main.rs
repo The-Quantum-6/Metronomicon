@@ -2,6 +2,7 @@ use axum::{
     Router, extract::State, routing::get
 };
 use sqlx::postgres::PgPoolOptions;
+use tower_http::cors::CorsLayer;
 
 #[tokio::main]
 async fn main() {
@@ -11,11 +12,19 @@ async fn main() {
 
     sqlx::migrate!().run(&db).await.expect("Migrations should succeed");
 
+    let environment = std::env::var("ENVIRONMENT").unwrap_or_default();
+
     let app = Router::new()
         .route("/", get(|| async { "Hello, World!" }))
         .route("/upload", get(upload))
         .route("/fetch", get(fetch))
         .with_state(db);
+
+    let app = if environment == "dev" {
+        app.layer(CorsLayer::permissive())
+    } else {
+        app // no permissive layer outside dev
+    };
     
     let listener = tokio::net::TcpListener::bind("0.0.0.0:3000").await.unwrap();
     axum::serve(listener, app).await.unwrap();
