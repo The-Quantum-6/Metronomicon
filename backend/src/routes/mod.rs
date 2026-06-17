@@ -1,5 +1,5 @@
-pub mod user;
 pub mod auth;
+pub mod user;
 
 use axum::Router;
 

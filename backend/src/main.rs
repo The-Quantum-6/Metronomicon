@@ -1,10 +1,10 @@
+mod auth;
 mod routes;
 mod state;
-mod auth;
 
-use state::AppState;
 use axum::{Router, routing::get};
 use sqlx::postgres::PgPoolOptions;
+use state::AppState;
 use tower_http::cors::CorsLayer;
 
 use tower_sessions::{SessionManagerLayer, cookie::SameSite};
@@ -28,8 +28,8 @@ async fn main() {
     session_store.migrate().await.unwrap();
 
     let session_layer = SessionManagerLayer::new(session_store)
-    .with_secure(false)
-    .with_same_site(SameSite::Lax);
+        .with_secure(false)
+        .with_same_site(SameSite::Lax);
 
     let environment = std::env::var("ENVIRONMENT").unwrap_or_default();
 
@@ -45,7 +45,7 @@ async fn main() {
     } else {
         app // no permissive layer outside dev
     };
-    
+
     let listener = tokio::net::TcpListener::bind("0.0.0.0:3000").await.unwrap();
     axum::serve(listener, app).await.unwrap();
 }

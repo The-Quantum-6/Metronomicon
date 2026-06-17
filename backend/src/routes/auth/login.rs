@@ -1,12 +1,9 @@
-use axum::{Router, extract::{Query, State}, response::Redirect, routing::get};
-use openidconnect::{
-    AuthorizationCode, CsrfToken, Nonce, PkceCodeChallenge, Scope, TokenResponse
-};
-use openidconnect::core::{CoreAuthenticationFlow};
-use serde::Deserialize;
-use tower_sessions::Session;
-use crate::state::AppState;
 use crate::auth::oidc;
+use crate::state::AppState;
+use axum::{
+    Router,
+    routing::get,
+};
 
 pub fn router() -> Router<AppState> {
     Router::new()
