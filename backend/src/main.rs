@@ -1,5 +1,6 @@
 mod routes;
 mod state;
+mod auth;
 
 use state::AppState;
 use axum::{Router, routing::get};
