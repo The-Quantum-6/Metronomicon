@@ -30,18 +30,14 @@ async fn main() {
     .with_secure(false)
     .with_same_site(SameSite::Lax);
 
+    let environment = std::env::var("ENVIRONMENT").unwrap_or_default();
+
     let state = AppState::new(db).await;
     let app = Router::new()
         .route("/", get(|| async { "Hello, World!" }))
         .merge(routes::router())
         .layer(session_layer)
         .with_state(state);
-
-    let environment = std::env::var("ENVIRONMENT").unwrap_or_default();
-
-    let app = Router::new()
-        .route("/", get(|| async { "Hello, World!" }))
-        .with_state(db);
 
     let app = if environment == "dev" {
         app.layer(CorsLayer::permissive())

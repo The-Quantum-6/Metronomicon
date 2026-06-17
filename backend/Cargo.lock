@@ -120,9 +120,9 @@ dependencies = [
  "serde",
  "sqlx",
  "tokio",
+ "tower-http 0.7.0",
  "tower-sessions",
  "tower-sessions-sqlx-store",
- "tower-http",
 ]
 
 [[package]]
@@ -1756,7 +1756,7 @@ dependencies = [
  "tokio",
  "tokio-rustls",
  "tower",
- "tower-http",
+ "tower-http 0.6.11",
  "tower-service",
  "url",
  "wasm-bindgen",
@@ -2597,6 +2597,9 @@ dependencies = [
  "tower-layer",
  "tower-service",
  "url",
+]
+
+[[package]]
 name = "tower-http"
 version = "0.7.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
