@@ -22,26 +22,22 @@ struct CallbackParams {
 
 async fn login_send(session: Session, State(client): State<CoreClient>) -> Redirect {
     let (pkce_challenge, pkce_verifier) = PkceCodeChallenge::new_random_sha256();
-    let csrf_token = CsrfToken::new_random();
-    let nonce = Nonce::new_random();
+    let (auth_url, csrf_token, nonce) = client
+        .authorize_url(
+            CoreAuthenticationFlow::AuthorizationCode,
+            CsrfToken::new_random,
+            Nonce::new_random,
+        )
+        .add_scope(Scope::new("openid".to_string()))
+        .add_scope(Scope::new("profile".to_string()))
+        .add_scope(Scope::new("email".to_string()))
+        .set_pkce_challenge(pkce_challenge)
+        .url();
 
     session.insert("pkce_verifier", pkce_verifier).expect("Should store PKCE verifier in session");
     session.insert("csrf_token", csrf_token.clone()).expect("Should store CSRF token in session");
     session.insert("nonce", nonce.clone()).expect("Should store nonce in session");
 
-    let auth_url = client
-        .authorize_url(
-            CoreAuthenticationFlow::AuthorizationCode,
-            |params| {
-                params.set_pkce_challenge(pkce_challenge);
-                params.set_csrf_token(csrf_token);
-                params.set_nonce(nonce);
-                params.add_scope(Scope::new("openid".to_string()));
-                params.add_scope(Scope::new("profile".to_string()));
-                params.add_scope(Scope::new("email".to_string()));
-            },
-        )
-        .url();
 
     Redirect::to(auth_url.as_str())
 }
