@@ -1,9 +1,10 @@
 use axum::{Json, Router, extract::Query, routing::get};
 use reqwest::Client;
 use serde::{Deserialize, Serialize};
-use sqlx::PgPool;
 use tower_sessions::Session;
-pub fn router() -> Router<PgPool> {
+
+use crate::state::AppState;
+pub fn router() -> Router<AppState> {
     Router::new().route("/user", get(user_info))
 }
 
