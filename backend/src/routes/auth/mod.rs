@@ -1,8 +1,8 @@
-pub mod user_info;
+pub mod feide;
 
 use axum::Router;
 use sqlx::PgPool;
 
 pub fn router() -> Router<PgPool> {
-    Router::new().merge(user_info::router())
+    Router::new().merge(feide::router())
 }
