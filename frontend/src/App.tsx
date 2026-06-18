@@ -4,6 +4,9 @@ import viteLogo from './assets/vite.svg'
 import heroImg from './assets/hero.png'
 import { apiUrl } from './config'
 import './App.css'
+import "@navikt/ds-css";
+import "@navikt/ds-react";
+import FeideButton from './components/login/feidebutton'
 
 function App() {
   const [count, setCount] = useState(0)
@@ -19,6 +22,7 @@ function App() {
   return (
     <>
       <section id="center">
+        <FeideButton />
         <div className="hero">
           <img src={heroImg} className="base" width="170" height="179" alt="" />
           <img src={reactLogo} className="framework" alt="React logo" />
