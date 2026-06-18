@@ -6,7 +6,7 @@ use uuid::Uuid;
 pub enum UserRole {
     User,
     Admin,
-    Root
+    Root,
 }
 
 #[derive(Serialize, Deserialize, sqlx::Type)]
