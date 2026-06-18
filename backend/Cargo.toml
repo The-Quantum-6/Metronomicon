@@ -7,12 +7,14 @@ edition = "2024"
 axum = "0.8.9"
 dotenvy = "0.15.7"
 sqlx = { version = "0.8.6", features = ["uuid", "postgres", "macros", "migrate", "runtime-tokio"] }
+serde = "1.0.228"
 tokio = { version = "1.52.3", features = ["full"] }
 base64 = "0.22.1"
 reqwest = { version = "0.12.28", default-features = false, features = ["json", "rustls-tls"] }
-serde = "1.0.228"
 rand = "0.10.1"
 openidconnect = "4.0.1"
 tower-sessions = "0.14.0"
 tower-sessions-sqlx-store = { version = "0.15.0", features = ["postgres"] }
 tower-http = { version = "0.7.0", features = ["cors"] }
+tower-http = { version = "0.7.0", features = ["cors"] }
+uuid = { version = "1.23.3", features = ["serde"] }
