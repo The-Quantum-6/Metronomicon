@@ -1,8 +1,8 @@
-ALTER table users
-ADD COLUMN role NOT NULL DEFAULT 'user'
 CREATE TYPE user_role AS ENUM ('user', 'admin', 'root');
+ALTER TABLE users
+ADD COLUMN role user_role NOT NULL DEFAULT 'user';
 
-DROP table IF EXISTS course;
+DROP TABLE IF EXISTS course;
 
 CREATE TABLE IF NOT EXISTS courses (
     id UUID PRIMARY KEY DEFAULT uuidv7(),
