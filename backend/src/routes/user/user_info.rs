@@ -11,7 +11,6 @@ pub fn router() -> Router<AppState> {
 #[derive(Deserialize, Serialize)]
 struct User {
     sub: String,
-    name: String,
 }
 
 async fn user_info(session: Session) -> Json<User> {
@@ -19,12 +18,10 @@ async fn user_info(session: Session) -> Json<User> {
     if let Some(sub) = userinfo {
         return Json(User {
             sub: sub.clone(),
-            name: format!("User {}", sub),
         });
     }
     Json(User {
         sub: "unknown".to_string(),
-        name: "Unknown User".to_string(),
     })
 }
 
