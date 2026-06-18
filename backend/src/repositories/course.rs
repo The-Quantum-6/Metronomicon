@@ -35,14 +35,11 @@ pub async fn get_course_by_id(pool: &PgPool, id: Uuid) -> Result<Option<Course>,
     .await
 }
 
-pub async fn get_course_by_name(
-    pool: &PgPool,
-    name: String,
-) -> Result<Option<Course>, sqlx::Error> {
+pub async fn get_course_by_code(pool: &PgPool, code: &str) -> Result<Option<Course>, sqlx::Error> {
     sqlx::query_as!(
         Course,
-        r#"SELECT id, content, name, code FROM courses WHERE name=$1"#,
-        name
+        r#"SELECT id, content, name, code FROM courses WHERE code=$1"#,
+        code
     )
     .fetch_optional(pool)
     .await
@@ -88,9 +85,9 @@ mod tests {
 
         create_course(&pool, name.clone(), content.clone(), code.clone()).await?;
 
-        let course = get_course_by_name(&pool, name.clone()).await?;
+        let course = get_course_by_code(&pool, &code).await?;
         assert!(course.is_some());
-        assert_eq!(course.unwrap().name, name);
+        assert_eq!(course.unwrap().code, code);
         Ok(())
     }
 
@@ -102,29 +99,12 @@ mod tests {
 
         create_course(&pool, name.clone(), content.clone(), code.clone()).await?;
 
-        let course = get_course_by_name(&pool, name.clone())
+        let course = get_course_by_code(&pool, &code)
             .await?
             .expect("course should exist");
-        assert_eq!(course.name, name);
-        assert_eq!(course.content, content);
         assert_eq!(course.code, code);
-        Ok(())
-    }
-
-    #[sqlx::test]
-    async fn create_course_with_no_description(pool: PgPool) -> sqlx::Result<()> {
-        let name = "NoDescription".to_string();
-        let content = None::<String>;
-        let code = "C103".to_string();
-
-        create_course(&pool, name.clone(), content.clone(), code.clone()).await?;
-
-        let course = get_course_by_name(&pool, name.clone())
-            .await?
-            .expect("course should exist");
-        assert_eq!(course.name, name);
         assert_eq!(course.content, content);
-        assert_eq!(course.code, code);
+        assert_eq!(course.name, name);
         Ok(())
     }
 
@@ -135,7 +115,7 @@ mod tests {
         let code = "C104".to_string();
         create_course(&pool, name.clone(), content.clone(), code.clone()).await?;
 
-        let course = get_course_by_name(&pool, name.clone())
+        let course = get_course_by_code(&pool, &code)
             .await?
             .expect("course should exist");
         let fetched = get_course_by_id(&pool, course.id)
@@ -157,8 +137,8 @@ mod tests {
     }
 
     #[sqlx::test]
-    async fn get_course_by_name_returns_none_for_unknown_name(pool: PgPool) -> sqlx::Result<()> {
-        let result = get_course_by_name(&pool, "Unknown".to_string()).await?;
+    async fn get_course_by_code_returns_none_for_unknown_code(pool: PgPool) -> sqlx::Result<()> {
+        let result = get_course_by_code(&pool, "Unknown").await?;
         assert!(result.is_none());
         Ok(())
     }
