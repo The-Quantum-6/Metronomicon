@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import reactLogo from './assets/react.svg'
 import viteLogo from './assets/vite.svg'
 import heroImg from './assets/hero.png'
+import { apiUrl } from './config'
 import './App.css'
 
 function App() {
@@ -10,7 +11,7 @@ function App() {
   const [ting, setTing] = useState<string>();
 
   useEffect(() => {
-    fetch("/api/")
+    fetch(apiUrl())
       .then(response => response.text())
       .then(data => setTing(data));
   }, []);
