@@ -5,6 +5,7 @@ use sqlx::postgres::PgPoolOptions;
 use tower_http::cors::CorsLayer;
 
 pub mod models;
+mod repositories;
 
 #[tokio::main]
 async fn main() {
