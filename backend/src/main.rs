@@ -4,6 +4,8 @@ use axum::{
 use sqlx::postgres::PgPoolOptions;
 use tower_http::cors::CorsLayer;
 
+mod models;
+
 #[tokio::main]
 async fn main() {
     dotenvy::dotenv().ok();
