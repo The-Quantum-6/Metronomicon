@@ -16,9 +16,7 @@ struct User {
 async fn user_info(session: Session) -> Json<User> {
     let userinfo = session.get::<String>("user_sub").await.unwrap_or(None);
     if let Some(sub) = userinfo {
-        return Json(User {
-            sub: sub.clone(),
-        });
+        return Json(User { sub: sub.clone() });
     }
     Json(User {
         sub: "unknown".to_string(),

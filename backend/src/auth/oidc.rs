@@ -3,13 +3,10 @@ use axum::{
     extract::{Query, State},
     response::Redirect,
 };
-use openidconnect::core::{
-    CoreAuthenticationFlow, CoreClient, CoreProviderMetadata, CoreResponseType, CoreUserInfoClaims,
-};
-use openidconnect::reqwest;
+use openidconnect::core::CoreAuthenticationFlow;
 use openidconnect::{
-    AccessTokenHash, AuthenticationFlow, AuthorizationCode, ClientId, ClientSecret, CsrfToken,
-    IssuerUrl, Nonce, OAuth2TokenResponse, PkceCodeChallenge, RedirectUrl, Scope, TokenResponse,
+    AccessTokenHash, AuthorizationCode, CsrfToken, Nonce, OAuth2TokenResponse, PkceCodeChallenge,
+    Scope, TokenResponse,
 };
 use serde::Deserialize;
 use tower_sessions::Session;
@@ -176,15 +173,6 @@ pub async fn login_callback(
         .insert("user_sub", claims.subject().as_str())
         .await
         .unwrap();
-
-    println!(
-        "User {} with e-mail address {} has authenticated successfully",
-        claims.subject().as_str(),
-        claims
-            .email()
-            .map(|email| email.as_str())
-            .unwrap_or("<not provided>"),
-    );
 
     Ok(Redirect::to("/user"))
 }
