@@ -1,9 +1,6 @@
 use crate::auth::oidc;
 use crate::state::AppState;
-use axum::{
-    Router,
-    routing::get,
-};
+use axum::{Router, routing::get};
 
 pub fn router() -> Router<AppState> {
     Router::new()

@@ -3,8 +3,14 @@ use axum::{
     extract::{Query, State},
     response::Redirect,
 };
-use openidconnect::core::CoreAuthenticationFlow;
-use openidconnect::{AuthorizationCode, CsrfToken, Nonce, PkceCodeChallenge, Scope, TokenResponse};
+use openidconnect::core::{
+    CoreAuthenticationFlow, CoreClient, CoreProviderMetadata, CoreResponseType, CoreUserInfoClaims,
+};
+use openidconnect::reqwest;
+use openidconnect::{
+    AccessTokenHash, AuthenticationFlow, AuthorizationCode, ClientId, ClientSecret, CsrfToken,
+    IssuerUrl, Nonce, OAuth2TokenResponse, PkceCodeChallenge, RedirectUrl, Scope, TokenResponse,
+};
 use serde::Deserialize;
 use tower_sessions::Session;
 
@@ -132,6 +138,37 @@ pub async fn login_callback(
             "Failed to verify ID token claims".into(),
         )
     })?;
+
+    if let Some(expected_access_token_hash) = claims.access_token_hash() {
+        let actual_access_token_hash = AccessTokenHash::from_token(
+            token_response.access_token(),
+            id_token.signing_alg().map_err(|_| {
+                (
+                    axum::http::StatusCode::BAD_REQUEST,
+                    "Failed to get signing algorithm".into(),
+                )
+            })?,
+            id_token.signing_key(&id_token_verifier).map_err(|_| {
+                (
+                    axum::http::StatusCode::BAD_REQUEST,
+                    "Failed to get signing key".into(),
+                )
+            })?,
+        )
+        .map_err(|_| {
+            (
+                axum::http::StatusCode::BAD_REQUEST,
+                "Failed to create access token hash".into(),
+            )
+        })?;
+        if actual_access_token_hash != *expected_access_token_hash {
+            return Err((
+                axum::http::StatusCode::BAD_REQUEST,
+                "Access token hash mismatch".into(),
+            ));
+        }
+    }
+
     session.remove::<String>("csrf_token").await.ok();
     session.remove::<String>("nonce").await.ok();
     session.remove::<String>("pkce_verifier").await.ok();
@@ -139,6 +176,15 @@ pub async fn login_callback(
         .insert("user_sub", claims.subject().as_str())
         .await
         .unwrap();
+
+    println!(
+        "User {} with e-mail address {} has authenticated successfully",
+        claims.subject().as_str(),
+        claims
+            .email()
+            .map(|email| email.as_str())
+            .unwrap_or("<not provided>"),
+    );
 
     Ok(Redirect::to("/user"))
 }
