@@ -35,7 +35,10 @@ pub async fn get_course_by_id(pool: &PgPool, id: Uuid) -> Result<Option<Course>,
     .await
 }
 
-pub async fn get_course_by_code(pool: &PgPool, code: &str) -> Result<Option<Course>, sqlx::Error> {
+pub async fn get_course_by_code(
+    pool: &PgPool,
+    code: &str,
+) -> Result<Option<Course>, sqlx::Error> {
     sqlx::query_as!(
         Course,
         r#"SELECT id, content, name, code FROM courses WHERE code=$1"#,
@@ -139,6 +142,24 @@ mod tests {
     #[sqlx::test]
     async fn get_course_by_code_returns_none_for_unknown_code(pool: PgPool) -> sqlx::Result<()> {
         let result = get_course_by_code(&pool, "Unknown").await?;
+        assert!(result.is_none());
+        Ok(())
+    }
+
+    #[sqlx::test]
+    async fn delete_course_removes_course(pool: PgPool) -> sqlx::Result<()> {
+        let name = "ToDelete".to_string();
+        let content = Some("Course content".to_string());
+        let code = "C103".to_string();
+        create_course(&pool, name.clone(), content.clone(), code.clone()).await?;
+
+        let course = get_course_by_code(&pool, &code)
+            .await?
+            .expect("course should exist");
+
+        delete_course(&pool, course.id).await?;
+
+        let result = get_course_by_id(&pool, course.id).await?;
         assert!(result.is_none());
         Ok(())
     }
