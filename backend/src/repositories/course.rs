@@ -3,12 +3,9 @@ use sqlx::PgPool;
 use uuid::Uuid;
 
 pub async fn get_courses(pool: &PgPool) -> Result<Vec<Course>, sqlx::Error> {
-    sqlx::query_as!(
-        Course,
-        r#"SELECT id, content, name, code FROM courses"#
-    )
-    .fetch_all(pool)
-    .await
+    sqlx::query_as!(Course, r#"SELECT id, content, name, code FROM courses"#)
+        .fetch_all(pool)
+        .await
 }
 
 pub async fn create_course(
@@ -38,7 +35,10 @@ pub async fn get_course_by_id(pool: &PgPool, id: Uuid) -> Result<Option<Course>,
     .await
 }
 
-pub async fn get_course_by_name(pool: &PgPool, name: String) -> Result<Option<Course>, sqlx::Error> {
+pub async fn get_course_by_name(
+    pool: &PgPool,
+    name: String,
+) -> Result<Option<Course>, sqlx::Error> {
     sqlx::query_as!(
         Course,
         r#"SELECT id, content, name, code FROM courses WHERE name=$1"#,
@@ -102,7 +102,9 @@ mod tests {
 
         create_course(&pool, name.clone(), content.clone(), code.clone()).await?;
 
-        let course = get_course_by_name(&pool, name.clone()).await?.expect("course should exist");
+        let course = get_course_by_name(&pool, name.clone())
+            .await?
+            .expect("course should exist");
         assert_eq!(course.name, name);
         assert_eq!(course.content, content);
         assert_eq!(course.code, code);
@@ -117,7 +119,9 @@ mod tests {
 
         create_course(&pool, name.clone(), content.clone(), code.clone()).await?;
 
-        let course = get_course_by_name(&pool, name.clone()).await?.expect("course should exist");
+        let course = get_course_by_name(&pool, name.clone())
+            .await?
+            .expect("course should exist");
         assert_eq!(course.name, name);
         assert_eq!(course.content, content);
         assert_eq!(course.code, code);
@@ -131,8 +135,12 @@ mod tests {
         let code = "C104".to_string();
         create_course(&pool, name.clone(), content.clone(), code.clone()).await?;
 
-        let course = get_course_by_name(&pool, name.clone()).await?.expect("course should exist");
-        let fetched = get_course_by_id(&pool, course.id).await?.expect("course should exist");
+        let course = get_course_by_name(&pool, name.clone())
+            .await?
+            .expect("course should exist");
+        let fetched = get_course_by_id(&pool, course.id)
+            .await?
+            .expect("course should exist");
 
         assert_eq!(fetched.id, course.id);
         assert_eq!(fetched.name, name);

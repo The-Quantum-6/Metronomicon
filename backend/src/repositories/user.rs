@@ -105,7 +105,9 @@ mod tests {
 
         create_user(&pool, sub, name.clone(), email.clone()).await?;
 
-        let user = get_user_by_sub(&pool, sub).await?.expect("user should exist");
+        let user = get_user_by_sub(&pool, sub)
+            .await?
+            .expect("user should exist");
         assert_eq!(user.sub, sub);
         assert_eq!(user.name, name);
         assert_eq!(user.email, email);
@@ -119,7 +121,9 @@ mod tests {
 
         create_user(&pool, sub, name.clone(), None).await?;
 
-        let user = get_user_by_sub(&pool, sub).await?.expect("user should exist");
+        let user = get_user_by_sub(&pool, sub)
+            .await?
+            .expect("user should exist");
         assert_eq!(user.email, None);
         Ok(())
     }
@@ -131,7 +135,9 @@ mod tests {
         create_user(&pool, sub, name.clone(), None).await?;
 
         let created = get_user_by_sub(&pool, sub).await?.expect("should exist");
-        let fetched = get_user_by_id(&pool, created.id).await?.expect("should exist");
+        let fetched = get_user_by_id(&pool, created.id)
+            .await?
+            .expect("should exist");
 
         assert_eq!(fetched.id, created.id);
         assert_eq!(fetched.name, name);
