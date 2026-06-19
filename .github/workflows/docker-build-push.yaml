@@ -1,8 +1,5 @@
 name: Build and push to Docker Hub with :dev tag
 
-env:
-  SQLX_OFFLINE: true
-
 on:
   workflow_dispatch:
   push:

@@ -1,8 +1,5 @@
 name: Build and push to Docker Hub with :candidate tag
 
-env:
-  SQLX_OFFLINE: true
-
 on:
   push:
     tags:
