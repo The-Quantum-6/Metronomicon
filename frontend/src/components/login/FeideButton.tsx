@@ -1,4 +1,3 @@
-
 import { Button, HStack } from "@navikt/ds-react";
 
 function FeideButton() {
