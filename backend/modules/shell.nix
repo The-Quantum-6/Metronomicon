@@ -8,6 +8,7 @@
     devShells.default = pkgs.mkShell {
       packages = with pkgs; [
         f
+        sqlx-cli
       ];
     };
   };
