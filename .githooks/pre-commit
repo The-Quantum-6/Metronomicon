@@ -1,0 +1,12 @@
+#!/bin/sh
+set -e
+
+if git diff --cached --name-only | grep -qE '^backend/(migrations|src/repositories)/'; then
+    echo "Detected changes to migrations or repositories, running cargo sqlx prepare..."
+    if ! (cd backend && cargo sqlx prepare); then
+        echo "cargo sqlx prepare failed. Commit aborted." >&2
+        exit 1
+    fi
+    git add backend/.sqlx
+fi
+exit 0
