@@ -7,9 +7,9 @@ type Props = {
   setCourse: (v: Course | null) => void;
 };
 
-export default function CoursePanel({ course, isEditing, setIsEditing }: Props) {
+export default function CoursePanel({ course, isEditing, setIsEditing, setCourse }: Props) {
 
-  function handleSubmit(e: React.SyntheticEvent<HTMLFormElement>) {
+  async function handleSubmit(e: React.SyntheticEvent<HTMLFormElement>) {
   e.preventDefault();
   const formData = new FormData(e.currentTarget);
 
@@ -19,21 +19,28 @@ export default function CoursePanel({ course, isEditing, setIsEditing }: Props) 
       code: formData.get('subjectCode'),
     });
 
-    if (course) {
-      fetch(`/admin/course/${course.id}`, {
-        method: 'PUT',
-        body,
-        headers: { 'Content-Type': 'application/json' },
-      });
-    } else {
-      fetch('/admin/course/create', {
-        method: 'POST',
-        body,
-        headers: { 'Content-Type': 'application/json' },
-      });
+    try{
+      if (course) {
+        const res = await fetch(`/admin/course/${course.id}`, {
+          method: 'PUT',
+          body,
+          headers: { 'Content-Type': 'application/json' },
+        });
+        if (!res.ok)  throw new Error('Kunne ikke oppdatere kurset');
+      } else {
+        const res = await fetch('/admin/course/create', {
+          method: 'POST',
+          body,
+          headers: { 'Content-Type': 'application/json' },
+        });
+        if (!res.ok) throw new Error('Kunne ikke opprette kurs');
+      }
+      setIsEditing(false);
+      setCourse(null);
     }
-
-    setIsEditing(false);
+    catch (err) {
+      console.error(err);
+    }
   }
 
   return (
@@ -41,7 +48,7 @@ export default function CoursePanel({ course, isEditing, setIsEditing }: Props) 
       {isEditing ? (
         <>
           <h2>Course info</h2>
-          <form method="post" onSubmit={handleSubmit}>
+          <form onSubmit={handleSubmit}>
             <label>
               Subject Code: <input name="subjectCode" defaultValue={course?.code} required />
             </label>
