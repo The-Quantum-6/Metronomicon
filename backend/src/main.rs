@@ -1,11 +1,10 @@
-mod routes;
-
 use axum::{Router, routing::get};
 use sqlx::postgres::PgPoolOptions;
 use tower_http::cors::CorsLayer;
 
 pub mod models;
 mod repositories;
+mod routes;
 
 #[tokio::main]
 async fn main() {
