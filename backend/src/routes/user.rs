@@ -6,6 +6,7 @@ pub fn router() -> Router<PgPool> {
     Router::new().route("/testuser", get(user_test))
 }
 
+/// To be removed
 async fn user_test() -> String {
     "User test endpoint".to_string()
 }
