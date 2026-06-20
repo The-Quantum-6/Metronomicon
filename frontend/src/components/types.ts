@@ -1,5 +1,5 @@
 export type Course = {
-  id: number;
+  id: string;
   name: string;
   code: string;
   content: string | null;

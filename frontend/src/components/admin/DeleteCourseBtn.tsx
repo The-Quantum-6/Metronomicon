@@ -1,4 +1,4 @@
-export default function DeleteButton({ id }: { id: number }) {
+export default function DeleteButton({ id }: { id: string }) {
   async function handleDelete() {
     await fetch(`/admin/course/${id}`, {
       method: 'DELETE',
