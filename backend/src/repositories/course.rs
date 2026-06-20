@@ -35,10 +35,7 @@ pub async fn get_course_by_id(pool: &PgPool, id: Uuid) -> Result<Option<Course>,
     .await
 }
 
-pub async fn get_course_by_code(
-    pool: &PgPool,
-    code: &str,
-) -> Result<Option<Course>, sqlx::Error> {
+pub async fn get_course_by_code(pool: &PgPool, code: &str) -> Result<Option<Course>, sqlx::Error> {
     sqlx::query_as!(
         Course,
         r#"SELECT id, content, name, code FROM courses WHERE code=$1"#,
