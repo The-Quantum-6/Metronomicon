@@ -98,6 +98,7 @@ dependencies = [
  "reqwest",
  "serde",
  "sqlx",
+ "thiserror",
  "tokio",
  "tower-http 0.7.0",
  "uuid",
