@@ -4,10 +4,10 @@ type Props = {
   course: Course | null;
   isEditing: boolean;
   setIsEditing: (v: boolean) => void;
-  setCourse: (v: Course | null) => void;
+  newCourse: (v: Course | null) => void;
 };
 
-export default function CoursePanel({ course, isEditing, setIsEditing, setCourse }: Props) {
+function CoursePanel({ course, isEditing, setIsEditing, newCourse }: Props) {
 
   async function handleSubmit(e: React.SyntheticEvent<HTMLFormElement>) {
   e.preventDefault();
@@ -36,7 +36,7 @@ export default function CoursePanel({ course, isEditing, setIsEditing, setCourse
         if (!res.ok) throw new Error('Kunne ikke opprette kurs');
       }
       setIsEditing(false);
-      setCourse(null);
+      newCourse(null);
     }
     catch (err) {
       console.error(err);
@@ -67,8 +67,10 @@ export default function CoursePanel({ course, isEditing, setIsEditing, setCourse
           </form>
         </>
       ) : (
-        <button onClick={() => setIsEditing(true)}>+</button>
+        <button onClick={() => { newCourse(null); setIsEditing(true); }}>+</button>
       )}
     </>
   );
 }
+
+export default CoursePanel;
