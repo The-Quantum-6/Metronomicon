@@ -7,6 +7,7 @@ use serde::Deserialize;
 use sqlx::PgPool;
 use uuid::Uuid;
 
+/// Routes for course CRUD operations, mounted under `/courses`.
 pub fn router() -> Router<PgPool> {
     Router::new()
         .route("/courses", get(get_courses))
@@ -23,10 +24,12 @@ struct CourseCreateRequest {
     code: String,
 }
 
+/// Fetches all courses.
 async fn get_courses(State(pool): State<PgPool>) -> Result<Json<Vec<Course>>, AppError> {
     Ok(Json(course_repo::get_courses(&pool).await?))
 }
 
+/// Creates a new course.
 async fn create_course(
     State(pool): State<PgPool>,
     Json(course): Json<CourseCreateRequest>,
@@ -34,6 +37,7 @@ async fn create_course(
     Ok(course_repo::create_course(&pool, course.name, course.content, course.code).await?)
 }
 
+/// Fetches a course by its id, returning a `BadRequest` if none exists.
 async fn get_course_by_id(
     State(pool): State<PgPool>,
     Path(id): Path<Uuid>,
@@ -45,6 +49,7 @@ async fn get_course_by_id(
     Ok(Json(course))
 }
 
+/// Fetches a course by course code. There is no guarantee that a specific instance of course is fetched if several match the code. This is not enforced unique in the db.
 async fn get_course_by_code(
     State(pool): State<PgPool>,
     Path(code): Path<String>,
@@ -56,6 +61,7 @@ async fn get_course_by_code(
     Ok(Json(course))
 }
 
+/// Deletes a course by its id.
 async fn delete_course(State(pool): State<PgPool>, Path(id): Path<Uuid>) -> Result<(), AppError> {
     Ok(course_repo::delete_course(&pool, id).await?)
 }
