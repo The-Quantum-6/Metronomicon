@@ -1,1 +1,119 @@
 @import "tailwindcss";
+
+/* Ensure Quill-generated lists and headers render correctly */
+.ql-editor h1 {
+  font-size: 2em;
+  font-weight: bold;
+  margin: 1em 0 0.5em 0;
+  color: #a78bfa;
+}
+
+.ql-editor h2 {
+  font-size: 1.5em;
+  font-weight: bold;
+  margin: 0.8em 0 0.4em 0;
+  color: #c4b5fd;
+}
+
+.ql-editor h3 {
+  font-size: 1.17em;
+  font-weight: bold;
+  margin: 0.7em 0 0.35em 0;
+  color: #d8d0f8;
+}
+
+.ql-editor ol {
+  list-style: decimal !important;
+  margin-left: 1.5em;
+}
+
+.ql-editor ol li {
+  list-style: decimal !important;
+}
+
+.ql-editor ul {
+  list-style-type: disc !important;
+  margin-left: 1.5em;
+}
+
+.ql-editor ul li {
+  list-style-type: disc !important;
+}
+
+.ql-editor li {
+  margin-bottom: 0.25em;
+}
+
+.ql-editor p {
+  margin-bottom: 0.5em;
+}
+
+.ql-editor {
+  color: #e5e7eb;
+}
+
+/* Dark theme for Quill snow */
+.ql-toolbar.ql-snow {
+  background-color: #374151;
+  border: 1px solid #4b5563;
+}
+
+.ql-toolbar.ql-snow .ql-stroke {
+  stroke: #9ca3af;
+}
+
+.ql-toolbar.ql-snow .ql-fill {
+  fill: #9ca3af;
+}
+
+.ql-toolbar.ql-snow .ql-picker-label {
+  color: #9ca3af;
+}
+
+.ql-container.ql-snow {
+  border: 1px solid #4b5563;
+}
+
+.ql-container.ql-snow .ql-editor {
+  background-color: #1f2937;
+  color: #e5e7eb;
+}
+
+/* Clean ql-editor when used for displaying content (not in container) */
+article .ql-editor {
+  background-color: transparent;
+  border: none;
+  padding: 0;
+  color: #e5e7eb;
+}
+
+.ql-editor.ql-blank::before {
+  color: #6b7280;
+}
+
+/* Quill dark mode support */
+.ql-toolbar.ql-snow button:hover,
+.ql-toolbar.ql-snow button.ql-active,
+.ql-toolbar.ql-snow button:focus,
+.ql-toolbar.ql-snow button:active {
+  color: #a78bfa;
+}
+
+.ql-toolbar.ql-snow button:hover .ql-stroke,
+.ql-toolbar.ql-snow button.ql-active .ql-stroke,
+.ql-toolbar.ql-snow button:focus .ql-stroke,
+.ql-toolbar.ql-snow button:active .ql-stroke {
+  stroke: #a78bfa;
+}
+
+.ql-toolbar.ql-snow button:hover .ql-fill,
+.ql-toolbar.ql-snow button.ql-active .ql-fill,
+.ql-toolbar.ql-snow button:focus .ql-fill,
+.ql-toolbar.ql-snow button:active .ql-fill {
+  fill: #a78bfa;
+}
+
+.ql-toolbar.ql-snow .ql-picker-label:hover,
+.ql-toolbar.ql-snow .ql-picker-label.ql-active {
+  color: #a78bfa;
+}
