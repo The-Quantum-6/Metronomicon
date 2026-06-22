@@ -13,7 +13,10 @@ export default function Admin() {
   const fetchCourses = () => {
     setLoading(true);
     fetch(apiUrl("courses"))
-      .then((r) => r.json())
+      .then((r) => {
+        if (!r.ok) throw new Error(`Failed to load courses (${r.status})`);
+        return r.json() as Promise<Course[]>;
+      })
       .then((data) => setCourses(data))
       .catch(() => setCourses([]))
       .finally(() => setLoading(false));
