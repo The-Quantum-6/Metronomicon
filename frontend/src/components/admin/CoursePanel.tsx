@@ -21,14 +21,14 @@ function CoursePanel({ course, isEditing, setIsEditing, newCourse }: Props) {
 
     try{
       if (course) {
-        const res = await fetch(`/admin/course/${course.id}`, {
+        const res = await fetch(`/courses/${course.id}`, {
           method: 'PUT',
           body,
           headers: { 'Content-Type': 'application/json' },
         });
         if (!res.ok)  throw new Error('Kunne ikke oppdatere kurset');
       } else {
-        const res = await fetch('/admin/course/create', {
+        const res = await fetch('/courses/create', {
           method: 'POST',
           body,
           headers: { 'Content-Type': 'application/json' },
