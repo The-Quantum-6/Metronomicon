@@ -1,4 +1,5 @@
 import type { Course } from '../types';
+import { apiUrl } from '../../config';
 
 type Props = {
   course: Course | null;
@@ -21,14 +22,14 @@ function CoursePanel({ course, isEditing, setIsEditing, newCourse }: Props) {
 
     try{
       if (course) {
-        const res = await fetch(`/courses/${course.id}`, {
+        const res = await fetch(apiUrl(`courses/${course.id}`), {
           method: 'PUT',
           body,
           headers: { 'Content-Type': 'application/json' },
         });
         if (!res.ok)  throw new Error('Kunne ikke oppdatere kurset');
       } else {
-        const res = await fetch('/courses/create', {
+        const res = await fetch(apiUrl('courses/create'), {
           method: 'POST',
           body,
           headers: { 'Content-Type': 'application/json' },

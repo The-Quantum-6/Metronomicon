@@ -3,6 +3,7 @@ import type { Course } from '../types';
 import CoursePanel from './CoursePanel';
 import EditCourseBtn from './EditCourseBtn';
 import DeleteCourseBtn from './DeleteCourseBtn';
+import { apiUrl } from '../../config';
 
 export default function AdminCourseList() {
   const [courses, setCourses] = useState<Course[]>([]);
@@ -13,7 +14,7 @@ export default function AdminCourseList() {
 
   async function fetchCourses() {
     try {
-      const res = await fetch('/courses');
+      const res = await fetch(apiUrl('courses'));
       if (!res.ok) throw new Error('Kunne ikke hente kurs');
       setCourses(await res.json());
     } catch (err) {
