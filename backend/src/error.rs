@@ -31,6 +31,8 @@ pub enum AppError {
     /// directly on `sqlx::Result` values inside handlers.
     #[error("database error: {0}")]
     Database(#[from] sqlx::Error),
+    #[error("bad request: {0}")]
+    BadRequest(#[from] RequestError),
     // --- Template for future variants — copy one of these when you need it ---
     //
     // /// Session store (e.g. Tower Sessions) failed to read/write a session.
@@ -42,10 +44,14 @@ pub enum AppError {
     // /// keeps that module's error details out of this top-level enum.
     // #[error("authorization error: {0}")]
     // Auth(#[from] AuthError),
-    //
-    // /// The client sent a malformed/invalid request.
-    // #[error("bad request: {0}")]
-    // BadRequest(#[from] RequestError),
+}
+
+/// Error related to malformed request.
+#[derive(Error, Debug)]
+pub enum RequestError {
+    /// Request was for a non existant resource
+    #[error("Non exsistant resource: {0}")]
+    NonExsistant(&'static str),
 }
 
 impl IntoResponse for AppError {
@@ -65,9 +71,12 @@ impl IntoResponse for AppError {
                 StatusCode::INTERNAL_SERVER_ERROR,
                 "Something went wrong on our end. Please try again later.",
             ),
+            Self::BadRequest(_) => (
+                StatusCode::BAD_REQUEST,
+                "The request was malformed or unable to be completed",
+            ),
             // Self::Session(_) => (StatusCode::INTERNAL_SERVER_ERROR, "Session storage failed"),
             // Self::Auth(_) => (StatusCode::FORBIDDEN, "You don't have permission to do that"),
-            // Self::BadRequest(_) => (StatusCode::BAD_REQUEST, "Bad request"),
         };
 
         (status, client_message).into_response()
