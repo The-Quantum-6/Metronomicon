@@ -11,7 +11,7 @@ export default function AdminCreate() {
   const [content, setContent] = useState("");
   const navigate = useNavigate();
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     const payload = { name, content, code };
     const res = await fetch(apiUrl("courses/create"), {
