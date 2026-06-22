@@ -4,7 +4,9 @@ use axum::{Router, routing::get};
 use sqlx::postgres::PgPoolOptions;
 use tower_http::cors::CorsLayer;
 
+pub mod error;
 pub mod models;
+mod repositories;
 
 #[tokio::main]
 async fn main() {
