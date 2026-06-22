@@ -1,5 +1,6 @@
 import Navbar from "../components/Navbar";
-import { useEffect, useState } from "react";
+import { Fragment, useEffect, useState } from "react";
+import type { ReactNode } from "react";
 import { Link } from "react-router-dom";
 import { apiUrl } from "../config";
 
@@ -8,6 +9,29 @@ type Course = {
   name: string;
   code: string;
 };
+
+// Replace each "[image]" token in text with a random image from a free API.
+// picsum.photos serves a random image; a unique seed keeps each one distinct
+// and avoids browser caching across tokens.
+function renderWithImages(text: string): ReactNode[] {
+  return text.split("[image]").reduce<ReactNode[]>((acc, part, i) => {
+    if (i > 0) {
+      const seed = `${Date.now()}-${i}-${Math.random().toString(36).slice(2)}`;
+      acc.push(
+        <img
+          key={`img-${i}-${seed}`}
+          src={`https://picsum.photos/seed/${seed}/120/80`}
+          alt="random"
+          className="inline-block align-middle rounded mx-1"
+          width={120}
+          height={80}
+        />,
+      );
+    }
+    if (part) acc.push(<Fragment key={`txt-${i}`}>{part}</Fragment>);
+    return acc;
+  }, []);
+}
 
 function Home() {
   const [courses, setCourses] = useState<Course[] | null>(null);
@@ -38,7 +62,7 @@ function Home() {
             {courses.map((c) => (
               <li key={c.id}>
                 <Link to={`/courses/${c.id}`} className="text-purple-400 hover:text-purple-300 transition block p-3 rounded hover:bg-gray-700">
-                  {c.name} <span className="text-gray-500">({c.code})</span>
+                  {renderWithImages(c.name)} <span className="text-gray-500">({c.code})</span>
                 </Link>
               </li>
             ))}
