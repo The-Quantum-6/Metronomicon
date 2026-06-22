@@ -32,7 +32,7 @@ export default function AdminEdit() {
       .finally(() => setLoading(false));
   }, [id]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     const payload = { name, content, code };
     const res = await fetch(apiUrl(`courses/${id}`), {
