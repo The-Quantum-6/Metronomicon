@@ -1,5 +1,5 @@
 import Navbar from "../components/Navbar";
-import { useEffect, useState } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { apiUrl } from "../config";
 import ReactQuill from "react-quill-new";
