@@ -10,18 +10,20 @@ type Course = {
   code: string;
 };
 
-// Replace each "[image]" token in text with a random image from a free API.
-// picsum.photos serves a random image; a unique seed keeps each one distinct
-// and avoids browser caching across tokens.
-function renderWithImages(text: string): ReactNode[] {
+// Replace each "[image]" token in text with a deterministic image URL.
+// Using a stable seed avoids refetching/flicker on re-renders.
+function renderWithImages(text: string, seedBase: string): ReactNode[] {
   return text.split("[image]").reduce<ReactNode[]>((acc, part, i) => {
     if (i > 0) {
-      const seed = `${Date.now()}-${i}-${Math.random().toString(36).slice(2)}`;
+      const seed = `${seedBase}-${i}`;
       acc.push(
         <img
-          key={`img-${i}-${seed}`}
+          key={`img-${i}`}
           src={`https://picsum.photos/seed/${seed}/120/80`}
-          alt="random"
+          alt=""
+          aria-hidden="true"
+          loading="lazy"
+          decoding="async"
           className="inline-block align-middle rounded mx-1"
           width={120}
           height={80}
