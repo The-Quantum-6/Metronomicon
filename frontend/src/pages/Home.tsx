@@ -64,7 +64,7 @@ function Home() {
             {courses.map((c) => (
               <li key={c.id}>
                 <Link to={`/courses/${c.id}`} className="text-purple-400 hover:text-purple-300 transition block p-3 rounded hover:bg-gray-700">
-                  {renderWithImages(c.name)} <span className="text-gray-500">({c.code})</span>
+                  {renderWithImages(c.name, c.id)} <span className="text-gray-500">({c.code})</span>
                 </Link>
               </li>
             ))}
