@@ -62,7 +62,10 @@ export default function Admin() {
                     </td>
                     <td className="p-3 text-gray-300">{c.code}</td>
                     <td className="p-3">
-                      <button onClick={() => handleDelete(c.id)} className="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded text-sm transition">Delete</button>
+                      <div className="flex gap-2">
+                        <Link to={`/admin/edit/${c.id}`} className="bg-purple-600 hover:bg-purple-700 text-white px-3 py-1 rounded text-sm transition">Edit</Link>
+                        <button onClick={() => handleDelete(c.id)} className="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded text-sm transition">Delete</button>
+                      </div>
                     </td>
                   </tr>
                 ))}

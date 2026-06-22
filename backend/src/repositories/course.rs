@@ -45,6 +45,25 @@ pub async fn get_course_by_code(pool: &PgPool, code: &str) -> Result<Option<Cour
     .await
 }
 
+pub async fn update_course(
+    pool: &PgPool,
+    id: Uuid,
+    name: String,
+    content: Option<String>,
+    code: String,
+) -> Result<(), sqlx::Error> {
+    sqlx::query!(
+        "UPDATE courses SET name=$1, content=$2, code=$3 WHERE id=$4",
+        name,
+        content,
+        code,
+        id
+    )
+    .execute(pool)
+    .await
+    .map(|_| ())
+}
+
 pub async fn delete_course(pool: &PgPool, id: Uuid) -> Result<(), sqlx::Error> {
     sqlx::query!("DELETE FROM courses WHERE id=$1", id)
         .execute(pool)
@@ -158,6 +177,38 @@ mod tests {
 
         let result = get_course_by_id(&pool, course.id).await?;
         assert!(result.is_none());
+        Ok(())
+    }
+
+    #[sqlx::test]
+    async fn update_course_changes_fields(pool: PgPool) -> sqlx::Result<()> {
+        create_course(
+            &pool,
+            "Old".to_string(),
+            Some("Old content".to_string()),
+            "C200".to_string(),
+        )
+        .await?;
+
+        let course = get_course_by_code(&pool, "C200")
+            .await?
+            .expect("course should exist");
+
+        update_course(
+            &pool,
+            course.id,
+            "New".to_string(),
+            Some("New content".to_string()),
+            "C201".to_string(),
+        )
+        .await?;
+
+        let updated = get_course_by_id(&pool, course.id)
+            .await?
+            .expect("course should exist");
+        assert_eq!(updated.name, "New");
+        assert_eq!(updated.content, Some("New content".to_string()));
+        assert_eq!(updated.code, "C201");
         Ok(())
     }
 }

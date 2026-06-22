@@ -2,7 +2,7 @@ use crate::error::{AppError, RequestError};
 use crate::models::course::Course;
 use crate::repositories::course as course_repo;
 use axum::extract::{Json, Path, State};
-use axum::{Router, routing::delete, routing::get, routing::post};
+use axum::{Router, routing::delete, routing::get, routing::post, routing::put};
 use serde::Deserialize;
 use sqlx::PgPool;
 use uuid::Uuid;
@@ -15,10 +15,18 @@ pub fn router() -> Router<PgPool> {
         .route("/courses/{id}", get(get_course_by_id))
         .route("/courses/code/{code}", get(get_course_by_code))
         .route("/courses/{id}", delete(delete_course))
+        .route("/courses/{id}", put(update_course))
 }
 
 #[derive(Deserialize)]
 struct CourseCreateRequest {
+    name: String,
+    content: Option<String>,
+    code: String,
+}
+
+#[derive(Deserialize)]
+struct CourseUpdateRequest {
     name: String,
     content: Option<String>,
     code: String,
@@ -64,4 +72,13 @@ async fn get_course_by_code(
 /// Deletes a course by its id.
 async fn delete_course(State(pool): State<PgPool>, Path(id): Path<Uuid>) -> Result<(), AppError> {
     Ok(course_repo::delete_course(&pool, id).await?)
+}
+
+/// Updates an existing course by its id.
+async fn update_course(
+    State(pool): State<PgPool>,
+    Path(id): Path<Uuid>,
+    Json(course): Json<CourseUpdateRequest>,
+) -> Result<(), AppError> {
+    Ok(course_repo::update_course(&pool, id, course.name, course.content, course.code).await?)
 }

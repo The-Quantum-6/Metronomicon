@@ -1,0 +1,17 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE courses SET name=$1, content=$2, code=$3 WHERE id=$4",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Varchar",
+        "Uuid"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "217793946387c9cd64c277ea4bdf587c878f75bf5b9ae915776f4cff69b847af"
+}
