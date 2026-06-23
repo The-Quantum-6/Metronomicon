@@ -9,7 +9,9 @@ use tower_http::cors::CorsLayer;
 
 use tower_sessions::{SessionManagerLayer, cookie::SameSite};
 use tower_sessions_sqlx_store::PostgresStore;
+pub mod error;
 pub mod models;
+mod repositories;
 
 #[tokio::main]
 async fn main() {

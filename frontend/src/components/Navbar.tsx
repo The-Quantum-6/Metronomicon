@@ -2,16 +2,9 @@ import { Link } from "react-router-dom";
 
 function Navbar() {
   return (
-    <nav
-      aria-label="Primary"
-      style={{ display: "flex", gap: "1rem", padding: "1rem", background: "#222" }}
-    >
-      <Link to="/" style={{ color: "#fff" }}>
-        Home
-      </Link>
-      <Link to="/about" style={{ color: "#fff" }}>
-        About
-      </Link>
+    <nav className="flex gap-6 p-4 bg-gray-900 border-b-2 border-purple-600" aria-label="Primary">
+      <Link to="/" className="text-white hover:text-purple-400 transition">Home</Link>
+      <Link to="/login/feide" className="text-white hover:text-purple-400 transition">Login</Link>
     </nav>
   );
 }

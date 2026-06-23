@@ -2,8 +2,11 @@ FROM rust:1.95-slim AS builder
 
 WORKDIR /app
 
+ENV SQLX_OFFLINE=true
+
 COPY Cargo.toml Cargo.lock ./
 COPY migrations ./migrations
+COPY .sqlx ./.sqlx
 RUN mkdir src && echo "fn main() {}" > src/main.rs
 RUN cargo build --release
 RUN rm src/main.rs
