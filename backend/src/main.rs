@@ -6,6 +6,8 @@ use tower_http::cors::CorsLayer;
 
 pub mod error;
 pub mod models;
+pub mod middleware;
+
 mod repositories;
 
 #[tokio::main]
