@@ -1,3 +1,4 @@
+use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
 /// The possible commands that may be issued against a course.
@@ -6,6 +7,7 @@ use uuid::Uuid;
 /// determined by the permission associated with the variant.
 ///
 /// Superuser-only operations bypass the regular permission system.
+#[derive(Debug, Serialize, Deserialize)]
 pub enum CourseCommandPayload {
     /// Creates a new course.
     ///
@@ -346,6 +348,7 @@ pub enum CourseCommandPayload {
 }
 
 /// Outcome of a moderation decision.
+#[derive(Debug,Serialize,Deserialize)]
 pub enum ModerationVerdict {
     /// Accept the suggestion and apply it.
     Approve,
@@ -355,6 +358,7 @@ pub enum ModerationVerdict {
 }
 
 /// The category of file suggestion being moderated.
+#[derive(Debug,Serialize,Deserialize)]
 pub enum FileSuggestionKind {
     /// Suggestion to create a resource.
     AddResource,
@@ -364,6 +368,7 @@ pub enum FileSuggestionKind {
 }
 
 /// The category of text suggestion being moderated.
+#[derive(Debug,Serialize,Deserialize)]
 pub enum TextSuggestionKind {
     AddProjectIdea,
     EditProjectIdea,
