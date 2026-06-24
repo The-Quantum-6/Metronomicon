@@ -13,10 +13,11 @@ base64 = "0.22.1"
 reqwest = { version = "0.12.28", default-features = false, features = ["json", "rustls-tls"] }
 rand = "0.10.1"
 tower-http = { version = "0.7.0", features = ["cors"] }
-uuid = { version = "1.23.3", features = ["serde"] }
+uuid = { version = "1.23.3", features = ["serde", "v4"] }
 thiserror = "2.0.18"
 cqrs-es = "0.5.0"
 postgres-es = "0.5.0"
+async-trait = "0.1.89"
 
 [dev-dependencies]
 uuid = { version = "1.23.3", features = ["serde", "v4"] }

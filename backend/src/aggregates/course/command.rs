@@ -12,7 +12,7 @@ pub enum CourseCommandPayload {
     /// Creates a new course.
     ///
     /// Permission: superuser only.
-    CreateCourse {
+    Create {
         /// Human-readable course name.
         name: String,
         /// Course code, e.g. `DATA1700`.
@@ -26,12 +26,12 @@ pub enum CourseCommandPayload {
     /// Permanently deletes the course.
     ///
     /// Permission: superuser only.
-    DeleteCourse,
+    Delete,
 
     /// Updates the course code.
     ///
     /// Permission: superuser only.
-    UpdateCourseCode {
+    UpdateCode {
         /// New course code.
         code: String,
     },
@@ -39,7 +39,7 @@ pub enum CourseCommandPayload {
     /// Updates the course name.
     ///
     /// Permission: superuser only.
-    UpdateCourseName {
+    UpdateName {
         /// New course name.
         name: String,
     },
@@ -55,7 +55,7 @@ pub enum CourseCommandPayload {
     /// Updates the course's academic field.
     ///
     /// Permission: `page_admin`.
-    UpdateCourseField {
+    UpdateField {
         /// New field value.
         field: String,
     },
@@ -84,20 +84,20 @@ pub enum CourseCommandPayload {
         link_id: Uuid,
     },
 
-    /// Marks a resource as officially endorsed by course maintainers.
-    ///
-    /// Permission: `page_admin`.
-    MakeResourceOfficial {
-        /// Identifier of the resource.
-        resource_id: Uuid,
-    },
-
     /// Removes official status from a link.
     ///
     /// Permission: `page_admin`.
     MakeLinkUnofficial {
         /// Identifier of the link.
         link_id: Uuid,
+    },
+
+    /// Marks a resource as officially endorsed by course maintainers.
+    ///
+    /// Permission: `page_admin`.
+    MakeResourceOfficial {
+        /// Identifier of the resource.
+        resource_id: Uuid,
     },
 
     /// Removes official status from a resource.
@@ -348,7 +348,7 @@ pub enum CourseCommandPayload {
 }
 
 /// Outcome of a moderation decision.
-#[derive(Debug,Serialize,Deserialize)]
+#[derive(Debug, Serialize, Deserialize)]
 pub enum ModerationVerdict {
     /// Accept the suggestion and apply it.
     Approve,
@@ -358,7 +358,7 @@ pub enum ModerationVerdict {
 }
 
 /// The category of file suggestion being moderated.
-#[derive(Debug,Serialize,Deserialize)]
+#[derive(Debug, Serialize, Deserialize)]
 pub enum FileSuggestionKind {
     /// Suggestion to create a resource.
     AddResource,
@@ -368,7 +368,7 @@ pub enum FileSuggestionKind {
 }
 
 /// The category of text suggestion being moderated.
-#[derive(Debug,Serialize,Deserialize)]
+#[derive(Debug, Serialize, Deserialize)]
 pub enum TextSuggestionKind {
     AddProjectIdea,
     EditProjectIdea,
