@@ -898,11 +898,13 @@ mod aggregate_tests {
             .expect("expected add resource to succeed");
 
         match result.as_slice() {
-            [CourseEvent::ResourceAdded {
-                resource_id,
-                title,
-                key,
-            }] => {
+            [
+                CourseEvent::ResourceAdded {
+                    resource_id,
+                    title,
+                    key,
+                },
+            ] => {
                 assert_ne!(*resource_id, Uuid::nil());
                 assert_eq!(title, "Lecture notes");
                 assert_ne!(*key, Uuid::nil());
@@ -930,11 +932,13 @@ mod aggregate_tests {
             .expect("expected link suggestion to succeed");
 
         match result.as_slice() {
-            [CourseEvent::LinkAddSuggestionSubmitted {
-                suggestion_id,
-                label,
-                url,
-            }] => {
+            [
+                CourseEvent::LinkAddSuggestionSubmitted {
+                    suggestion_id,
+                    label,
+                    url,
+                },
+            ] => {
                 assert_ne!(*suggestion_id, Uuid::nil());
                 assert_eq!(label, "Course homepage");
                 assert_eq!(url, "https://example.com/course");
