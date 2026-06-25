@@ -1,7 +1,7 @@
 use bitflags::bitflags;
 
 bitflags! {
-    pub struct Permissions: u32 {
+    pub struct Permissions: i32 {
         // reading
         const READ = 1 << 1;
 
