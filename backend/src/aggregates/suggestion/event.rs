@@ -9,8 +9,6 @@ pub enum SuggestionEvent {
         suggestion_id: Uuid,
         course_id: Uuid,
         kind: Suggestion,
-        payload: serde_json::Value,
-        proposer: Uuid,
     },
     SuggestionApproved {
         suggestion_id: Uuid,
