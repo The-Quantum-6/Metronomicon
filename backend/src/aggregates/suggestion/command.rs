@@ -1,7 +1,7 @@
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, PartialEq, Clone)]
 pub enum SuggestionCommand {
     /// Suggest a change
     ///
@@ -20,13 +20,13 @@ pub enum SuggestionCommand {
     },
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, PartialEq, Clone)]
 pub enum Suggestion {
     File(FileSuggestionKind),
     Text(TextSuggestionKind),
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, PartialEq, Clone)]
 pub enum FileSuggestionKind {
     AddResource {
         course_id: Uuid,
@@ -38,7 +38,7 @@ pub enum FileSuggestionKind {
     },
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, PartialEq, Clone)]
 pub enum TextSuggestionKind {
     AddLink {
         course_id: Uuid,
@@ -81,7 +81,7 @@ pub enum TextSuggestionKind {
     },
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, PartialEq, Clone)]
 pub enum ModerationVerdict {
     Approve,
     Deny,
