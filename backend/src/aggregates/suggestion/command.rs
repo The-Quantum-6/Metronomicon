@@ -1,8 +1,6 @@
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
-use crate::aggregates::shared::moderation::{ModerationVerdict, SuggestionKind};
-
 #[derive(Debug, Serialize, Deserialize)]
 pub enum SuggestionCommand {
     /// Suggest a change
@@ -10,9 +8,7 @@ pub enum SuggestionCommand {
     /// Requires `suggest_file` for resource suggestions and `suggest_text` for other suggestions
     Propose {
         course_id: Uuid,
-        kind: SuggestionKind,
-        payload: serde_json::Value, // or a typed enum if you prefer type-safety
-        proposer: Uuid,
+        suggestion: Suggestion,
     },
 
     /// Suggest a change
@@ -22,4 +18,71 @@ pub enum SuggestionCommand {
         suggestion_id: Uuid,
         verdict: ModerationVerdict,
     },
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub enum Suggestion {
+    File(FileSuggestionKind),
+    Text(TextSuggestionKind),
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub enum FileSuggestionKind {
+    AddResource {
+        course_id: Uuid,
+        title: String,
+        key: Uuid,
+    },
+    RemoveResource {
+        resource_id: Uuid,
+    },
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub enum TextSuggestionKind {
+    AddLink {
+        course_id: Uuid,
+        label: String,
+        url: String,
+    },
+    EditLink {
+        link_id: Uuid,
+        label: Option<String>,
+        url: Option<String>,
+    },
+    RemoveLink {
+        link_id: Uuid,
+    },
+    AddFaqEntry {
+        course_id: Uuid,
+        question: String,
+        answer: String,
+    },
+    EditFaqEntry {
+        faq_id: Uuid,
+        question: Option<String>,
+        answer: Option<String>,
+    },
+    RemoveFaqEntry {
+        faq_id: Uuid,
+    },
+    AddProjectIdea {
+        course_id: Uuid,
+        title: String,
+        body: String,
+    },
+    EditProjectIdea {
+        idea_id: Uuid,
+        title: Option<String>,
+        body: Option<String>,
+    },
+    RemoveProjectIdea {
+        idea_id: Uuid,
+    },
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub enum ModerationVerdict {
+    Approve,
+    Deny,
 }
