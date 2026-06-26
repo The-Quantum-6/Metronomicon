@@ -29,19 +29,19 @@ export default function CoursePage() {
   }, [id]);
 
   return (
-    <div className="min-h-screen bg-gray-800 text-white">
+    <div className="min-h-screen bg-surface-dark text-text">
       <Navbar />
       <main className="container mx-auto p-6">
         {loading ? (
-          <div className="text-gray-400">Loading...</div>
+          <div className="text-text-muted">Loading...</div>
         ) : course ? (
           <article>
-            <h1 className="text-4xl font-bold text-purple-400 mb-2">{course.name}</h1>
-            <div className="text-gray-400 mb-6 text-sm">{course.code}</div>
+            <h1 className="text-4xl font-bold text-primary mb-2">{course.name}</h1>
+            <div className="text-text-muted mb-6 text-sm">{course.code}</div>
             <div className="ql-editor" dangerouslySetInnerHTML={{ __html: course.content ?? "" }} />
           </article>
         ) : (
-          <div className="text-gray-400">Course not found.</div>
+          <div className="text-text-muted">Course not found.</div>
         )}
       </main>
     </div>

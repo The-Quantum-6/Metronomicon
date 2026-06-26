@@ -1,25 +1,61 @@
 @import "tailwindcss";
 
+@theme {
+  --color-bg: #FDFAF4;
+  --color-surface-dark: #F5F2EB;
+  --color-surface: #EDE9DF;
+  --color-surface-light: #E0DDD9;
+  --color-border: #E0DDD9;
+  --color-text: #1A1F3A;
+  --color-text-secondary: #6B6B5A;
+  --color-text-muted: #6B6B5A;
+  --color-placeholder: #6B6B5A;
+  --color-primary: #1A1F3A;
+  --color-primary-light: #2D3461;
+  --color-primary-lighter: #404880;
+  --color-accent: #1A1F3A;
+  --color-accent-dark: #0D1128;
+}
+
+:root {
+  --ax-bg-default: var(--color-surface-dark);
+  --ax-bg-raised: var(--color-bg);
+  --ax-bg-sunken: var(--color-surface);
+  --ax-text-default: var(--color-text);
+  --ax-text-neutral: var(--color-text);
+  --ax-text-subtle: var(--color-text-secondary);
+  --ax-text-neutral-subtle: var(--color-text-secondary);
+  --ax-border-default: var(--color-border);
+  --ax-border-neutral: var(--color-border);
+  --ax-border-subtle: var(--color-border);
+  --ax-border-subtleA: var(--color-border);
+}
+
+/* Roomier course cards (overrides Aksel's default LinkCard padding) */
+.course-card.course-card {
+  padding: 1.75rem 2rem !important;
+}
+
 /* Ensure Quill-generated lists and headers render correctly */
 .ql-editor h1 {
   font-size: 2em;
   font-weight: bold;
   margin: 1em 0 0.5em 0;
-  color: #a78bfa;
+  color: var(--color-primary);
 }
 
 .ql-editor h2 {
   font-size: 1.5em;
   font-weight: bold;
   margin: 0.8em 0 0.4em 0;
-  color: #c4b5fd;
+  color: var(--color-primary-light);
 }
 
 .ql-editor h3 {
   font-size: 1.17em;
   font-weight: bold;
   margin: 0.7em 0 0.35em 0;
-  color: #d8d0f8;
+  color: var(--color-primary-lighter);
 }
 
 .ql-editor ol {
@@ -49,34 +85,34 @@
 }
 
 .ql-editor {
-  color: #e5e7eb;
+  color: var(--color-text);
 }
 
 /* Dark theme for Quill snow */
 .ql-toolbar.ql-snow {
-  background-color: #374151;
-  border: 1px solid #4b5563;
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-surface-light);
 }
 
 .ql-toolbar.ql-snow .ql-stroke {
-  stroke: #9ca3af;
+  stroke: var(--color-text-muted);
 }
 
 .ql-toolbar.ql-snow .ql-fill {
-  fill: #9ca3af;
+  fill: var(--color-text-muted);
 }
 
 .ql-toolbar.ql-snow .ql-picker-label {
-  color: #9ca3af;
+  color: var(--color-text-muted);
 }
 
 .ql-container.ql-snow {
-  border: 1px solid #4b5563;
+  border: 1px solid var(--color-surface-light);
 }
 
 .ql-container.ql-snow .ql-editor {
-  background-color: #1f2937;
-  color: #e5e7eb;
+  background-color: var(--color-surface-dark);
+  color: var(--color-text);
 }
 
 /* Clean ql-editor when used for displaying content (not in container) */
@@ -84,11 +120,11 @@ article .ql-editor {
   background-color: transparent;
   border: none;
   padding: 0;
-  color: #e5e7eb;
+  color: var(--color-text);
 }
 
 .ql-editor.ql-blank::before {
-  color: #6b7280;
+  color: var(--color-placeholder);
 }
 
 /* Quill dark mode support */
@@ -96,24 +132,24 @@ article .ql-editor {
 .ql-toolbar.ql-snow button.ql-active,
 .ql-toolbar.ql-snow button:focus,
 .ql-toolbar.ql-snow button:active {
-  color: #a78bfa;
+  color: var(--color-primary);
 }
 
 .ql-toolbar.ql-snow button:hover .ql-stroke,
 .ql-toolbar.ql-snow button.ql-active .ql-stroke,
 .ql-toolbar.ql-snow button:focus .ql-stroke,
 .ql-toolbar.ql-snow button:active .ql-stroke {
-  stroke: #a78bfa;
+  stroke: var(--color-primary);
 }
 
 .ql-toolbar.ql-snow button:hover .ql-fill,
 .ql-toolbar.ql-snow button.ql-active .ql-fill,
 .ql-toolbar.ql-snow button:focus .ql-fill,
 .ql-toolbar.ql-snow button:active .ql-fill {
-  fill: #a78bfa;
+  fill: var(--color-primary);
 }
 
 .ql-toolbar.ql-snow .ql-picker-label:hover,
 .ql-toolbar.ql-snow .ql-picker-label.ql-active {
-  color: #a78bfa;
+  color: var(--color-primary);
 }

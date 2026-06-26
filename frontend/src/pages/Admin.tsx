@@ -37,36 +37,36 @@ export default function Admin() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-800 text-white">
+    <div className="min-h-screen bg-surface-dark text-text">
       <Navbar />
       <main className="container mx-auto p-6">
         <div className="flex items-center justify-between mb-6">
-          <h1 className="text-2xl font-bold text-purple-400">Admin — Courses</h1>
-          <button onClick={() => navigate("/admin/create")} className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded transition">Create New Course</button>
+          <h1 className="text-2xl font-bold text-primary">Admin — Courses</h1>
+          <button onClick={() => navigate("/admin/create")} className="bg-accent hover:bg-accent-dark text-white px-4 py-2 rounded transition">Create New Course</button>
         </div>
 
         {loading ? (
-          <div className="text-gray-400">Loading...</div>
+          <div className="text-text-muted">Loading...</div>
         ) : courses && courses.length > 0 ? (
-          <div className="overflow-x-auto bg-gray-900 rounded border border-gray-700">
+          <div className="overflow-x-auto bg-bg rounded border border-surface">
             <table className="min-w-full">
-              <thead className="bg-gray-700 border-b border-gray-600">
+              <thead className="bg-surface border-b border-surface-light">
                 <tr>
-                  <th className="text-left p-3 text-purple-400">Name</th>
-                  <th className="text-left p-3 text-purple-400">Code</th>
-                  <th className="text-left p-3 text-purple-400">Actions</th>
+                  <th className="text-left p-3 text-primary">Name</th>
+                  <th className="text-left p-3 text-primary">Code</th>
+                  <th className="text-left p-3 text-primary">Actions</th>
                 </tr>
               </thead>
               <tbody>
                 {courses.map((c) => (
-                  <tr key={c.id} className="border-t border-gray-700 hover:bg-gray-800">
+                  <tr key={c.id} className="border-t border-surface hover:bg-surface-dark">
                     <td className="p-3">
-                      <Link to={`/courses/${c.id}`} className="text-purple-400 hover:text-purple-300 transition">{c.name}</Link>
+                      <Link to={`/courses/${c.id}`} className="text-primary hover:text-primary-light transition">{c.name}</Link>
                     </td>
-                    <td className="p-3 text-gray-300">{c.code}</td>
+                    <td className="p-3 text-text-secondary">{c.code}</td>
                     <td className="p-3">
                       <div className="flex gap-2">
-                        <Link to={`/admin/edit/${c.id}`} className="bg-purple-600 hover:bg-purple-700 text-white px-3 py-1 rounded text-sm transition">Edit</Link>
+                        <Link to={`/admin/edit/${c.id}`} className="bg-accent hover:bg-accent-dark text-white px-3 py-1 rounded text-sm transition">Edit</Link>
                         <button onClick={() => handleDelete(c.id)} className="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded text-sm transition">Delete</button>
                       </div>
                     </td>
@@ -76,7 +76,7 @@ export default function Admin() {
             </table>
           </div>
         ) : (
-          <div className="text-gray-400">No courses.</div>
+          <div className="text-text-muted">No courses.</div>
         )}
       </main>
     </div>

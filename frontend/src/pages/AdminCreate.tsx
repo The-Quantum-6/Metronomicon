@@ -47,29 +47,29 @@ export default function AdminCreate() {
   ];
 
   return (
-    <div className="min-h-screen bg-gray-800 text-white">
+    <div className="min-h-screen bg-surface-dark text-text">
       <Navbar />
       <main className="container mx-auto p-6">
-        <h1 className="text-2xl font-bold mb-6 text-purple-400">Create Course</h1>
-        <form onSubmit={handleSubmit} className="space-y-4 bg-gray-900 p-6 rounded border border-gray-700">
+        <h1 className="text-2xl font-bold mb-6 text-primary">Create Course</h1>
+        <form onSubmit={handleSubmit} className="space-y-4 bg-bg p-6 rounded border border-surface">
           <div>
-            <label className="block text-sm font-medium text-gray-300">Name</label>
-            <input className="mt-1 block w-full bg-gray-800 border border-gray-700 rounded p-2 text-white focus:border-purple-600 focus:outline-none" value={name} onChange={(e) => setName(e.target.value)} required />
+            <label className="block text-sm font-medium text-text-secondary">Name</label>
+            <input className="mt-1 block w-full bg-surface-dark border border-surface rounded p-2 text-text focus:border-accent focus:outline-none" value={name} onChange={(e) => setName(e.target.value)} required />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-300">Code</label>
-            <input className="mt-1 block w-full bg-gray-800 border border-gray-700 rounded p-2 text-white focus:border-purple-600 focus:outline-none" value={code} onChange={(e) => setCode(e.target.value)} required />
+            <label className="block text-sm font-medium text-text-secondary">Code</label>
+            <input className="mt-1 block w-full bg-surface-dark border border-surface rounded p-2 text-text focus:border-accent focus:outline-none" value={code} onChange={(e) => setCode(e.target.value)} required />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-300 mb-2">Content (rich text)</label>
+            <label className="block text-sm font-medium text-text-secondary mb-2">Content (rich text)</label>
             <ReactQuill theme="snow" value={content} onChange={setContent} modules={modules} formats={formats} />
-            <p className="text-sm text-gray-500 mt-2">Preview (raw HTML stored):</p>
-            <pre className="mt-2 p-3 bg-gray-700 rounded max-h-40 overflow-auto text-xs text-gray-300">{content}</pre>
+            <p className="text-sm text-placeholder mt-2">Preview (raw HTML stored):</p>
+            <pre className="mt-2 p-3 bg-surface rounded max-h-40 overflow-auto text-xs text-text-secondary">{content}</pre>
           </div>
 
           <div>
-            <button type="submit" className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded transition">Create</button>
+            <button type="submit" className="bg-accent hover:bg-accent-dark text-white px-4 py-2 rounded transition">Create</button>
           </div>
         </form>
       </main>
