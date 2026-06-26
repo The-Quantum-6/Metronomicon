@@ -1,4 +1,5 @@
 use serde::{Deserialize, Serialize};
+use uuid::Uuid;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub enum CourseCommand {
@@ -6,6 +7,7 @@ pub enum CourseCommand {
     ///
     /// `SUPERUSER` only
     Create {
+        id: Uuid,
         name: String,
         code: String,
         field: String,

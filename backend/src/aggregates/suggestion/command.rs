@@ -7,6 +7,7 @@ pub enum SuggestionCommand {
     ///
     /// Requires `suggest_file` for resource suggestions and `suggest_text` for other suggestions
     Propose {
+        suggestion_id: Uuid,
         course_id: Uuid,
         suggestion: Suggestion,
     },

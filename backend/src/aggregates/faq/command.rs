@@ -7,6 +7,7 @@ pub enum FaqCommand {
     ///
     /// Requires `write_text`
     Create {
+        faq_id: Uuid,
         course_id: Uuid,
         question: String,
         answer: String,

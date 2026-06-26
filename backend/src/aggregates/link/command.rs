@@ -7,6 +7,7 @@ pub enum LinkCommand {
     ///
     /// Requires `write_text`
     Create {
+        link_id: Uuid,
         course_id: Uuid,
         label: String,
         url: String,

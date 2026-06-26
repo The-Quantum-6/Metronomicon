@@ -7,6 +7,7 @@ pub enum ProjectIdeaCommand {
     ///
     /// Requires `write_text`
     Create {
+        idea_id: Uuid,
         course_id: Uuid,
         title: String,
         body: String,

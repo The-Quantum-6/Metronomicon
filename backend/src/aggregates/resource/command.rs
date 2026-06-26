@@ -7,6 +7,7 @@ pub enum ResourceCommand {
     ///
     /// Requires `write_file`
     Create {
+        resource_id: Uuid,
         course_id: Uuid,
         title: String,
         key: Uuid,
