@@ -39,9 +39,10 @@ impl DomainEvent for CourseEvent {
             CourseEvent::CourseMetadataUpdated { .. } => "CourseMetadataUpdated",
             CourseEvent::TagAdded { .. } => "TagAdded",
             Self::TagRemoved { .. } => "TagRemoved",
-        }.to_string()
+        }
+        .to_string()
     }
-    
+
     fn event_version(&self) -> String {
         "1.0".to_string()
     }
