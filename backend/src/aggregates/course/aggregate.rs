@@ -1,4 +1,3 @@
-use async_trait::async_trait;
 use cqrs_es::Aggregate;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
@@ -24,7 +23,6 @@ pub enum CourseStatus {
     Deleted,
 }
 
-#[async_trait]
 impl Aggregate for Course {
     const TYPE: &'static str = "course";
     type Command = CourseCommand;
