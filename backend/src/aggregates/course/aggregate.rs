@@ -16,7 +16,7 @@ pub struct Course {
     pub tags: Vec<String>,
 }
 
-#[derive(Serialize, Default, Deserialize)]
+#[derive(Serialize, Default, Deserialize, Debug)]
 pub enum CourseStatus {
     #[default]
     Uninitialized,
