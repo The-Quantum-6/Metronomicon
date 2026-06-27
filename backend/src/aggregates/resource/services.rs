@@ -6,7 +6,11 @@ pub struct ResourceServices;
 
 impl ResourceServices {
     /// TODO: check whether an object exists in S3
-    async fn check_exists(&self, key: Uuid, client: reqwest::Client) -> Result<(), ResourceError> {
+    async fn check_exists(
+        &self,
+        _key: Uuid,
+        _client: reqwest::Client,
+    ) -> Result<(), ResourceError> {
         Ok(())
     }
 }

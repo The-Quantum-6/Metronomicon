@@ -9,7 +9,7 @@ pub struct SimpleLoggingQuery {}
 impl Query<Course> for SimpleLoggingQuery {
     async fn dispatch(&self, aggregate_id: &str, events: &[EventEnvelope<Course>]) {
         for event in events {
-            println!("{}-{}\n{:#?}", aggregate_id, event.sequence, &event.payload);
+            println!("{}-{}\n{:#?}", aggregate_id, event.sequence, event.payload);
         }
     }
 }

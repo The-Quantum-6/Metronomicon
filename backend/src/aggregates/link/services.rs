@@ -4,7 +4,7 @@ pub struct LinkServices;
 
 impl LinkServices {
     /// TODO: Check whether a link is valid
-    async fn check_valid(&self, url: &str, client: reqwest::Client) -> Result<(), LinkError> {
+    async fn check_valid(&self, _url: &str, _client: reqwest::Client) -> Result<(), LinkError> {
         Ok(())
     }
 }

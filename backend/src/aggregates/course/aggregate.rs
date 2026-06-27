@@ -35,7 +35,7 @@ impl Aggregate for Course {
     fn handle(
         &mut self,
         command: Self::Command,
-        service: &Self::Services,
+        _service: &Self::Services,
         sink: &cqrs_es::event_sink::EventSink<Self>,
     ) -> impl Future<Output = Result<(), Self::Error>> + Send {
         async {
@@ -47,25 +47,31 @@ impl Aggregate for Course {
                     field,
                     description,
                 } => match self.status {
-                    CourseStatus::Uninitialized => Ok(sink
-                        .write(
-                            CourseEvent::CourseCreated {
-                                id,
-                                name,
-                                code,
-                                field,
-                                description,
-                            },
-                            self,
-                        )
-                        .await),
+                    CourseStatus::Uninitialized => {
+                        let _: () = sink
+                            .write(
+                                CourseEvent::CourseCreated {
+                                    id,
+                                    name,
+                                    code,
+                                    field,
+                                    description,
+                                },
+                                self,
+                            )
+                            .await;
+                        Ok(())
+                    }
                     _ => Err("course already exists".into()),
                 },
                 CourseCommand::Delete => match self.status {
                     CourseStatus::Uninitialized => Err("course not found".into()),
-                    CourseStatus::Active => Ok(sink
-                        .write(CourseEvent::CourseDeleted { id: self.id }, self)
-                        .await),
+                    CourseStatus::Active => {
+                        let _: () = sink
+                            .write(CourseEvent::CourseDeleted { id: self.id }, self)
+                            .await;
+                        Ok(())
+                    }
                     CourseStatus::Deleted => Err("course is already deleted".into()),
                 },
                 CourseCommand::UpdateMetadata {
@@ -75,18 +81,21 @@ impl Aggregate for Course {
                     description,
                 } => match self.status {
                     CourseStatus::Uninitialized => Err("course not found".into()),
-                    CourseStatus::Active => Ok(sink
-                        .write(
-                            CourseEvent::CourseMetadataUpdated {
-                                id: self.id,
-                                name,
-                                code,
-                                field,
-                                description,
-                            },
-                            self,
-                        )
-                        .await),
+                    CourseStatus::Active => {
+                        let _: () = sink
+                            .write(
+                                CourseEvent::CourseMetadataUpdated {
+                                    id: self.id,
+                                    name,
+                                    code,
+                                    field,
+                                    description,
+                                },
+                                self,
+                            )
+                            .await;
+                        Ok(())
+                    }
                     CourseStatus::Deleted => Err("cannot modify deleted course".into()),
                 },
                 CourseCommand::AddTag { tag } => match self.status {
@@ -95,9 +104,10 @@ impl Aggregate for Course {
                         if self.tags.contains(&tag) {
                             Err("tag already exists".into())
                         } else {
-                            Ok(sink
+                            let _: () = sink
                                 .write(CourseEvent::TagAdded { id: self.id, tag }, self)
-                                .await)
+                                .await;
+                            Ok(())
                         }
                     }
                     CourseStatus::Deleted => Err("cannot modify deleted course".into()),
