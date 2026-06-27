@@ -29,12 +29,11 @@ pub async fn get(config: &AppConfig) -> AppState {
         .expect("Migrations should succeed");
 
     // Queries setup
-    let course_view_repo: Arc<PostgresViewRepository<CourseView, Course>> =
+    type CourseViewRepo = PostgresViewRepository<CourseView, Course>;
+    let course_view_repo: Arc<CourseViewRepo> =
         Arc::new(PostgresViewRepository::new("course_query", db.clone()));
     let mut course_query =
-        GenericQuery::<PostgresViewRepository<CourseView, Course>, CourseView, Course>::new(
-            course_view_repo.clone(),
-        );
+        GenericQuery::<CourseViewRepo, CourseView, Course>::new(course_view_repo.clone());
     course_query.use_error_handler(Box::new(|e| println!("{e}")));
     let logging_query = test_logging_query::SimpleLoggingQuery {};
 
@@ -42,7 +41,7 @@ pub async fn get(config: &AppConfig) -> AppState {
         vec![Box::new(course_query), Box::new(logging_query)];
 
     // CQRS framework
-    let cqrs = Arc::new(postgres_es::postgres_cqrs(db.clone(), queries, ()));
+    let cqrs = Arc::new(postgres_es::postgres_cqrs(db, queries, ()));
 
     AppState {
         cqrs,
