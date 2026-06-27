@@ -19,6 +19,7 @@ pub struct Course {
 #[derive(Serialize, Default, Deserialize)]
 pub enum CourseStatus {
     #[default]
+    Uninitialized,
     Active,
     Deleted,
 }
@@ -39,26 +40,29 @@ impl Aggregate for Course {
     ) -> impl Future<Output = Result<(), Self::Error>> + Send {
         async {
             match command {
-                // Can I enforce that the id has to be unused?? Does that have to be done via a service or can it be done here somehow?
                 CourseCommand::Create {
                     id,
                     name,
                     code,
                     field,
                     description,
-                } => Ok(sink
-                    .write(
-                        CourseEvent::CourseCreated {
-                            id,
-                            name,
-                            code,
-                            field,
-                            description,
-                        },
-                        self,
-                    )
-                    .await),
+                } => match self.status {
+                    CourseStatus::Uninitialized => Ok(sink
+                        .write(
+                            CourseEvent::CourseCreated {
+                                id,
+                                name,
+                                code,
+                                field,
+                                description,
+                            },
+                            self,
+                        )
+                        .await),
+                    _ => Err("course already exists".into()),
+                },
                 CourseCommand::Delete => match self.status {
+                    CourseStatus::Uninitialized => Err("course not found".into()),
                     CourseStatus::Active => Ok(sink
                         .write(CourseEvent::CourseDeleted { id: self.id }, self)
                         .await),
@@ -70,6 +74,7 @@ impl Aggregate for Course {
                     field,
                     description,
                 } => match self.status {
+                    CourseStatus::Uninitialized => Err("course not found".into()),
                     CourseStatus::Active => Ok(sink
                         .write(
                             CourseEvent::CourseMetadataUpdated {
@@ -85,6 +90,7 @@ impl Aggregate for Course {
                     CourseStatus::Deleted => Err("cannot modify deleted course".into()),
                 },
                 CourseCommand::AddTag { tag } => match self.status {
+                    CourseStatus::Uninitialized => Err("course not found".into()),
                     CourseStatus::Active => {
                         if self.tags.contains(&tag) {
                             Err("tag already exists".into())
@@ -97,6 +103,7 @@ impl Aggregate for Course {
                     CourseStatus::Deleted => Err("cannot modify deleted course".into()),
                 },
                 CourseCommand::RemoveTag { tag } => match self.status {
+                    CourseStatus::Uninitialized => Err("course not found".into()),
                     CourseStatus::Active => {
                         if self.tags.contains(&tag) {
                             sink.write(CourseEvent::TagRemoved { id: self.id, tag }, self)
@@ -201,6 +208,20 @@ mod tests {
             .then_expect_events(vec![created_event()]);
     }
 
+    #[test]
+    fn test_create_already_existing_course_returns_error() {
+        framework()
+            .given(vec![created_event()])
+            .when(CourseCommand::Create {
+                id: course_id(),
+                name: "Algorithms".into(),
+                code: "CS301".into(),
+                field: "Computer Science".into(),
+                description: "Graph theory and beyond".into(),
+            })
+            .then_expect_error_message("course already exists");
+    }
+
     // ── Delete ────────────────────────────────────────────────────────────────
 
     #[test]
@@ -209,6 +230,14 @@ mod tests {
             .given(vec![created_event()])
             .when(CourseCommand::Delete)
             .then_expect_events(vec![CourseEvent::CourseDeleted { id: course_id() }]);
+    }
+
+    #[test]
+    fn test_cannot_delete_uninitialized_course() {
+        framework()
+            .given_no_previous_events()
+            .when(CourseCommand::Delete)
+            .then_expect_error_message("course not found");
     }
 
     #[test]
@@ -244,6 +273,19 @@ mod tests {
     }
 
     #[test]
+    fn test_cannot_update_uninitialized_course() {
+        framework()
+            .given_no_previous_events()
+            .when(CourseCommand::UpdateMetadata {
+                name: Some("Algorithms II".into()),
+                code: None,
+                field: None,
+                description: None,
+            })
+            .then_expect_error_message("course not found");
+    }
+
+    #[test]
     fn test_update_metadata_on_deleted_course_returns_error() {
         framework()
             .given(vec![
@@ -272,6 +314,16 @@ mod tests {
                 id: course_id(),
                 tag: "graphs".into(),
             }]);
+    }
+
+    #[test]
+    fn test_cannot_add_tag_on_uninitialized_course() {
+        framework()
+            .given_no_previous_events()
+            .when(CourseCommand::AddTag {
+                tag: "graphs".into(),
+            })
+            .then_expect_error_message("course not found");
     }
 
     #[test]
@@ -307,6 +359,16 @@ mod tests {
                 id: course_id(),
                 tag: "graphs".into(),
             }]);
+    }
+
+    #[test]
+    fn test_cannot_remove_tag_on_uninitialized_course() {
+        framework()
+            .given_no_previous_events()
+            .when(CourseCommand::RemoveTag {
+                tag: "graphs".into(),
+            })
+            .then_expect_error_message("course not found");
     }
 
     #[test]
