@@ -61,7 +61,15 @@ impl Aggregate for Course {
                 CourseCommand::Delete => {
                     sink.write(CourseEvent::CourseDeleted { id: self.id }, self).await
                 },
-                _ => todo!(),
+                CourseCommand::UpdateMetadata { name, code, field, description } => {
+                    sink.write(CourseEvent::CourseMetadataUpdated { id: self.id, name, code, field, description },self).await
+                },
+                CourseCommand::AddTag { tag } => {
+                    sink.write(CourseEvent::TagAdded { id: self.id, tag }, self).await
+                },
+                CourseCommand::RemoveTag { tag } => {
+                    sink.write(CourseEvent::TagRemoved { id: self.id, tag }, self).await
+                },
             };
             Ok(())
         }
