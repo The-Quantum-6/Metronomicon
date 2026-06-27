@@ -56,22 +56,31 @@ impl Aggregate for Course {
                         },
                         self,
                     )
-                    .await
+                    .await;
+                    Ok(())
                 },
-                CourseCommand::Delete => {
-                    sink.write(CourseEvent::CourseDeleted { id: self.id }, self).await
+                CourseCommand::Delete => match self.status {
+                    CourseStatus::Active => {
+                        sink.write(CourseEvent::CourseDeleted { id: self.id }, self).await;
+                        Ok(())
+                    },
+                    CourseStatus::Deleted => {
+                        Err("course is already deleted".into())
+                    },
                 },
                 CourseCommand::UpdateMetadata { name, code, field, description } => {
-                    sink.write(CourseEvent::CourseMetadataUpdated { id: self.id, name, code, field, description },self).await
+                    sink.write(CourseEvent::CourseMetadataUpdated { id: self.id, name, code, field, description },self).await;
+                    Ok(())
                 },
                 CourseCommand::AddTag { tag } => {
-                    sink.write(CourseEvent::TagAdded { id: self.id, tag }, self).await
+                    sink.write(CourseEvent::TagAdded { id: self.id, tag }, self).await;
+                    Ok(())
                 },
                 CourseCommand::RemoveTag { tag } => {
-                    sink.write(CourseEvent::TagRemoved { id: self.id, tag }, self).await
+                    sink.write(CourseEvent::TagRemoved { id: self.id, tag }, self).await;
+                    Ok(())
                 },
-            };
-            Ok(())
+            }
         }
     }
 
