@@ -1,10 +1,11 @@
 use cqrs_es::DomainEvent;
 use serde::{Deserialize, Serialize};
+use strum::Display;
 use uuid::Uuid;
 
 use crate::aggregates::suggestion::command::Suggestion;
 
-#[derive(Debug, Serialize, Deserialize, PartialEq, Clone)]
+#[derive(Debug, Serialize, Deserialize, PartialEq, Clone, Display)]
 pub enum SuggestionEvent {
     SuggestionProposed {
         suggestion_id: Uuid,
@@ -21,12 +22,7 @@ pub enum SuggestionEvent {
 
 impl DomainEvent for SuggestionEvent {
     fn event_type(&self) -> String {
-        match self {
-            SuggestionEvent::SuggestionProposed { .. } => "SuggestionProposed",
-            SuggestionEvent::SuggestionApproved { .. } => "SuggestionApproved",
-            SuggestionEvent::SuggestionDenied { .. } => "SuggestionDenied",
-        }
-        .to_string()
+        self.to_string()
     }
 
     fn event_version(&self) -> String {

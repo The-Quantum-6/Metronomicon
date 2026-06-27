@@ -1,8 +1,9 @@
 use cqrs_es::DomainEvent;
 use serde::{Deserialize, Serialize};
+use strum::Display;
 use uuid::Uuid;
 
-#[derive(Debug, Serialize, Deserialize, PartialEq, Clone)]
+#[derive(Debug, Serialize, Deserialize, PartialEq, Clone, Display)]
 pub enum ProjectIdeaEvent {
     ProjectCreated {
         idea_id: Uuid,
@@ -22,12 +23,7 @@ pub enum ProjectIdeaEvent {
 
 impl DomainEvent for ProjectIdeaEvent {
     fn event_type(&self) -> String {
-        match self {
-            ProjectIdeaEvent::ProjectCreated { .. } => "ProjectCreated",
-            ProjectIdeaEvent::ProjectUpdated { .. } => "ProjectUpdated",
-            ProjectIdeaEvent::ProjectDeleted { .. } => "ProjectDeleted",
-        }
-        .to_string()
+        self.to_string()
     }
 
     fn event_version(&self) -> String {

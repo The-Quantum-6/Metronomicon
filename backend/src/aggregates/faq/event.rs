@@ -1,8 +1,9 @@
 use cqrs_es::DomainEvent;
 use serde::{Deserialize, Serialize};
+use strum::Display;
 use uuid::Uuid;
 
-#[derive(Debug, Serialize, Deserialize, PartialEq, Clone)]
+#[derive(Debug, Serialize, Deserialize, PartialEq, Clone, Display)]
 pub enum FaqEvent {
     FaqCreated {
         faq_id: Uuid,
@@ -22,12 +23,7 @@ pub enum FaqEvent {
 
 impl DomainEvent for FaqEvent {
     fn event_type(&self) -> String {
-        match self {
-            FaqEvent::FaqCreated { .. } => "FaqCreated",
-            FaqEvent::FaqUpdated { .. } => "FaqUpdated",
-            FaqEvent::FaqDeleted { .. } => "FaqDeleted",
-        }
-        .to_string()
+        self.to_string()
     }
 
     fn event_version(&self) -> String {

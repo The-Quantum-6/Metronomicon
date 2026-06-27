@@ -1,8 +1,9 @@
 use cqrs_es::DomainEvent;
 use serde::{Deserialize, Serialize};
+use strum::Display;
 use uuid::Uuid;
 
-#[derive(Debug, Serialize, Deserialize, PartialEq, Clone)]
+#[derive(Debug, Serialize, Deserialize, PartialEq, Clone, Display)]
 pub enum ResourceEvent {
     ResourceCreated {
         resource_id: Uuid,
@@ -21,12 +22,7 @@ pub enum ResourceEvent {
 
 impl DomainEvent for ResourceEvent {
     fn event_type(&self) -> String {
-        match self {
-            ResourceEvent::ResourceCreated { .. } => "ResourceCreated",
-            ResourceEvent::ResourceDeleted { .. } => "ResourceDeleted",
-            ResourceEvent::ResourceOfficialStatusChanged { .. } => "ResourceOfficialStatusChanged",
-        }
-        .to_string()
+        self.to_string()
     }
 
     fn event_version(&self) -> String {

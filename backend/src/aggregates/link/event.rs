@@ -1,8 +1,9 @@
 use cqrs_es::DomainEvent;
 use serde::{Deserialize, Serialize};
+use strum::Display;
 use uuid::Uuid;
 
-#[derive(Debug, Serialize, Deserialize, PartialEq, Clone)]
+#[derive(Debug, Serialize, Deserialize, PartialEq, Clone, Display)]
 pub enum LinkEvent {
     LinkCreated {
         link_id: Uuid,
@@ -26,13 +27,7 @@ pub enum LinkEvent {
 
 impl DomainEvent for LinkEvent {
     fn event_type(&self) -> String {
-        match self {
-            LinkEvent::LinkCreated { .. } => "LinkCreated",
-            LinkEvent::LinkUpdated { .. } => "LinkUpdated",
-            LinkEvent::LinkDeleted { .. } => "LinkDeleted",
-            LinkEvent::LinkOfficialStatusChanged { .. } => "LinkOfficialStatusChanged",
-        }
-        .to_string()
+        self.to_string()
     }
 
     fn event_version(&self) -> String {

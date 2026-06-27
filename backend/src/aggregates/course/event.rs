@@ -1,8 +1,9 @@
 use cqrs_es::DomainEvent;
 use serde::{Deserialize, Serialize};
+use strum::Display;
 use uuid::Uuid;
 
-#[derive(Debug, Serialize, Deserialize, PartialEq, Clone)]
+#[derive(Debug, Serialize, Deserialize, PartialEq, Clone, Display)]
 pub enum CourseEvent {
     CourseCreated {
         id: Uuid,
@@ -33,14 +34,7 @@ pub enum CourseEvent {
 
 impl DomainEvent for CourseEvent {
     fn event_type(&self) -> String {
-        match self {
-            CourseEvent::CourseCreated { .. } => "CourseCreated",
-            CourseEvent::CourseDeleted { .. } => "CourseDeleted",
-            CourseEvent::CourseMetadataUpdated { .. } => "CourseMetadataUpdated",
-            CourseEvent::TagAdded { .. } => "TagAdded",
-            Self::TagRemoved { .. } => "TagRemoved",
-        }
-        .to_string()
+        self.to_string()
     }
 
     fn event_version(&self) -> String {
