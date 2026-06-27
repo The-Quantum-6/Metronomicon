@@ -1,4 +1,4 @@
-use cqrs_es::{View, persist::GenericQuery};
+use cqrs_es::View;
 use postgres_es::PostgresViewRepository;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
@@ -7,6 +7,8 @@ use crate::aggregates::course::{
     aggregate::{Course, CourseStatus},
     event::CourseEvent,
 };
+
+pub type CourseViewRepo = PostgresViewRepository<CourseView, Course>;
 
 #[derive(Serialize, Debug, Deserialize, Default)]
 pub struct CourseView {
@@ -18,8 +20,6 @@ pub struct CourseView {
     pub description: String,
     pub tags: Vec<String>,
 }
-
-pub type CourseQuery = GenericQuery<PostgresViewRepository<CourseView, Course>, CourseView, Course>;
 
 impl View<Course> for CourseView {
     fn update(&mut self, event: &cqrs_es::EventEnvelope<Course>) {
