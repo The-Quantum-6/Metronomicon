@@ -1,7 +1,8 @@
-import Navbar from "../components/Navbar";
 import { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams} from "react-router-dom";
+import Navbar from "../components/Navbar";
 import { apiUrl } from "../config";
+
 
 type Course = {
   id: string;
@@ -10,40 +11,61 @@ type Course = {
   content?: string | null;
 };
 
-export default function CoursePage() {
-  const { id } = useParams<{ id: string }>();
+type CourseTab = "overview" | "resources" | "links" | "projects" | "faq";
+
+const tabs = [
+  { id: "overview"  as CourseTab, label: "Overview"},
+  { id: "resources" as CourseTab, label: "Resources"},
+  { id: "links"     as CourseTab, label: "Links"},
+  { id: "projects"  as CourseTab, label: "Projects"},
+  { id: "faq"       as CourseTab, label: "FAQ"},
+];
+
+export default function Course() {
+  const navigate = useNavigate();
+  const { id } = useParams();
   const [course, setCourse] = useState<Course | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [tab, setTab] = useState<CourseTab>("overview");
 
   useEffect(() => {
-    if (!id) return;
-    setLoading(true);
     fetch(apiUrl(`courses/${id}`))
-      .then((r) => {
-        if (!r.ok) throw new Error("not found");
-        return r.json();
-      })
+      .then((r) => r.json())
       .then((data) => setCourse(data))
-      .catch(() => setCourse(null))
-      .finally(() => setLoading(false));
+      .catch(console.error);
   }, [id]);
 
+  if (!course) return;
+
   return (
-    <div className="min-h-screen bg-gray-800 text-white">
+    <>
       <Navbar />
-      <main className="container mx-auto p-6">
-        {loading ? (
-          <div className="text-gray-400">Loading...</div>
-        ) : course ? (
-          <article>
-            <h1 className="text-4xl font-bold text-purple-400 mb-2">{course.name}</h1>
-            <div className="text-gray-400 mb-6 text-sm">{course.code}</div>
-            <div className="ql-editor" dangerouslySetInnerHTML={{ __html: course.content ?? "" }} />
-          </article>
-        ) : (
-          <div className="text-gray-400">Course not found.</div>
-        )}
+      <main>
+        <button onClick={() => navigate("/")}>Back to courses</button>
+        <div>
+          <p>{course.code}</p>
+          <div>
+            <h1>{course.name}</h1>
+            <div>
+              <button>Contribute</button>
+              <button>Report</button>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          {tabs.map((t) => (
+            <button key={t.id} onClick={() => setTab(t.id)}>
+              {t.label}
+            </button>
+          ))}
+        </div>
+        {tab === "overview"  && <div>Overview</div>}
+        {tab === "resources" && <div>Resources</div>}
+        {tab === "links"     && <div>Links</div>}
+        {tab === "projects"  && <div>Projects</div>}
+        {tab === "faq"       && <div>FAQ</div>}
+
       </main>
-    </div>
+    </>
   );
 }
