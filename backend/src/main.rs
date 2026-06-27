@@ -27,10 +27,7 @@ async fn main() {
     let config = config::get();
     let state = state::get(&config).await;
 
-    let app = Router::new()
-        .route("/", get(|| async { "Hello, World!" }))
-        .merge(routes::router())
-        .with_state(state);
+    let app = routes::router().with_state(state);
 
     // CORS off in dev
     let app = if config.cors_should_be_permissive {
