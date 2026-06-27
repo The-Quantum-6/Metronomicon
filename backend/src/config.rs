@@ -1,7 +1,6 @@
 pub struct AppConfig {
     pub cors_should_be_permissive: bool,
     pub database_url: String,
-
 }
 
 pub fn get() -> AppConfig {
@@ -11,6 +10,6 @@ pub fn get() -> AppConfig {
 
     AppConfig {
         cors_should_be_permissive: environment == "dev",
-        database_url
+        database_url,
     }
 }

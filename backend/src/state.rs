@@ -4,7 +4,10 @@ use cqrs_es::{Query, persist::GenericQuery};
 use postgres_es::{PostgresCqrs, PostgresViewRepository};
 use sqlx::postgres::PgPoolOptions;
 
-use crate::{aggregates::course::aggregate::Course, config::AppConfig, queries::test_logging_query, views::course::CourseView};
+use crate::{
+    aggregates::course::aggregate::Course, config::AppConfig, queries::test_logging_query,
+    views::course::CourseView,
+};
 
 #[derive(Clone)]
 pub struct AppState {
@@ -35,10 +38,14 @@ pub async fn get(config: &AppConfig) -> AppState {
     course_query.use_error_handler(Box::new(|e| println!("{e}")));
     let logging_query = test_logging_query::SimpleLoggingQuery {};
 
-    let queries: Vec<Box<dyn Query<Course>>> = vec![Box::new(course_query), Box::new(logging_query)];
+    let queries: Vec<Box<dyn Query<Course>>> =
+        vec![Box::new(course_query), Box::new(logging_query)];
 
     // CQRS framework
     let cqrs = Arc::new(postgres_es::postgres_cqrs(db.clone(), queries, ()));
 
-    AppState { cqrs, course_view_repo }
+    AppState {
+        cqrs,
+        course_view_repo,
+    }
 }
