@@ -1,8 +1,10 @@
+pub mod course;
 pub mod user;
 
 use axum::Router;
-use sqlx::PgPool;
 
-pub fn router() -> Router<PgPool> {
-    Router::new().merge(user::router())
+use crate::state::AppState;
+
+pub fn router() -> Router<AppState> {
+    Router::new().merge(user::router()).merge(course::router())
 }
