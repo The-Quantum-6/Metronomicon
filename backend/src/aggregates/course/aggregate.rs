@@ -39,14 +39,15 @@ impl Aggregate for Course {
     ) -> impl Future<Output = Result<(), Self::Error>> + Send {
         async {
             match command {
+                // Can I enforce that the id has to be unused?? Does that have to be done via a service or can it be done here somehow?
                 CourseCommand::Create {
                     id,
                     name,
                     code,
                     field,
                     description,
-                } => {
-                    sink.write(
+                } => Ok(sink
+                    .write(
                         CourseEvent::CourseCreated {
                             id,
                             name,
@@ -56,29 +57,56 @@ impl Aggregate for Course {
                         },
                         self,
                     )
-                    .await;
-                    Ok(())
-                },
+                    .await),
                 CourseCommand::Delete => match self.status {
+                    CourseStatus::Active => Ok(sink
+                        .write(CourseEvent::CourseDeleted { id: self.id }, self)
+                        .await),
+                    CourseStatus::Deleted => Err("course is already deleted".into()),
+                },
+                CourseCommand::UpdateMetadata {
+                    name,
+                    code,
+                    field,
+                    description,
+                } => match self.status {
+                    CourseStatus::Active => Ok(sink
+                        .write(
+                            CourseEvent::CourseMetadataUpdated {
+                                id: self.id,
+                                name,
+                                code,
+                                field,
+                                description,
+                            },
+                            self,
+                        )
+                        .await),
+                    CourseStatus::Deleted => Err("cannot modify deleted course".into()),
+                },
+                CourseCommand::AddTag { tag } => match self.status {
                     CourseStatus::Active => {
-                        sink.write(CourseEvent::CourseDeleted { id: self.id }, self).await;
-                        Ok(())
-                    },
-                    CourseStatus::Deleted => {
-                        Err("course is already deleted".into())
-                    },
+                        if self.tags.contains(&tag) {
+                            Err("tag already exists".into())
+                        } else {
+                            Ok(sink
+                                .write(CourseEvent::TagAdded { id: self.id, tag }, self)
+                                .await)
+                        }
+                    }
+                    CourseStatus::Deleted => Err("cannot modify deleted course".into()),
                 },
-                CourseCommand::UpdateMetadata { name, code, field, description } => {
-                    sink.write(CourseEvent::CourseMetadataUpdated { id: self.id, name, code, field, description },self).await;
-                    Ok(())
-                },
-                CourseCommand::AddTag { tag } => {
-                    sink.write(CourseEvent::TagAdded { id: self.id, tag }, self).await;
-                    Ok(())
-                },
-                CourseCommand::RemoveTag { tag } => {
-                    sink.write(CourseEvent::TagRemoved { id: self.id, tag }, self).await;
-                    Ok(())
+                CourseCommand::RemoveTag { tag } => match self.status {
+                    CourseStatus::Active => {
+                        if self.tags.contains(&tag) {
+                            sink.write(CourseEvent::TagRemoved { id: self.id, tag }, self)
+                                .await;
+                            Ok(())
+                        } else {
+                            Err("tag not found".into())
+                        }
+                    }
+                    CourseStatus::Deleted => Err("cannot modify deleted course".into()),
                 },
             }
         }
@@ -165,9 +193,9 @@ mod tests {
             .given_no_previous_events()
             .when(CourseCommand::Create {
                 id: course_id(),
-                name:        "Algorithms".into(),
-                code:        "CS301".into(),
-                field:       "Computer Science".into(),
+                name: "Algorithms".into(),
+                code: "CS301".into(),
+                field: "Computer Science".into(),
                 description: "Graph theory and beyond".into(),
             })
             .then_expect_events(vec![created_event()]);
@@ -228,7 +256,7 @@ mod tests {
                 field: None,
                 description: None,
             })
-            .then_expect_error_message("course is already deleted");
+            .then_expect_error_message("cannot modify deleted course");
     }
 
     // ── AddTag / RemoveTag ────────────────────────────────────────────────────
