@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use cqrs_es::{Query, persist::GenericQuery};
+use cqrs_es::Query;
 use postgres_es::{PostgresCqrs, PostgresViewRepository};
 use sqlx::postgres::PgPoolOptions;
 
