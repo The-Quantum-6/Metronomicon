@@ -2,6 +2,7 @@ use axum::body::{Body, Bytes};
 use axum::extract::FromRequest;
 use axum::http::{Request, StatusCode};
 use axum::response::{IntoResponse, Response};
+use uuid::Uuid;
 use std::collections::HashMap;
 
 use crate::aggregates::course::command::CourseCommand;
@@ -28,10 +29,24 @@ where
         // }
 
         // TODO: This may be the place attach the user id of the user that is issuing a command.
-        // We may want to create a higher level extractor that uses this one to collect those functionalities.
-
+        // We may want to create a higher level extractor that uses this one to collect those functionalities
+        
         let body = Bytes::from_request(req, state).await?;
-        let command: CourseCommand = serde_json::from_slice(&body)?;
+
+        let mut json_value: serde_json::Value = serde_json::from_slice(&body)?;
+
+        // Only inject course_id when the command is a Create
+        if let Some(create_obj) = json_value
+            .get_mut("Create")
+            .and_then(|v| v.as_object_mut())
+        {
+            create_obj.insert(
+                "course_id".to_string(),
+                serde_json::Value::String(Uuid::new_v4().to_string()),
+            );
+        }
+
+        let command: CourseCommand = serde_json::from_value(json_value)?;
         Ok(Self(metadata, command))
     }
 }

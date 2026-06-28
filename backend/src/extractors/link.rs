@@ -2,6 +2,7 @@ use axum::body::{Body, Bytes};
 use axum::extract::FromRequest;
 use axum::http::{Request, StatusCode};
 use axum::response::{IntoResponse, Response};
+use uuid::Uuid;
 use std::collections::HashMap;
 
 use crate::aggregates::link::command::LinkCommand;
@@ -18,8 +19,8 @@ where
 
     async fn from_request(req: Request<Body>, state: &S) -> Result<Self, Self::Rejection> {
         let mut metadata = HashMap::default();
-        // Insert timestamp
         metadata.insert("time".to_string(), chrono::Utc::now().to_rfc3339());
+
         // metadata.insert("uri".to_string(), req.uri().to_string());
         // if let Some(user_agent) = req.headers().get(USER_AGENT_HDR) {
         //     if let Ok(value) = user_agent.to_str() {
@@ -31,7 +32,20 @@ where
         // We may want to create a higher level extractor that uses this one to collect those functionalities.
 
         let body = Bytes::from_request(req, state).await?;
-        let command: LinkCommand = serde_json::from_slice(&body)?;
+
+        let mut json_value: serde_json::Value = serde_json::from_slice(&body)?;
+
+        if let Some(create_obj) = json_value
+            .get_mut("Create")
+            .and_then(|v| v.as_object_mut())
+        {
+            create_obj.insert(
+                "link_id".to_string(),
+                serde_json::Value::String(Uuid::new_v4().to_string()),
+            );
+        }
+
+        let command: LinkCommand = serde_json::from_value(json_value)?;
         Ok(Self(metadata, command))
     }
 }
