@@ -2,8 +2,8 @@ use axum::body::{Body, Bytes};
 use axum::extract::FromRequest;
 use axum::http::{Request, StatusCode};
 use axum::response::{IntoResponse, Response};
-use uuid::Uuid;
 use std::collections::HashMap;
+use uuid::Uuid;
 
 use crate::aggregates::link::command::LinkCommand;
 
@@ -35,10 +35,7 @@ where
 
         let mut json_value: serde_json::Value = serde_json::from_slice(&body)?;
 
-        if let Some(create_obj) = json_value
-            .get_mut("Create")
-            .and_then(|v| v.as_object_mut())
-        {
+        if let Some(create_obj) = json_value.get_mut("Create").and_then(|v| v.as_object_mut()) {
             create_obj.insert(
                 "link_id".to_string(),
                 serde_json::Value::String(Uuid::new_v4().to_string()),
