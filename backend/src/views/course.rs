@@ -87,6 +87,7 @@ impl View<Link> for CourseDetailView {
             } => {
                 self.links.push(LinkDetailView {
                     link_id: link_id.clone(),
+                    status: Status::Active,
                     label: label.clone(),
                     url: url.clone(),
                     official: false,
@@ -96,6 +97,7 @@ impl View<Link> for CourseDetailView {
                 link_id,
                 label,
                 url,
+                ..
             } => {
                 let l = self
                     .links
@@ -109,10 +111,12 @@ impl View<Link> for CourseDetailView {
                     l.url = url.clone();
                 }
             }
-            LinkEvent::LinkDeleted { link_id } => {
+            LinkEvent::LinkDeleted { link_id, .. } => {
                 self.links.retain(|l| &l.link_id != link_id);
             }
-            LinkEvent::LinkOfficialStatusChanged { link_id, official } => {
+            LinkEvent::LinkOfficialStatusChanged {
+                link_id, official, ..
+            } => {
                 let l = self
                     .links
                     .iter_mut()
