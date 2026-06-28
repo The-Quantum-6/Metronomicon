@@ -3,7 +3,7 @@ use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
 use crate::aggregates::{
-    link::{command::LinkCommand, error::LinkError, event::LinkEvent},
+    link::{command::LinkCommand, error::LinkError, event::LinkEvent, services::LinkServices},
     shared::Status,
 };
 
@@ -22,7 +22,7 @@ impl Aggregate for Link {
     type Command = LinkCommand;
     type Event = LinkEvent;
     type Error = LinkError;
-    type Services = ();
+    type Services = LinkServices;
 
     fn handle(
         &mut self,
