@@ -7,7 +7,7 @@ pub enum CourseCommand {
     ///
     /// `SUPERUSER` only
     Create {
-        id: Uuid,
+        course_id: Uuid,
         name: String,
         code: String,
         field: String,
@@ -17,13 +17,13 @@ pub enum CourseCommand {
     /// Delete course
     ///
     /// `SUPERUSER` only
-    Delete { id: Uuid },
+    Delete { course_id: Uuid },
 
     /// Update course metadata
     ///
     /// Requires `page_admin`
     UpdateMetadata {
-        id: Uuid,
+        course_id: Uuid,
         name: Option<String>,
         code: Option<String>,
         field: Option<String>,
@@ -33,21 +33,21 @@ pub enum CourseCommand {
     /// Add tag
     ///
     /// Requires `page_admin`
-    AddTag { id: Uuid, tag: String },
+    AddTag { course_id: Uuid, tag: String },
     /// Remove tag
     ///
     /// Requires `page_admin`
-    RemoveTag { id: Uuid, tag: String },
+    RemoveTag { course_id: Uuid, tag: String },
 }
 
 impl CourseCommand {
     pub fn id(&self) -> &Uuid {
         match self {
-            CourseCommand::Create { id, .. } => id,
-            CourseCommand::Delete { id, .. } => id,
-            CourseCommand::UpdateMetadata { id, .. } => id,
-            CourseCommand::AddTag { id, .. } => id,
-            CourseCommand::RemoveTag { id, .. } => id,
+            CourseCommand::Create { course_id, .. } => course_id,
+            CourseCommand::Delete { course_id, .. } => course_id,
+            CourseCommand::UpdateMetadata { course_id, .. } => course_id,
+            CourseCommand::AddTag { course_id, .. } => course_id,
+            CourseCommand::RemoveTag { course_id, .. } => course_id,
         }
     }
 }
