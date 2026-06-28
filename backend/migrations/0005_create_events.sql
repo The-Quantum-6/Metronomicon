@@ -10,7 +10,7 @@ CREATE TABLE events
     PRIMARY KEY (aggregate_type, aggregate_id, sequence)
 );
 
-CREATE TABLE course_query
+CREATE TABLE course_detail_view
 (
     view_id text                        NOT NULL,
     version           bigint CHECK (version >= 0) NOT NULL,

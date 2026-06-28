@@ -8,13 +8,13 @@ use crate::{
     aggregates::course::aggregate::Course,
     config::AppConfig,
     queries::{self, test_logging_query},
-    views::course::CourseView,
+    views::course::CourseDetailView,
 };
 
 #[derive(Clone)]
 pub struct AppState {
     pub cqrs: Arc<PostgresCqrs<Course>>,
-    pub course_view_repo: Arc<PostgresViewRepository<CourseView, Course>>,
+    pub course_view_repo: Arc<PostgresViewRepository<CourseDetailView, Course>>,
 }
 
 pub async fn get(config: &AppConfig) -> AppState {

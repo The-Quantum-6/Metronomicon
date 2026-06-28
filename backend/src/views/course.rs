@@ -8,10 +8,10 @@ use crate::aggregates::course::{
     event::CourseEvent,
 };
 
-pub type CourseViewRepo = PostgresViewRepository<CourseView, Course>;
+pub type CourseDetailViewRepo = PostgresViewRepository<CourseDetailView, Course>;
 
 #[derive(Serialize, Debug, Deserialize, Default)]
-pub struct CourseView {
+pub struct CourseDetailView {
     pub id: Uuid,
     pub status: CourseStatus,
     pub name: String,
@@ -21,7 +21,7 @@ pub struct CourseView {
     pub tags: Vec<String>,
 }
 
-impl View<Course> for CourseView {
+impl View<Course> for CourseDetailView {
     fn update(&mut self, event: &cqrs_es::EventEnvelope<Course>) {
         match &event.payload {
             CourseEvent::CourseCreated {
