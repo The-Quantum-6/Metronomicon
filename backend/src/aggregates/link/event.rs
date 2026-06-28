@@ -13,14 +13,17 @@ pub enum LinkEvent {
     },
     LinkUpdated {
         link_id: Uuid,
+        course_id: Uuid,
         label: Option<String>,
         url: Option<String>,
     },
     LinkDeleted {
         link_id: Uuid,
+        course_id: Uuid,
     },
     LinkOfficialStatusChanged {
         link_id: Uuid,
+        course_id: Uuid,
         official: bool,
     },
 }

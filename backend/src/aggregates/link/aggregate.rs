@@ -58,12 +58,17 @@ impl Aggregate for Link {
                     Status::Uninitialized => Err("link not found".into()),
                     Status::Deleted => Err("Cannot modify deleted link".into()),
                     Status::Active => {
-                        if let Some(label) = label {
-                            self.label = label;
-                        }
-                        if let Some(url) = url {
-                            self.url = url;
-                        }
+                        let _: () = sink
+                            .write(
+                                LinkEvent::LinkUpdated {
+                                    link_id: self.link_id,
+                                    course_id: self.course_id,
+                                    label,
+                                    url,
+                                },
+                                self,
+                            )
+                            .await;
                         Ok(())
                     }
                 },
@@ -75,6 +80,7 @@ impl Aggregate for Link {
                             .write(
                                 LinkEvent::LinkDeleted {
                                     link_id: self.link_id,
+                                    course_id: self.course_id,
                                 },
                                 self,
                             )
@@ -90,6 +96,7 @@ impl Aggregate for Link {
                             .write(
                                 LinkEvent::LinkOfficialStatusChanged {
                                     link_id: self.link_id,
+                                    course_id: self.course_id,
                                     official,
                                 },
                                 self,
