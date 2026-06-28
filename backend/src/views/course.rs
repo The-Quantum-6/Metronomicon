@@ -78,7 +78,7 @@ impl View<Link> for CourseDetailView {
         match &event.payload {
             LinkEvent::LinkCreated { label, url, .. } => {
                 self.links.push(LinkDetailView {
-                    link_id: link_id,
+                    link_id,
                     status: Status::Active,
                     label: label.clone(),
                     url: url.clone(),

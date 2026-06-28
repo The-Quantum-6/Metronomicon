@@ -128,7 +128,7 @@ impl Aggregate for Course {
                 self.field = field;
                 self.description = description;
             }
-            CourseEvent::CourseDeleted { .. } => self.status = Status::Deleted,
+            CourseEvent::CourseDeleted => self.status = Status::Deleted,
             CourseEvent::CourseMetadataUpdated {
                 name,
                 code,

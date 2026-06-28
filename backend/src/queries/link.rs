@@ -44,7 +44,7 @@ impl Query<Link> for CourseLinkQuery {
                 }
             };
 
-            let link_id = Uuid::parse_str(&event.aggregate_id).unwrap();
+            let link_id = Uuid::parse_str(link_id).unwrap();
 
             match &event.payload {
                 LinkEvent::LinkCreated { url, label, .. } => {
