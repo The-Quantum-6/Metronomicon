@@ -22,6 +22,7 @@ pub async fn handle_command(
 ) -> Response {
     match state
         .cqrs
+        .course
         .execute_with_metadata(&course_id, command, metadata)
         .await
     {
