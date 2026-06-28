@@ -6,8 +6,8 @@ use sqlx::{Pool, Postgres, postgres::PgPoolOptions};
 
 use crate::{
     aggregates::{
-        course::aggregate::Course,
-        link::{aggregate::Link, services::LinkServices},
+        course::{aggregate::Course, service::CourseServices},
+        link::aggregate::Link,
     },
     config::AppConfig,
     queries::{
@@ -69,7 +69,7 @@ pub async fn get(config: &AppConfig) -> AppState {
     let link_cqrs = Arc::new(postgres_es::postgres_cqrs(
         db.clone(),
         link_queries,
-        LinkServices {},
+        CourseServices(db.clone()),
     ));
 
     AppState {
