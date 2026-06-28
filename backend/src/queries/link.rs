@@ -8,7 +8,7 @@ use crate::aggregates::shared::Status;
 use crate::views::link::LinkDetailView;
 use crate::{
     aggregates::link::{aggregate::Link, event::LinkEvent},
-    views::course::CourseDetailViewRepo,
+    views::course::active_detailed::CourseDetailViewRepo,
 };
 
 pub struct CourseLinkQuery {

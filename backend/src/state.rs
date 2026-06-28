@@ -11,7 +11,7 @@ use crate::{
     },
     config::AppConfig,
     queries::{course::CourseQuery, link::CourseLinkQuery, test_logging_query},
-    views::course::{ActiveCourseViewRepo, CourseDetailViewRepo},
+    views::course::active_detailed::{ActiveCourseViewRepo, CourseDetailViewRepo},
 };
 
 #[derive(Clone)]
