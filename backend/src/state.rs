@@ -10,7 +10,7 @@ use crate::{
         link::{aggregate::Link, services::LinkServices},
     },
     config::AppConfig,
-    queries::{self, test_logging_query},
+    queries::{self, link::CourseLinkQuery, test_logging_query},
     views::course::CourseDetailView,
 };
 
@@ -49,7 +49,7 @@ pub async fn get(config: &AppConfig) -> AppState {
     ];
     let course_cqrs = Arc::new(postgres_es::postgres_cqrs(db.clone(), course_queries, ()));
 
-    let link_queries: Vec<Box<dyn Query<Link>>> = vec![Box::new(logging_query)];
+    let link_queries: Vec<Box<dyn Query<Link>>> = vec![Box::new(logging_query), Box::new(CourseLinkQuery::new(course_view_repo.clone()))];
     let link_cqrs = Arc::new(postgres_es::postgres_cqrs(
         db,
         link_queries,

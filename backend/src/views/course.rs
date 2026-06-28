@@ -3,10 +3,9 @@ use postgres_es::PostgresViewRepository;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
-use crate::aggregates::{
-    course::{aggregate::Course, event::CourseEvent},
-    shared::Status,
-};
+use crate::{aggregates::{
+    course::{aggregate::Course, event::CourseEvent}, link::{aggregate::Link, event::LinkEvent}, shared::Status
+}, views::link::LinkDetailView};
 
 pub type CourseDetailViewRepo = PostgresViewRepository<CourseDetailView, Course>;
 
@@ -19,6 +18,7 @@ pub struct CourseDetailView {
     pub field: String,
     pub description: String,
     pub tags: Vec<String>,
+    pub links: Vec<LinkDetailView>
 }
 
 impl View<Course> for CourseDetailView {
@@ -67,6 +67,32 @@ impl View<Course> for CourseDetailView {
             CourseEvent::TagRemoved { id: _, tag } => {
                 self.tags.retain(|t| t != tag);
             }
+        }
+    }
+}
+
+impl View<Link> for CourseDetailView {
+    fn update(&mut self, event: &cqrs_es::EventEnvelope<Link>) {
+        match &event.payload {
+            LinkEvent::LinkCreated { link_id, course_id: _, label, url } => {
+                self.links.push(LinkDetailView { link_id: link_id.clone(), label: label.clone(), url: url.clone(), official: false });
+            },
+            LinkEvent::LinkUpdated { link_id, label, url } => {
+                let l = self.links.iter_mut().find(|l| l.link_id == *link_id).unwrap();
+                if let Some(label) = label {
+                    l.label = label.clone();
+                }
+                if let Some(url) = url {
+                    l.url = url.clone();
+                }
+            },
+            LinkEvent::LinkDeleted { link_id } => {
+                self.links.retain(|l| &l.link_id != link_id);
+            },
+            LinkEvent::LinkOfficialStatusChanged { link_id, official } => {
+                let l = self.links.iter_mut().find(|l| l.link_id == *link_id).unwrap();
+                l.official = *official;
+            },
         }
     }
 }
