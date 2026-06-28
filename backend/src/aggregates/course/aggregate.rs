@@ -57,7 +57,7 @@ impl Aggregate for Course {
                     }
                     _ => Err("course already exists".into()),
                 },
-                CourseCommand::Delete => match self.status {
+                CourseCommand::Delete { .. } => match self.status {
                     Status::Uninitialized => Err("course not found".into()),
                     Status::Active => {
                         let _: () = sink
@@ -72,6 +72,7 @@ impl Aggregate for Course {
                     code,
                     field,
                     description,
+                    ..
                 } => match self.status {
                     Status::Uninitialized => Err("course not found".into()),
                     Status::Active => {
@@ -91,7 +92,7 @@ impl Aggregate for Course {
                     }
                     Status::Deleted => Err("cannot modify deleted course".into()),
                 },
-                CourseCommand::AddTag { tag } => match self.status {
+                CourseCommand::AddTag { tag, .. } => match self.status {
                     Status::Uninitialized => Err("course not found".into()),
                     Status::Active => {
                         if self.tags.contains(&tag) {
@@ -105,7 +106,7 @@ impl Aggregate for Course {
                     }
                     Status::Deleted => Err("cannot modify deleted course".into()),
                 },
-                CourseCommand::RemoveTag { tag } => match self.status {
+                CourseCommand::RemoveTag { tag, .. } => match self.status {
                     Status::Uninitialized => Err("course not found".into()),
                     Status::Active => {
                         if self.tags.contains(&tag) {
@@ -231,7 +232,7 @@ mod tests {
     fn test_delete_course() {
         framework()
             .given(vec![created_event()])
-            .when(CourseCommand::Delete)
+            .when(CourseCommand::Delete { id: course_id() })
             .then_expect_events(vec![CourseEvent::CourseDeleted { id: course_id() }]);
     }
 
@@ -239,7 +240,7 @@ mod tests {
     fn test_cannot_delete_uninitialized_course() {
         framework()
             .given_no_previous_events()
-            .when(CourseCommand::Delete)
+            .when(CourseCommand::Delete { id: course_id() })
             .then_expect_error_message("course not found");
     }
 
@@ -250,7 +251,7 @@ mod tests {
                 created_event(),
                 CourseEvent::CourseDeleted { id: course_id() },
             ])
-            .when(CourseCommand::Delete)
+            .when(CourseCommand::Delete { id: course_id() })
             .then_expect_error_message("course is already deleted");
     }
 
@@ -261,6 +262,7 @@ mod tests {
         framework()
             .given(vec![created_event()])
             .when(CourseCommand::UpdateMetadata {
+                id: course_id(),
                 name: Some("Algorithms II".into()),
                 code: None,
                 field: None,
@@ -280,6 +282,7 @@ mod tests {
         framework()
             .given_no_previous_events()
             .when(CourseCommand::UpdateMetadata {
+                id: course_id(),
                 name: Some("Algorithms II".into()),
                 code: None,
                 field: None,
@@ -296,6 +299,7 @@ mod tests {
                 CourseEvent::CourseDeleted { id: course_id() },
             ])
             .when(CourseCommand::UpdateMetadata {
+                id: course_id(),
                 name: Some("Ghost".into()),
                 code: None,
                 field: None,
@@ -311,6 +315,7 @@ mod tests {
         framework()
             .given(vec![created_event()])
             .when(CourseCommand::AddTag {
+                id: course_id(),
                 tag: "graphs".into(),
             })
             .then_expect_events(vec![CourseEvent::TagAdded {
@@ -324,6 +329,7 @@ mod tests {
         framework()
             .given_no_previous_events()
             .when(CourseCommand::AddTag {
+                id: course_id(),
                 tag: "graphs".into(),
             })
             .then_expect_error_message("course not found");
@@ -340,6 +346,7 @@ mod tests {
                 },
             ])
             .when(CourseCommand::AddTag {
+                id: course_id(),
                 tag: "graphs".into(),
             })
             .then_expect_error_message("tag already exists");
@@ -356,6 +363,7 @@ mod tests {
                 },
             ])
             .when(CourseCommand::RemoveTag {
+                id: course_id(),
                 tag: "graphs".into(),
             })
             .then_expect_events(vec![CourseEvent::TagRemoved {
@@ -369,6 +377,7 @@ mod tests {
         framework()
             .given_no_previous_events()
             .when(CourseCommand::RemoveTag {
+                id: course_id(),
                 tag: "graphs".into(),
             })
             .then_expect_error_message("course not found");
@@ -379,6 +388,7 @@ mod tests {
         framework()
             .given(vec![created_event()])
             .when(CourseCommand::RemoveTag {
+                id: course_id(),
                 tag: "nonexistent".into(),
             })
             .then_expect_error_message("tag not found");

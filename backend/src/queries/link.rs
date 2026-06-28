@@ -3,6 +3,7 @@ use cqrs_es::persist::ViewRepository;
 use cqrs_es::{EventEnvelope, Query};
 use std::sync::Arc;
 
+use crate::aggregates::shared::Status;
 use crate::views::link::LinkDetailView;
 use crate::{
     aggregates::link::{aggregate::Link, event::LinkEvent},
@@ -25,16 +26,20 @@ impl Query<Link> for CourseLinkQuery {
         for event in events {
             let course_id = match &event.payload {
                 LinkEvent::LinkCreated { course_id, .. } => course_id.to_string(),
-                _ => todo!("Only link creation is supported atm"),
+                LinkEvent::LinkUpdated { course_id, .. } => course_id.to_string(),
+                LinkEvent::LinkDeleted { course_id, .. } => course_id.to_string(),
+                LinkEvent::LinkOfficialStatusChanged { course_id, .. } => course_id.to_string(),
             };
 
             let (mut view, context) = match self.view_repo.load_with_context(&course_id).await {
                 Ok(Some(vc)) => vc,
                 Ok(None) => {
-                    panic!("CourseLinkQuery: no course view found for {course_id}");
+                    println!("CourseLinkQuery: no course view found for {course_id}");
+                    continue;
                 }
                 Err(e) => {
-                    panic!("CourseLinkQuery load error: {e}");
+                    println!("CourseLinkQuery load error: {e}");
+                    continue;
                 }
             };
 
@@ -47,12 +52,43 @@ impl Query<Link> for CourseLinkQuery {
                 } => {
                     view.links.push(LinkDetailView {
                         link_id: link_id.clone(),
+                        status: Status::Active,
                         url: url.clone(),
                         label: label.clone(),
                         official: false,
                     });
                 }
-                _ => todo!("Only link creation is supported atm"),
+                LinkEvent::LinkUpdated {
+                    link_id,
+                    label,
+                    url,
+                    ..
+                } => {
+                    let l = view
+                        .links
+                        .iter_mut()
+                        .find(|l| &l.link_id == link_id)
+                        .unwrap();
+                    if let Some(label) = label {
+                        l.label = label.clone();
+                    }
+                    if let Some(url) = url {
+                        l.url = url.clone();
+                    }
+                }
+                LinkEvent::LinkDeleted { link_id, .. } => {
+                    view.links.retain(|l| &l.link_id != link_id);
+                }
+                LinkEvent::LinkOfficialStatusChanged {
+                    link_id, official, ..
+                } => {
+                    let l = view
+                        .links
+                        .iter_mut()
+                        .find(|l| &l.link_id == link_id)
+                        .unwrap();
+                    l.official = *official;
+                }
             }
 
             // Save back under the course_id key

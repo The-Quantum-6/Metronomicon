@@ -3,6 +3,7 @@ use axum::http::StatusCode;
 use axum::response::IntoResponse;
 use axum::response::Response;
 use axum::routing::get;
+use axum::routing::post;
 use axum::{
     Json,
     extract::{Path, State},
@@ -12,18 +13,21 @@ use cqrs_es::persist::ViewRepository;
 use crate::{extractors::course::CourseCommandExtractor, state::AppState};
 
 pub fn router() -> Router<AppState> {
-    Router::new().route("/courses/{id}", get(query_handler).post(handle_command))
+    Router::new()
+        .route("/courses", post(handle_command))
+        .route("/courses/{id}", get(query_handler))
 }
 
 pub async fn handle_command(
-    Path(course_id): Path<String>,
     State(state): State<AppState>,
     CourseCommandExtractor(metadata, command): CourseCommandExtractor,
 ) -> Response {
+    let course_id = command.id();
+
     match state
         .cqrs
         .course
-        .execute_with_metadata(&course_id, command, metadata)
+        .execute_with_metadata(&course_id.to_string(), command, metadata)
         .await
     {
         Ok(()) => StatusCode::NO_CONTENT.into_response(),
