@@ -9,7 +9,6 @@ use crate::aggregates::{
 
 #[derive(Serialize, Default, Deserialize)]
 pub struct Link {
-    pub link_id: Uuid,
     pub status: Status,
     pub course_id: Uuid,
     pub label: String,

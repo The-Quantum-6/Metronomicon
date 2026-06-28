@@ -1,6 +1,5 @@
 use cqrs_es::Aggregate;
 use serde::{Deserialize, Serialize};
-use uuid::Uuid;
 
 use crate::aggregates::{
     course::{command::CourseCommand, error::CourseError, event::CourseEvent},
@@ -9,7 +8,6 @@ use crate::aggregates::{
 
 #[derive(Serialize, Default, Deserialize)]
 pub struct Course {
-    pub id: Uuid,
     pub status: Status,
     pub name: String,
     pub code: String,
