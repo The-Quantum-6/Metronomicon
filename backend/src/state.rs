@@ -7,7 +7,7 @@ use sqlx::postgres::PgPoolOptions;
 use crate::{
     aggregates::course::aggregate::Course,
     config::AppConfig,
-    queries::{course::CourseQuery, test_logging_query},
+    queries::{self, course::CourseQuery, test_logging_query},
     views::course::{CourseView, CourseViewRepo},
 };
 
@@ -31,10 +31,7 @@ pub async fn get(config: &AppConfig) -> AppState {
         .expect("Migrations should succeed");
 
     // Queries setup
-    let course_view_repo: Arc<CourseViewRepo> =
-        Arc::new(PostgresViewRepository::new("course_query", db.clone()));
-    let mut course_query: CourseQuery = CourseQuery::new(course_view_repo.clone());
-    course_query.use_error_handler(Box::new(|e| println!("{e}")));
+    let (course_view_repo, course_query) = queries::course::get(db.clone());
     let logging_query = test_logging_query::SimpleLoggingQuery {};
 
     let queries: Vec<Box<dyn Query<Course>>> =
