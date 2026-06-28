@@ -4,9 +4,14 @@ use uuid::Uuid;
 
 use crate::aggregates::{
     course::service::CourseServices,
-    link::{command::LinkCommand, error::LinkError, event::LinkEvent},
+    link::{command::LinkCommand, error::LinkError, event::LinkEvent, services::LinkServices},
     shared::Status,
 };
+
+pub struct LinkAggregateServices {
+    pub course: CourseServices,
+    pub link: LinkServices,
+}
 
 #[derive(Serialize, Default, Deserialize)]
 pub struct Link {
@@ -22,7 +27,7 @@ impl Aggregate for Link {
     type Command = LinkCommand;
     type Event = LinkEvent;
     type Error = LinkError;
-    type Services = CourseServices;
+    type Services = LinkAggregateServices;
 
     fn handle(
         &mut self,
@@ -39,21 +44,29 @@ impl Aggregate for Link {
                     ..
                 } => match self.status {
                     Status::Uninitialized => {
-                        match service.course_exists(&course_id.to_string()).await.unwrap() {
+                        match service
+                            .course
+                            .course_exists(&course_id.to_string())
+                            .await
+                            .unwrap()
+                        {
                             false => Err("course not found".into()),
-                            true => {
-                                let _: () = sink
-                                    .write(
-                                        LinkEvent::LinkCreated {
-                                            course_id,
-                                            label,
-                                            url,
-                                        },
-                                        self,
-                                    )
-                                    .await;
-                                Ok(())
-                            }
+                            true => match service.link.check_valid(&url).await {
+                                Err(_) => Err("invalid url".into()),
+                                Ok(()) => {
+                                    let _: () = sink
+                                        .write(
+                                            LinkEvent::LinkCreated {
+                                                course_id,
+                                                label,
+                                                url,
+                                            },
+                                            self,
+                                        )
+                                        .await;
+                                    Ok(())
+                                }
+                            },
                         }
                     }
                     _ => Err("link already exists".into()),

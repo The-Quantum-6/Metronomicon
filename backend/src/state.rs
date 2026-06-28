@@ -7,7 +7,10 @@ use sqlx::{Pool, Postgres, postgres::PgPoolOptions};
 use crate::{
     aggregates::{
         course::{aggregate::Course, service::CourseServices},
-        link::aggregate::Link,
+        link::{
+            aggregate::{Link, LinkAggregateServices},
+            services::LinkServices,
+        },
     },
     config::AppConfig,
     queries::{
@@ -66,10 +69,14 @@ pub async fn get(config: &AppConfig) -> AppState {
         Box::new(logging_query),
         Box::new(CourseLinkQuery::new(course_view_repo.clone())),
     ];
+    let link_aggregate_services = LinkAggregateServices {
+        course: CourseServices(db.clone()),
+        link: LinkServices(reqwest::Client::new()),
+    };
     let link_cqrs = Arc::new(postgres_es::postgres_cqrs(
         db.clone(),
         link_queries,
-        CourseServices(db.clone()),
+        link_aggregate_services,
     ));
 
     AppState {

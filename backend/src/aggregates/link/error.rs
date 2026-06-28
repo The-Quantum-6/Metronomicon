@@ -16,3 +16,9 @@ impl From<&str> for LinkError {
         LinkError(value.to_string())
     }
 }
+
+impl From<String> for LinkError {
+    fn from(value: String) -> Self {
+        LinkError(value)
+    }
+}
