@@ -1,7 +1,6 @@
 use cqrs_es::View;
 use postgres_es::PostgresViewRepository;
 use serde::{Deserialize, Serialize};
-use uuid::Uuid;
 
 use crate::{
     aggregates::{
@@ -16,7 +15,6 @@ pub type CourseDetailViewRepo = PostgresViewRepository<CourseDetailView, Course>
 
 #[derive(Serialize, Debug, Deserialize, Default)]
 pub struct CourseDetailView {
-    pub id: Uuid,
     pub status: Status,
     pub name: String,
     pub code: String,
@@ -30,24 +28,21 @@ impl View<Course> for CourseDetailView {
     fn update(&mut self, event: &cqrs_es::EventEnvelope<Course>) {
         match &event.payload {
             CourseEvent::CourseCreated {
-                id,
                 name,
                 code,
                 field,
                 description,
             } => {
-                self.id = *id;
                 self.status = Status::Active;
                 self.name = name.clone();
                 self.code = code.clone();
                 self.field = field.clone();
                 self.description = description.clone();
             }
-            CourseEvent::CourseDeleted { id: _ } => {
+            CourseEvent::CourseDeleted => {
                 self.status = Status::Deleted;
             }
             CourseEvent::CourseMetadataUpdated {
-                id: _,
                 name,
                 code,
                 field,
@@ -66,10 +61,10 @@ impl View<Course> for CourseDetailView {
                     self.description = description.clone();
                 }
             }
-            CourseEvent::TagAdded { id: _, tag } => {
+            CourseEvent::TagAdded { tag } => {
                 self.tags.push(tag.clone());
             }
-            CourseEvent::TagRemoved { id: _, tag } => {
+            CourseEvent::TagRemoved { tag } => {
                 self.tags.retain(|t| t != tag);
             }
         }

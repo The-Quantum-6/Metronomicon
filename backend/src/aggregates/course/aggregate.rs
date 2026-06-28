@@ -34,17 +34,16 @@ impl Aggregate for Course {
         async {
             match command {
                 CourseCommand::Create {
-                    id,
                     name,
                     code,
                     field,
                     description,
+                    ..
                 } => match self.status {
                     Status::Uninitialized => {
                         let _: () = sink
                             .write(
                                 CourseEvent::CourseCreated {
-                                    id,
                                     name,
                                     code,
                                     field,
@@ -60,9 +59,7 @@ impl Aggregate for Course {
                 CourseCommand::Delete { .. } => match self.status {
                     Status::Uninitialized => Err("course not found".into()),
                     Status::Active => {
-                        let _: () = sink
-                            .write(CourseEvent::CourseDeleted { id: self.id }, self)
-                            .await;
+                        let _: () = sink.write(CourseEvent::CourseDeleted, self).await;
                         Ok(())
                     }
                     Status::Deleted => Err("course is already deleted".into()),
@@ -79,7 +76,6 @@ impl Aggregate for Course {
                         let _: () = sink
                             .write(
                                 CourseEvent::CourseMetadataUpdated {
-                                    id: self.id,
                                     name,
                                     code,
                                     field,
@@ -98,9 +94,7 @@ impl Aggregate for Course {
                         if self.tags.contains(&tag) {
                             Err("tag already exists".into())
                         } else {
-                            let _: () = sink
-                                .write(CourseEvent::TagAdded { id: self.id, tag }, self)
-                                .await;
+                            let _: () = sink.write(CourseEvent::TagAdded { tag }, self).await;
                             Ok(())
                         }
                     }
@@ -110,8 +104,7 @@ impl Aggregate for Course {
                     Status::Uninitialized => Err("course not found".into()),
                     Status::Active => {
                         if self.tags.contains(&tag) {
-                            sink.write(CourseEvent::TagRemoved { id: self.id, tag }, self)
-                                .await;
+                            sink.write(CourseEvent::TagRemoved { tag }, self).await;
                             Ok(())
                         } else {
                             Err("tag not found".into())
@@ -126,13 +119,11 @@ impl Aggregate for Course {
     fn apply(&mut self, event: Self::Event) {
         match event {
             CourseEvent::CourseCreated {
-                id,
                 name,
                 code,
                 field,
                 description,
             } => {
-                self.id = id;
                 self.status = Status::Active;
                 self.name = name;
                 self.code = code;
@@ -184,7 +175,6 @@ mod tests {
 
     fn created_event() -> CourseEvent {
         CourseEvent::CourseCreated {
-            id: course_id(),
             name: "Algorithms".into(),
             code: "CS301".into(),
             field: "Computer Science".into(),
@@ -233,7 +223,7 @@ mod tests {
         framework()
             .given(vec![created_event()])
             .when(CourseCommand::Delete { id: course_id() })
-            .then_expect_events(vec![CourseEvent::CourseDeleted { id: course_id() }]);
+            .then_expect_events(vec![CourseEvent::CourseDeleted]);
     }
 
     #[test]
@@ -247,10 +237,7 @@ mod tests {
     #[test]
     fn test_delete_already_deleted_course_returns_error() {
         framework()
-            .given(vec![
-                created_event(),
-                CourseEvent::CourseDeleted { id: course_id() },
-            ])
+            .given(vec![created_event(), CourseEvent::CourseDeleted])
             .when(CourseCommand::Delete { id: course_id() })
             .then_expect_error_message("course is already deleted");
     }
@@ -269,7 +256,6 @@ mod tests {
                 description: None,
             })
             .then_expect_events(vec![CourseEvent::CourseMetadataUpdated {
-                id: course_id(),
                 name: Some("Algorithms II".into()),
                 code: None,
                 field: None,
@@ -294,10 +280,7 @@ mod tests {
     #[test]
     fn test_update_metadata_on_deleted_course_returns_error() {
         framework()
-            .given(vec![
-                created_event(),
-                CourseEvent::CourseDeleted { id: course_id() },
-            ])
+            .given(vec![created_event(), CourseEvent::CourseDeleted])
             .when(CourseCommand::UpdateMetadata {
                 id: course_id(),
                 name: Some("Ghost".into()),
@@ -319,7 +302,6 @@ mod tests {
                 tag: "graphs".into(),
             })
             .then_expect_events(vec![CourseEvent::TagAdded {
-                id: course_id(),
                 tag: "graphs".into(),
             }]);
     }
@@ -341,7 +323,6 @@ mod tests {
             .given(vec![
                 created_event(),
                 CourseEvent::TagAdded {
-                    id: course_id(),
                     tag: "graphs".into(),
                 },
             ])
@@ -358,7 +339,6 @@ mod tests {
             .given(vec![
                 created_event(),
                 CourseEvent::TagAdded {
-                    id: course_id(),
                     tag: "graphs".into(),
                 },
             ])
@@ -367,7 +347,6 @@ mod tests {
                 tag: "graphs".into(),
             })
             .then_expect_events(vec![CourseEvent::TagRemoved {
-                id: course_id(),
                 tag: "graphs".into(),
             }]);
     }
