@@ -3,17 +3,18 @@ use axum::http::StatusCode;
 use axum::response::IntoResponse;
 use axum::response::Response;
 use axum::routing::get;
-use axum::routing::post;
 use axum::{
     Json,
     extract::{Path, State},
 };
+use serde::Deserialize;
+use serde::Serialize;
 
 use crate::{extractors::course::CourseCommandExtractor, state::AppState};
 
 pub fn router() -> Router<AppState> {
     Router::new()
-        .route("/courses", post(handle_command))
+        .route("/courses", get(list_active_courses).post(handle_command))
         .route("/courses/{id}", get(query_handler))
 }
 
@@ -49,4 +50,31 @@ pub async fn query_handler(
             (StatusCode::INTERNAL_SERVER_ERROR, err.to_string()).into_response()
         }
     }
+}
+
+pub async fn list_active_courses(
+    State(state): State<AppState>,
+) -> Result<Json<Vec<CourseDTO>>, StatusCode> {
+    Ok::<axum::Json<Vec<CourseDTO>>, StatusCode>(Json(
+        sqlx::query_as!(
+            CourseDTO,
+            r#"
+        SELECT aggregate_id, name, code, field
+        FROM course_list_view
+        WHERE status = 'Active'
+        ORDER BY name
+        "#
+        )
+        .fetch_all(&state.pool)
+        .await
+        .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?,
+    ))
+}
+
+#[derive(Serialize, Deserialize)]
+pub struct CourseDTO {
+    aggregate_id: String,
+    name: String,
+    code: String,
+    field: String,
 }

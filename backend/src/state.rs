@@ -2,7 +2,7 @@ use std::sync::Arc;
 
 use cqrs_es::Query;
 use postgres_es::{PostgresCqrs, PostgresViewRepository};
-use sqlx::postgres::PgPoolOptions;
+use sqlx::{Pool, Postgres, postgres::PgPoolOptions};
 
 use crate::{
     aggregates::{
@@ -10,7 +10,11 @@ use crate::{
         link::{aggregate::Link, services::LinkServices},
     },
     config::AppConfig,
-    queries::{course::CourseQuery, link::CourseLinkQuery, test_logging_query},
+    queries::{
+        course::{CourseListQuery, CourseQuery},
+        link::CourseLinkQuery,
+        test_logging_query,
+    },
     views::course::active_detailed::{ActiveCourseViewRepo, CourseDetailViewRepo},
 };
 
@@ -18,6 +22,7 @@ use crate::{
 pub struct AppState {
     pub cqrs: Arc<Cqrs>,
     pub course_view_repo: ActiveCourseViewRepo,
+    pub pool: Pool<Postgres>,
 }
 
 #[derive(Clone)]
@@ -48,9 +53,11 @@ pub async fn get(config: &AppConfig) -> AppState {
     ));
     let mut course_detail_query: CourseQuery = CourseQuery::new(course_view_repo.clone());
     course_detail_query.use_error_handler(Box::new(|e| println!("{e}")));
+    let course_list_query = CourseListQuery::new(db.clone());
 
     let course_queries: Vec<Box<dyn Query<Course>>> = vec![
         Box::new(course_detail_query),
+        Box::new(course_list_query),
         Box::new(logging_query.clone()),
     ];
     let course_cqrs = Arc::new(postgres_es::postgres_cqrs(db.clone(), course_queries, ()));
@@ -60,7 +67,7 @@ pub async fn get(config: &AppConfig) -> AppState {
         Box::new(CourseLinkQuery::new(course_view_repo.clone())),
     ];
     let link_cqrs = Arc::new(postgres_es::postgres_cqrs(
-        db,
+        db.clone(),
         link_queries,
         LinkServices {},
     ));
@@ -71,5 +78,6 @@ pub async fn get(config: &AppConfig) -> AppState {
             link: link_cqrs,
         }),
         course_view_repo: ActiveCourseViewRepo(course_view_repo),
+        pool: db,
     }
 }
