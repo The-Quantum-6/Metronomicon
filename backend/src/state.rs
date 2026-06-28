@@ -7,8 +7,8 @@ use sqlx::postgres::PgPoolOptions;
 use crate::{
     aggregates::course::aggregate::Course,
     config::AppConfig,
-    queries::{self, course::CourseQuery, test_logging_query},
-    views::course::{CourseView, CourseViewRepo},
+    queries::{self, test_logging_query},
+    views::course::CourseView,
 };
 
 #[derive(Clone)]
