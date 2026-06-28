@@ -1,6 +1,7 @@
 use cqrs_es::View;
 use postgres_es::PostgresViewRepository;
 use serde::{Deserialize, Serialize};
+use uuid::Uuid;
 
 use crate::{
     aggregates::{
@@ -73,31 +74,22 @@ impl View<Course> for CourseDetailView {
 
 impl View<Link> for CourseDetailView {
     fn update(&mut self, event: &cqrs_es::EventEnvelope<Link>) {
+        let link_id = Uuid::parse_str(&event.aggregate_id).unwrap();
         match &event.payload {
-            LinkEvent::LinkCreated {
-                link_id,
-                course_id: _,
-                label,
-                url,
-            } => {
+            LinkEvent::LinkCreated { label, url, .. } => {
                 self.links.push(LinkDetailView {
-                    link_id: link_id.clone(),
+                    link_id: link_id,
                     status: Status::Active,
                     label: label.clone(),
                     url: url.clone(),
                     official: false,
                 });
             }
-            LinkEvent::LinkUpdated {
-                link_id,
-                label,
-                url,
-                ..
-            } => {
+            LinkEvent::LinkUpdated { label, url, .. } => {
                 let l = self
                     .links
                     .iter_mut()
-                    .find(|l| l.link_id == *link_id)
+                    .find(|l| l.link_id == link_id)
                     .unwrap();
                 if let Some(label) = label {
                     l.label = label.clone();
@@ -106,16 +98,14 @@ impl View<Link> for CourseDetailView {
                     l.url = url.clone();
                 }
             }
-            LinkEvent::LinkDeleted { link_id, .. } => {
-                self.links.retain(|l| &l.link_id != link_id);
+            LinkEvent::LinkDeleted { .. } => {
+                self.links.retain(|l| l.link_id != link_id);
             }
-            LinkEvent::LinkOfficialStatusChanged {
-                link_id, official, ..
-            } => {
+            LinkEvent::LinkOfficialStatusChanged { official, .. } => {
                 let l = self
                     .links
                     .iter_mut()
-                    .find(|l| l.link_id == *link_id)
+                    .find(|l| l.link_id == link_id)
                     .unwrap();
                 l.official = *official;
             }

@@ -33,16 +33,15 @@ impl Aggregate for Link {
         async {
             match command {
                 LinkCommand::Create {
-                    link_id,
                     course_id,
                     label,
                     url,
+                    ..
                 } => match self.status {
                     Status::Uninitialized => {
                         let _: () = sink
                             .write(
                                 LinkEvent::LinkCreated {
-                                    link_id,
                                     course_id,
                                     label,
                                     url,
@@ -54,15 +53,19 @@ impl Aggregate for Link {
                     }
                     _ => Err("link already exists".into()),
                 },
-                LinkCommand::Update { label, url, .. } => match self.status {
+                LinkCommand::Update {
+                    course_id,
+                    label,
+                    url,
+                    ..
+                } => match self.status {
                     Status::Uninitialized => Err("link not found".into()),
                     Status::Deleted => Err("Cannot modify deleted link".into()),
                     Status::Active => {
                         let _: () = sink
                             .write(
                                 LinkEvent::LinkUpdated {
-                                    link_id: self.link_id,
-                                    course_id: self.course_id,
+                                    course_id,
                                     label,
                                     url,
                                 },
@@ -72,31 +75,26 @@ impl Aggregate for Link {
                         Ok(())
                     }
                 },
-                LinkCommand::Delete { .. } => match self.status {
+                LinkCommand::Delete { course_id, .. } => match self.status {
                     Status::Uninitialized => Err("link not found".into()),
                     Status::Deleted => Err("link already deleted".into()),
                     Status::Active => {
-                        let _: () = sink
-                            .write(
-                                LinkEvent::LinkDeleted {
-                                    link_id: self.link_id,
-                                    course_id: self.course_id,
-                                },
-                                self,
-                            )
-                            .await;
+                        let _: () = sink.write(LinkEvent::LinkDeleted { course_id }, self).await;
                         Ok(())
                     }
                 },
-                LinkCommand::SetOfficial { official, .. } => match self.status {
+                LinkCommand::SetOfficial {
+                    course_id,
+                    official,
+                    ..
+                } => match self.status {
                     Status::Uninitialized => Err("link not found".into()),
                     Status::Deleted => Err("link already deleted".into()),
                     Status::Active => {
                         let _: () = sink
                             .write(
                                 LinkEvent::LinkOfficialStatusChanged {
-                                    link_id: self.link_id,
-                                    course_id: self.course_id,
+                                    course_id,
                                     official,
                                 },
                                 self,
@@ -112,12 +110,10 @@ impl Aggregate for Link {
     fn apply(&mut self, event: Self::Event) {
         match event {
             LinkEvent::LinkCreated {
-                link_id,
                 course_id,
                 label,
                 url,
             } => {
-                self.link_id = link_id;
                 self.status = Status::Active;
                 self.course_id = course_id;
                 self.label = label;

@@ -2,6 +2,7 @@ use async_trait::async_trait;
 use cqrs_es::persist::ViewRepository;
 use cqrs_es::{EventEnvelope, Query};
 use std::sync::Arc;
+use uuid::Uuid;
 
 use crate::aggregates::shared::Status;
 use crate::views::link::LinkDetailView;
@@ -22,7 +23,7 @@ impl CourseLinkQuery {
 
 #[async_trait]
 impl Query<Link> for CourseLinkQuery {
-    async fn dispatch(&self, _link_id: &str, events: &[EventEnvelope<Link>]) {
+    async fn dispatch(&self, link_id: &str, events: &[EventEnvelope<Link>]) {
         for event in events {
             let course_id = match &event.payload {
                 LinkEvent::LinkCreated { course_id, .. } => course_id.to_string(),
@@ -43,31 +44,23 @@ impl Query<Link> for CourseLinkQuery {
                 }
             };
 
+            let link_id = Uuid::parse_str(&event.aggregate_id).unwrap();
+
             match &event.payload {
-                LinkEvent::LinkCreated {
-                    link_id,
-                    url,
-                    label,
-                    ..
-                } => {
+                LinkEvent::LinkCreated { url, label, .. } => {
                     view.links.push(LinkDetailView {
-                        link_id: link_id.clone(),
+                        link_id,
                         status: Status::Active,
                         url: url.clone(),
                         label: label.clone(),
                         official: false,
                     });
                 }
-                LinkEvent::LinkUpdated {
-                    link_id,
-                    label,
-                    url,
-                    ..
-                } => {
+                LinkEvent::LinkUpdated { label, url, .. } => {
                     let l = view
                         .links
                         .iter_mut()
-                        .find(|l| &l.link_id == link_id)
+                        .find(|l| l.link_id == link_id)
                         .unwrap();
                     if let Some(label) = label {
                         l.label = label.clone();
@@ -76,16 +69,14 @@ impl Query<Link> for CourseLinkQuery {
                         l.url = url.clone();
                     }
                 }
-                LinkEvent::LinkDeleted { link_id, .. } => {
-                    view.links.retain(|l| &l.link_id != link_id);
+                LinkEvent::LinkDeleted { .. } => {
+                    view.links.retain(|l| l.link_id != link_id);
                 }
-                LinkEvent::LinkOfficialStatusChanged {
-                    link_id, official, ..
-                } => {
+                LinkEvent::LinkOfficialStatusChanged { official, .. } => {
                     let l = view
                         .links
                         .iter_mut()
-                        .find(|l| &l.link_id == link_id)
+                        .find(|l| l.link_id == link_id)
                         .unwrap();
                     l.official = *official;
                 }

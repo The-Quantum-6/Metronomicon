@@ -222,7 +222,9 @@ mod tests {
     fn test_delete_course() {
         framework()
             .given(vec![created_event()])
-            .when(CourseCommand::Delete { course_id: course_id() })
+            .when(CourseCommand::Delete {
+                course_id: course_id(),
+            })
             .then_expect_events(vec![CourseEvent::CourseDeleted]);
     }
 
@@ -230,7 +232,9 @@ mod tests {
     fn test_cannot_delete_uninitialized_course() {
         framework()
             .given_no_previous_events()
-            .when(CourseCommand::Delete { course_id: course_id() })
+            .when(CourseCommand::Delete {
+                course_id: course_id(),
+            })
             .then_expect_error_message("course not found");
     }
 
@@ -238,7 +242,9 @@ mod tests {
     fn test_delete_already_deleted_course_returns_error() {
         framework()
             .given(vec![created_event(), CourseEvent::CourseDeleted])
-            .when(CourseCommand::Delete { course_id: course_id() })
+            .when(CourseCommand::Delete {
+                course_id: course_id(),
+            })
             .then_expect_error_message("course is already deleted");
     }
 
