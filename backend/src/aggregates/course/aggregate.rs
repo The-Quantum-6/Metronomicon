@@ -6,6 +6,24 @@ use crate::aggregates::{
     shared::Status,
 };
 
+/// The `Course` aggregate — the central building block for all course-related behaviour.
+///
+/// An aggregate is the gatekeeper for a piece of domain state. All changes go
+/// through it; nothing mutates the state directly.
+///
+/// # How it works
+///
+/// 1. A client sends a [`CourseCommand`].
+/// 2. [`handle`](Aggregate::handle) validates it against the current state and,
+///    if valid, writes one or more [`CourseEvent`]s via the event sink.
+/// 3. Each committed event is immediately passed to [`apply`](Aggregate::apply),
+///    which updates the in-memory state.
+///
+/// # What counts as "invalid"
+///
+/// A command is invalid when the *current state* makes it impossible to execute —
+/// e.g. creating a course that already exists. This is distinct from a command
+/// that simply can't be parsed (handle that at the type level instead).
 #[derive(Serialize, Default, Deserialize)]
 pub struct Course {
     pub status: Status,
@@ -17,12 +35,26 @@ pub struct Course {
 }
 
 impl Aggregate for Course {
+    /// Identifies this aggregate type in the event store. Must be globally unique.
     const TYPE: &'static str = "course";
-    type Command = CourseCommand;
-    type Event = CourseEvent;
-    type Error = CourseError;
-    type Services = ();
+    type Command = CourseCommand; // Commands may be issued by clients
+    type Event = CourseEvent; // Events may be generated if the command is valid
+    type Error = CourseError; // Errors may be returned if they are not
+    type Services = (); // The course aggregate has no external services for the moment
 
+    /// Validates a command and, if accepted, writes the resulting event(s).
+    ///
+    /// This is where all business logic lives. Before adding validation here,
+    /// consider the following priority order:
+    ///
+    /// 1. **Prefer type-level validation.** If a value is always invalid (e.g. a
+    ///    negative count), use an unsigned type in the command so it fails at
+    ///    deserialization — no logic needed here.
+    /// 2. **Use services for external checks.** If you need to validate against
+    ///    data outside this aggregate (e.g. "does this course code already exist
+    ///    globally?"), inject a service. Think carefully before adding one.
+    /// 3. **Everything else goes here.** Validation against the aggregate's own
+    ///    state (e.g. "is this course already deleted?") belongs in this function.
     fn handle(
         &mut self,
         command: Self::Command,
@@ -114,6 +146,16 @@ impl Aggregate for Course {
         }
     }
 
+    /// Applies a committed event to update the aggregate's in-memory state.
+    ///
+    /// This function **cannot fail**. Events are immutable facts — by the time
+    /// `apply` is called, the event is already persisted. Any validation that
+    /// could produce an error must happen in [`handle`](Aggregate::handle) before
+    /// the event is written.
+    ///
+    /// `apply` is called in two situations:
+    /// - Immediately after `handle` writes an event (live path).
+    /// - If the aggregate is rebuilt for some reason, replaying events from start.
     fn apply(&mut self, event: Self::Event) {
         match event {
             CourseEvent::CourseCreated {
@@ -150,15 +192,21 @@ impl Aggregate for Course {
                 }
             }
             CourseEvent::TagAdded { tag, .. } => {
+                // No duplicate check here — that's `handle`s job. Once an event
+                // is committed it is treated as correct.
                 self.tags.push(tag);
             }
             CourseEvent::TagRemoved { tag, .. } => {
+                // Same principle: no existence check. `handle` already verified
+                // the tag was present before writing this event.
                 self.tags.retain(|t| t != &tag);
             }
         }
     }
 }
 
+// Event sourcing makes unit tests unusually clean: each test is a short story
+// of the form "given these past events, when this command arrives, expect this
 #[cfg(test)]
 mod tests {
     use super::*;
