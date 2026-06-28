@@ -2,25 +2,20 @@ use cqrs_es::Aggregate;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
-use crate::aggregates::course::{command::CourseCommand, error::CourseError, event::CourseEvent};
+use crate::aggregates::{
+    course::{command::CourseCommand, error::CourseError, event::CourseEvent},
+    shared::Status,
+};
 
 #[derive(Serialize, Default, Deserialize)]
 pub struct Course {
     pub id: Uuid,
-    pub status: CourseStatus,
+    pub status: Status,
     pub name: String,
     pub code: String,
     pub field: String,
     pub description: String,
     pub tags: Vec<String>,
-}
-
-#[derive(Serialize, Default, Deserialize, Debug)]
-pub enum CourseStatus {
-    #[default]
-    Uninitialized,
-    Active,
-    Deleted,
 }
 
 impl Aggregate for Course {
@@ -45,7 +40,7 @@ impl Aggregate for Course {
                     field,
                     description,
                 } => match self.status {
-                    CourseStatus::Uninitialized => {
+                    Status::Uninitialized => {
                         let _: () = sink
                             .write(
                                 CourseEvent::CourseCreated {
@@ -63,14 +58,14 @@ impl Aggregate for Course {
                     _ => Err("course already exists".into()),
                 },
                 CourseCommand::Delete => match self.status {
-                    CourseStatus::Uninitialized => Err("course not found".into()),
-                    CourseStatus::Active => {
+                    Status::Uninitialized => Err("course not found".into()),
+                    Status::Active => {
                         let _: () = sink
                             .write(CourseEvent::CourseDeleted { id: self.id }, self)
                             .await;
                         Ok(())
                     }
-                    CourseStatus::Deleted => Err("course is already deleted".into()),
+                    Status::Deleted => Err("course is already deleted".into()),
                 },
                 CourseCommand::UpdateMetadata {
                     name,
@@ -78,8 +73,8 @@ impl Aggregate for Course {
                     field,
                     description,
                 } => match self.status {
-                    CourseStatus::Uninitialized => Err("course not found".into()),
-                    CourseStatus::Active => {
+                    Status::Uninitialized => Err("course not found".into()),
+                    Status::Active => {
                         let _: () = sink
                             .write(
                                 CourseEvent::CourseMetadataUpdated {
@@ -94,11 +89,11 @@ impl Aggregate for Course {
                             .await;
                         Ok(())
                     }
-                    CourseStatus::Deleted => Err("cannot modify deleted course".into()),
+                    Status::Deleted => Err("cannot modify deleted course".into()),
                 },
                 CourseCommand::AddTag { tag } => match self.status {
-                    CourseStatus::Uninitialized => Err("course not found".into()),
-                    CourseStatus::Active => {
+                    Status::Uninitialized => Err("course not found".into()),
+                    Status::Active => {
                         if self.tags.contains(&tag) {
                             Err("tag already exists".into())
                         } else {
@@ -108,11 +103,11 @@ impl Aggregate for Course {
                             Ok(())
                         }
                     }
-                    CourseStatus::Deleted => Err("cannot modify deleted course".into()),
+                    Status::Deleted => Err("cannot modify deleted course".into()),
                 },
                 CourseCommand::RemoveTag { tag } => match self.status {
-                    CourseStatus::Uninitialized => Err("course not found".into()),
-                    CourseStatus::Active => {
+                    Status::Uninitialized => Err("course not found".into()),
+                    Status::Active => {
                         if self.tags.contains(&tag) {
                             sink.write(CourseEvent::TagRemoved { id: self.id, tag }, self)
                                 .await;
@@ -121,7 +116,7 @@ impl Aggregate for Course {
                             Err("tag not found".into())
                         }
                     }
-                    CourseStatus::Deleted => Err("cannot modify deleted course".into()),
+                    Status::Deleted => Err("cannot modify deleted course".into()),
                 },
             }
         }
@@ -137,13 +132,13 @@ impl Aggregate for Course {
                 description,
             } => {
                 self.id = id;
-                self.status = CourseStatus::Active;
+                self.status = Status::Active;
                 self.name = name;
                 self.code = code;
                 self.field = field;
                 self.description = description;
             }
-            CourseEvent::CourseDeleted { .. } => self.status = CourseStatus::Deleted,
+            CourseEvent::CourseDeleted { .. } => self.status = Status::Deleted,
             CourseEvent::CourseMetadataUpdated {
                 name,
                 code,

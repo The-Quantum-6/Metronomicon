@@ -9,7 +9,8 @@ use crate::{
     views::course::{CourseDetailView, CourseDetailViewRepo},
 };
 
-pub type CourseQuery = GenericQuery<PostgresViewRepository<CourseDetailView, Course>, CourseDetailView, Course>;
+pub type CourseQuery =
+    GenericQuery<PostgresViewRepository<CourseDetailView, Course>, CourseDetailView, Course>;
 
 pub fn get(pool: Pool<Postgres>) -> (Arc<CourseDetailViewRepo>, CourseQuery) {
     let course_view_repo: Arc<CourseDetailViewRepo> =
