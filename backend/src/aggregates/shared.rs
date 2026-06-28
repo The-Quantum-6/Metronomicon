@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-#[derive(Serialize, Default, Deserialize, Debug)]
+#[derive(Serialize, Default, Deserialize, Debug, PartialEq)]
 pub enum Status {
     #[default]
     Uninitialized,

@@ -8,7 +8,6 @@ use axum::{
     Json,
     extract::{Path, State},
 };
-use cqrs_es::persist::ViewRepository;
 
 use crate::{extractors::course::CourseCommandExtractor, state::AppState};
 
@@ -42,7 +41,7 @@ pub async fn query_handler(
     Path(course_id): Path<String>,
     State(state): State<AppState>,
 ) -> Response {
-    match state.course_view_repo.load(&course_id).await {
+    match state.course_view_repo.load_active(&course_id).await {
         Ok(Some(course_view)) => (StatusCode::OK, Json(course_view)).into_response(),
         Ok(None) => StatusCode::NOT_FOUND.into_response(),
         Err(err) => {

@@ -10,14 +10,14 @@ use crate::{
         link::{aggregate::Link, services::LinkServices},
     },
     config::AppConfig,
-    queries::{self, link::CourseLinkQuery, test_logging_query},
-    views::course::CourseDetailView,
+    queries::{course::CourseQuery, link::CourseLinkQuery, test_logging_query},
+    views::course::{ActiveCourseViewRepo, CourseDetailViewRepo},
 };
 
 #[derive(Clone)]
 pub struct AppState {
     pub cqrs: Arc<Cqrs>,
-    pub course_view_repo: Arc<PostgresViewRepository<CourseDetailView, Course>>,
+    pub course_view_repo: ActiveCourseViewRepo,
 }
 
 #[derive(Clone)]
@@ -42,7 +42,13 @@ pub async fn get(config: &AppConfig) -> AppState {
     // Queries setup
     let logging_query = test_logging_query::SimpleLoggingQuery {};
 
-    let (course_view_repo, course_detail_query) = queries::course::get(db.clone());
+    let course_view_repo: Arc<CourseDetailViewRepo> = Arc::new(PostgresViewRepository::new(
+        "course_detail_view",
+        db.clone(),
+    ));
+    let mut course_detail_query: CourseQuery = CourseQuery::new(course_view_repo.clone());
+    course_detail_query.use_error_handler(Box::new(|e| println!("{e}")));
+
     let course_queries: Vec<Box<dyn Query<Course>>> = vec![
         Box::new(course_detail_query),
         Box::new(logging_query.clone()),
@@ -64,6 +70,6 @@ pub async fn get(config: &AppConfig) -> AppState {
             course: course_cqrs,
             link: link_cqrs,
         }),
-        course_view_repo,
+        course_view_repo: ActiveCourseViewRepo(course_view_repo),
     }
 }

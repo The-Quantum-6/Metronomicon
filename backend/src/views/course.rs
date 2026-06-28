@@ -1,4 +1,9 @@
-use cqrs_es::View;
+use std::sync::Arc;
+
+use cqrs_es::{
+    View,
+    persist::{PersistenceError, ViewRepository},
+};
 use postgres_es::PostgresViewRepository;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
@@ -109,6 +114,22 @@ impl View<Link> for CourseDetailView {
                     .unwrap();
                 l.official = *official;
             }
+        }
+    }
+}
+
+#[derive(Clone)]
+pub struct ActiveCourseViewRepo(pub Arc<CourseDetailViewRepo>);
+
+impl ActiveCourseViewRepo {
+    pub async fn load_active(
+        &self,
+        id: &str,
+    ) -> Result<Option<CourseDetailView>, PersistenceError> {
+        match self.0.load(id).await? {
+            Some(view) if view.status == Status::Active => Ok(Some(view)),
+            Some(_) => Ok(None), // deleted = not found, from caller's perspective
+            None => Ok(None),
         }
     }
 }
