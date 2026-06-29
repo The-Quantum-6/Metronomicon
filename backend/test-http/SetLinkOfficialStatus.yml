@@ -1,0 +1,25 @@
+info:
+  name: SetLinkOfficialStatus
+  type: http
+  seq: 19
+
+http:
+  method: POST
+  url: http://localhost:3000/links
+  body:
+    type: json
+    data: |-
+      {
+        "SetOfficial": {
+          "link_id": "550e8400-e29b-41d4-a716-446655440000",
+          "course_id": "550e8400-e29b-41d4-a716-446655440000",
+          "official": true
+        }
+      }
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

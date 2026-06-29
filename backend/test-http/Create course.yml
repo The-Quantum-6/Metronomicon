@@ -1,0 +1,27 @@
+info:
+  name: Create course
+  type: http
+  seq: 2
+
+http:
+  method: POST
+  url: http://localhost:3000/courses
+  body:
+    type: json
+    data: |-
+      {
+        "Create": {
+          "course_id": "550e8400-e29b-41d4-a716-446655440000",
+          "name": "Introduction to Rust",
+          "code": "CS-401",
+          "field": "Computer Science",
+          "description": "A beginner-friendly course on systems programming with Rust."
+        }
+      }
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

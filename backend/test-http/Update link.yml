@@ -1,0 +1,26 @@
+info:
+  name: Update link
+  type: http
+  seq: 15
+
+http:
+  method: POST
+  url: http://localhost:3000/links
+  body:
+    type: json
+    data: |-
+      {
+        "Update": {
+          "link_id": "550e8400-e29b-41d4-a716-446655440001",
+          "course_id": "550e8400-e29b-41d4-a716-446655440000",
+          "label": "Actually I lied, the link was terrible",
+          "url": null
+        }
+      }
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
