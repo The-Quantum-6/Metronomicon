@@ -11,9 +11,9 @@ http:
     data: |-
       {
         "Create": {
-          "course_id": "aa288201-d8d1-4200-bf05-3dc23d3e83a5",
+          "course_id": "a1500188-75b4-4433-819a-870fb1134e9a",
           "label": "An awful link",
-          "url": "https://github.com/heeesesesseses"
+          "url": "https://github.com/"
         }
       }
   auth: inherit

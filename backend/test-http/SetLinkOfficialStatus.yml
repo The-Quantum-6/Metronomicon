@@ -11,8 +11,8 @@ http:
     data: |-
       {
         "SetOfficial": {
-          "link_id": "550e8400-e29b-41d4-a716-446655440000",
-          "course_id": "550e8400-e29b-41d4-a716-446655440000",
+          "link_id": "ebd49d15-4a1b-4891-bbf4-65692551a63a",
+          "course_id": "1b353b1f-ffe5-4dea-b0ef-2d4f9f6bd68e",
           "official": true
         }
       }

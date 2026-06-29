@@ -11,7 +11,7 @@ http:
     data: |-
       {
         "AddTag": {
-          "course_id": "550e8400-e29b-41d4-a716-446655440000",
+          "course_id": "1b353b1f-ffe5-4dea-b0ef-2d4f9f6bd68e",
           "tag": "goated"
         }
       }
