@@ -1,0 +1,24 @@
+# Garage S3-compatible object storage — local/dev configuration.
+# Used by the `garage` service in compose.yaml.
+#
+# This is a single-node setup for development. After the first `docker compose up`,
+# you must assign a layout once (see GARAGE.md). The bucket and keys then persist
+# in the named volumes across restarts.
+
+metadata_dir = "/var/lib/garage/meta"
+data_dir = "/var/lib/garage/data"
+db_engine = "lmdb"
+
+# One node, no replication — correct for local dev.
+replication_factor = 1
+
+rpc_bind_addr = "[::]:3901"
+rpc_public_addr = "127.0.0.1:3901"
+# Local-dev RPC secret only. Not a real secret — it is fine that this is committed,
+# since Garage here is reachable only on localhost. Do NOT reuse in production.
+rpc_secret = "74efc8bb8aa5c4a8d498aea0689799d80ed4b78ecf0db02458e8f73ca6949fe9"
+
+[s3_api]
+s3_region = "garage"
+api_bind_addr = "[::]:3900"
+root_domain = ".s3.garage.localhost"

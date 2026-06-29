@@ -33,6 +33,10 @@ pub enum AppError {
     Database(#[from] sqlx::Error),
     #[error("bad request: {0}")]
     BadRequest(#[from] RequestError),
+    #[error("storage error: {0}")]
+    Storage(#[from] crate::storage::StorageError),
+    #[error("invalid upload: {0}")]
+    Multipart(#[from] axum::extract::multipart::MultipartError),
     // --- Template for future variants — copy one of these when you need it ---
     //
     // /// Session store (e.g. Tower Sessions) failed to read/write a session.
@@ -74,6 +78,14 @@ impl IntoResponse for AppError {
             Self::BadRequest(_) => (
                 StatusCode::BAD_REQUEST,
                 "The request was malformed or unable to be completed",
+            ),
+            Self::Storage(_) => (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                "Something went wrong on our end. Please try again later.",
+            ),
+            Self::Multipart(_) => (
+                StatusCode::BAD_REQUEST,
+                "The upload was malformed",
             ),
             // Self::Session(_) => (StatusCode::INTERNAL_SERVER_ERROR, "Session storage failed"),
             // Self::Auth(_) => (StatusCode::FORBIDDEN, "You don't have permission to do that"),
