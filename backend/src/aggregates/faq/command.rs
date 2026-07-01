@@ -1,6 +1,8 @@
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
+use crate::aggregates::shared::Officiality;
+
 #[derive(Debug, Serialize, Deserialize)]
 pub enum FaqCommand {
     /// Create FAQ entry
@@ -24,4 +26,20 @@ pub enum FaqCommand {
     ///
     /// Requires `write_text`
     Delete { faq_id: Uuid },
+    SetOfficial {
+        faq_id: Uuid,
+        course_id: Uuid,
+        officiality: Officiality,
+    },
+}
+
+impl FaqCommand {
+    pub fn id(&self) -> &Uuid {
+        match self {
+            FaqCommand::Create { faq_id, .. } => faq_id,
+            FaqCommand::Delete { faq_id, .. } => faq_id,
+            FaqCommand::Update { faq_id, .. } => faq_id,
+            FaqCommand::SetOfficial { faq_id, .. } => faq_id,
+        }
+    }
 }
