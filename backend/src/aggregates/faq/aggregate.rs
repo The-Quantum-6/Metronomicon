@@ -3,7 +3,10 @@ use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
 use crate::aggregates::{
-    faq::{command::FaqCommand, error::FaqError, event::FaqEvent}, shared::{Officiality, Status},
+    faq::{
+        command::FaqCommand, error::FaqError, event::FaqEvent, service::FaqAggregateServices,
+    },
+    shared::{Officiality, Status},
 };
 
 
@@ -22,12 +25,12 @@ impl Aggregate for Faq {
     type Command = FaqCommand; 
     type Event = FaqEvent; 
     type Error = FaqError;
-    type Services = ();
+    type Services = FaqAggregateServices;
 
     fn handle(
         &mut self,
         command: Self::Command,
-        _service: &Self::Services,
+        service: &Self::Services,
         sink: &cqrs_es::event_sink::EventSink<Self>,
     ) -> impl Future<Output = Result<(), Self::Error>> + Send {
         async {
@@ -40,34 +43,46 @@ impl Aggregate for Faq {
                     ..
                 } => match self.status {
                     Status::Uninitialized => {
-                        let _: () = sink
-                            .write(
-                                FaqEvent::FaqCreated {
-                                    faq_id,
-                                    course_id,
-                                    question,
-                                    answer,
-                                },
-                                self,
-                            )
-                            .await;
-                        Ok(())
+                        match service
+                            .course
+                            .course_exists(&course_id.to_string())
+                            .await
+                            .unwrap()
+                        {
+                            false => Err("course not found".into()),
+                            true => {
+                                let _: () = sink
+                                    .write(
+                                        FaqEvent::FaqCreated {
+                                            faq_id,
+                                            course_id,
+                                            question,
+                                            answer,
+                                        },
+                                        self,
+                                    )
+                                    .await;
+                                Ok(())
+                            }
+                        }
                     }
                     _ => Err("Faq already exists".into()),
                 },
-                FaqCommand::Delete { faq_id, .. } => match self.status {
+                FaqCommand::Delete { faq_id, course_id } => match self.status {
                     Status::Uninitialized => Err("Faq not found".into()),
                     Status::Active => {
-                        let _: () = sink.write(FaqEvent::FaqDeleted { faq_id }, self).await;
+                        let _: () = sink
+                            .write(FaqEvent::FaqDeleted { faq_id, course_id }, self)
+                            .await;
                         Ok(())
                     }
                     Status::Deleted => Err("Faq is already deleted".into()),
                 },
                 FaqCommand::Update {
                     faq_id,
+                    course_id,
                     question,
                     answer,
-                    ..
                 } => match self.status {
                     Status::Uninitialized => Err("Faq not found".into()),
                     Status::Active => {
@@ -75,6 +90,7 @@ impl Aggregate for Faq {
                             .write(
                                 FaqEvent::FaqUpdated {
                                     faq_id,
+                                    course_id,
                                     question,
                                     answer,
                                 },
@@ -120,7 +136,7 @@ impl Aggregate for Faq {
             } => {
                 self.status = Status::Active;
                 self.faq_id = faq_id;
-                self.course_id= course_id;
+                self.course_id = course_id;
                 self.question = question;
                 self.answer = answer;
             }
@@ -147,6 +163,7 @@ impl Aggregate for Faq {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::aggregates::course::service::CourseServices;
     use cqrs_es::test::TestFramework;
     use uuid::Uuid;
 
@@ -170,12 +187,18 @@ mod tests {
     }
 
     fn framework() -> FaqTestFramework {
-        FaqTestFramework::with(())
+        FaqTestFramework::with(FaqAggregateServices {
+            course: CourseServices(
+                sqlx::PgPool::connect_lazy("postgres://invalid/invalid")
+                    .expect("connect_lazy should not require a live connection"),
+            ),
+        })
     }
 
     // ── Create ────────────────────────────────────────────────────────────────
 
     #[test]
+    #[ignore = "hits CourseServices::course_exists; needs a live Postgres connection"]
     fn test_create_faq() {
         framework()
             .given_no_previous_events()
@@ -189,7 +212,23 @@ mod tests {
     }
 
     #[test]
+    #[ignore = "hits CourseServices::course_exists; needs a live Postgres connection"]
+    fn test_cannot_create_faq_for_nonexistent_course() {
+        framework()
+            .given_no_previous_events()
+            .when(FaqCommand::Create {
+                faq_id: faq_id(),
+                course_id: course_id(),
+                question: "What is Big-O notation?".into(),
+                answer: "A way to describe an algorithm's growth rate.".into(),
+            })
+            .then_expect_error_message("course not found");
+    }
+
+    #[test]
     fn test_create_already_existing_faq_returns_error() {
+        // Already-existing check happens before the course-existence check,
+        // so this never touches the database — safe to run offline.
         framework()
             .given(vec![created_event()])
             .when(FaqCommand::Create {
@@ -207,23 +246,41 @@ mod tests {
     fn test_delete_faq() {
         framework()
             .given(vec![created_event()])
-            .when(FaqCommand::Delete { faq_id: faq_id() })
-            .then_expect_events(vec![FaqEvent::FaqDeleted { faq_id: faq_id() }]);
+            .when(FaqCommand::Delete {
+                faq_id: faq_id(),
+                course_id: course_id(),
+            })
+            .then_expect_events(vec![FaqEvent::FaqDeleted {
+                faq_id: faq_id(),
+                course_id: course_id(),
+            }]);
     }
 
     #[test]
     fn test_cannot_delete_uninitialized_faq() {
         framework()
             .given_no_previous_events()
-            .when(FaqCommand::Delete { faq_id: faq_id() })
+            .when(FaqCommand::Delete {
+                faq_id: faq_id(),
+                course_id: course_id(),
+            })
             .then_expect_error_message("Faq not found");
     }
 
     #[test]
     fn test_delete_already_deleted_faq_returns_error() {
         framework()
-            .given(vec![created_event(), FaqEvent::FaqDeleted { faq_id: faq_id() }])
-            .when(FaqCommand::Delete { faq_id: faq_id() })
+            .given(vec![
+                created_event(),
+                FaqEvent::FaqDeleted {
+                    faq_id: faq_id(),
+                    course_id: course_id(),
+                },
+            ])
+            .when(FaqCommand::Delete {
+                faq_id: faq_id(),
+                course_id: course_id(),
+            })
             .then_expect_error_message("Faq is already deleted");
     }
 
@@ -235,11 +292,13 @@ mod tests {
             .given(vec![created_event()])
             .when(FaqCommand::Update {
                 faq_id: faq_id(),
+                course_id: course_id(),
                 question: Some("What is Big-O, really?".into()),
                 answer: None,
             })
             .then_expect_events(vec![FaqEvent::FaqUpdated {
                 faq_id: faq_id(),
+                course_id: course_id(),
                 question: Some("What is Big-O, really?".into()),
                 answer: None,
             }]);
@@ -251,6 +310,7 @@ mod tests {
             .given_no_previous_events()
             .when(FaqCommand::Update {
                 faq_id: faq_id(),
+                course_id: course_id(),
                 question: Some("What is Big-O, really?".into()),
                 answer: None,
             })
@@ -260,9 +320,16 @@ mod tests {
     #[test]
     fn test_update_on_deleted_faq_returns_error() {
         framework()
-            .given(vec![created_event(), FaqEvent::FaqDeleted { faq_id: faq_id() }])
+            .given(vec![
+                created_event(),
+                FaqEvent::FaqDeleted {
+                    faq_id: faq_id(),
+                    course_id: course_id(),
+                },
+            ])
             .when(FaqCommand::Update {
                 faq_id: faq_id(),
+                course_id: course_id(),
                 question: Some("Ghost question".into()),
                 answer: None,
             })
@@ -301,7 +368,13 @@ mod tests {
     #[test]
     fn test_cannot_set_official_on_deleted_faq() {
         framework()
-            .given(vec![created_event(), FaqEvent::FaqDeleted { faq_id: faq_id() }])
+            .given(vec![
+                created_event(),
+                FaqEvent::FaqDeleted {
+                    faq_id: faq_id(),
+                    course_id: course_id(),
+                },
+            ])
             .when(FaqCommand::SetOfficial {
                 faq_id: faq_id(),
                 course_id: course_id(),
