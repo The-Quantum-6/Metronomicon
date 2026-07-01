@@ -15,11 +15,13 @@ pub enum FaqEvent {
     },
     FaqUpdated {
         faq_id: Uuid,
+        course_id: Uuid,
         question: Option<String>,
         answer: Option<String>,
     },
     FaqDeleted {
         faq_id: Uuid,
+        course_id: Uuid,
     },
     FaqOfficialStatusChanged {
         course_id: Uuid,

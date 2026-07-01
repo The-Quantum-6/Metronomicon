@@ -1,6 +1,7 @@
 pub mod course;
 pub mod link;
 pub mod user;
+pub mod faq;
 
 use axum::Router;
 
@@ -11,4 +12,5 @@ pub fn router() -> Router<AppState> {
         .merge(user::router())
         .merge(course::router())
         .merge(link::router())
+        .merge(faq::router())
 }

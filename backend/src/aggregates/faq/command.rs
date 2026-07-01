@@ -19,13 +19,17 @@ pub enum FaqCommand {
     /// Requires `write_text`
     Update {
         faq_id: Uuid,
+        course_id: Uuid,
         question: Option<String>,
         answer: Option<String>,
     },
     /// Delete FAQ entry
     ///
     /// Requires `write_text`
-    Delete { faq_id: Uuid },
+    Delete { faq_id: Uuid, course_id: Uuid },
+    /// Set FAQ official status
+    ///
+    /// Requires `page_admin`
     SetOfficial {
         faq_id: Uuid,
         course_id: Uuid,
