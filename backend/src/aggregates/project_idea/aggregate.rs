@@ -7,7 +7,7 @@ use uuid::Uuid;
 use crate::aggregates::{
     course::service::CourseServices,
     project_idea::{
-        command::ProjectIdeaCommand, error::ProjectIdeaError,
+        command::ProjectIdeaCommand, difficulty::Difficulty, error::ProjectIdeaError,
         event::ProjectIdeaEvent,
     },
     shared::Status,
@@ -24,6 +24,7 @@ pub struct ProjectIdea {
     pub course_id: Uuid,
     pub title: String,
     pub body: String,
+    pub difficulty: Option<Difficulty>,
 }
 
 impl Aggregate for ProjectIdea {
@@ -46,6 +47,7 @@ impl Aggregate for ProjectIdea {
                     course_id,
                     title,
                     body,
+                    difficulty,
                 } => match self.status {
                     Status::Uninitialized => {
                         let course_exists = service
@@ -64,6 +66,7 @@ impl Aggregate for ProjectIdea {
                                         course_id,
                                         title,
                                         body,
+                                        difficulty,
                                     },
                                     self,
                                 )
@@ -79,6 +82,7 @@ impl Aggregate for ProjectIdea {
                     idea_id,
                     title,
                     body,
+                    difficulty,
                 } => match self.status {
                     Status::Uninitialized => Err("Project_idea not found".into()),
                     Status::Deleted => Err("Cannot modify deleted project_idea".into()),
@@ -87,8 +91,10 @@ impl Aggregate for ProjectIdea {
                             .write(
                                 ProjectIdeaEvent::ProjectUpdated {
                                     idea_id,
+                                    course_id
                                     title,
                                     body,
+                                    difficulty,
                                 },
                                 self,
                             )
@@ -104,6 +110,7 @@ impl Aggregate for ProjectIdea {
                             .write(
                                 ProjectIdeaEvent::ProjectDeleted {
                                     idea_id,
+                                    course_id: self.course_id,
                                 },
                                 self,
                             )
@@ -122,16 +129,19 @@ impl Aggregate for ProjectIdea {
                 course_id,
                 title,
                 body,
+                difficulty,
             } => {
                 self.status = Status::Active;
                 self.idea_id = idea_id;
                 self.course_id = course_id;
                 self.title = title;
                 self.body = body;
+                self.difficulty = difficulty;
             }
             ProjectIdeaEvent::ProjectUpdated {
                 title,
                 body,
+                difficulty,
                 ..
             } => {
                 if let Some(title) = title {
@@ -139,6 +149,9 @@ impl Aggregate for ProjectIdea {
                 }
                 if let Some(body) = body {
                     self.body = body;
+                }
+                if let Some(difficulty) = difficulty {
+                    self.difficulty = Some(difficulty);
                 }
             }
             ProjectIdeaEvent::ProjectDeleted { .. } => {
