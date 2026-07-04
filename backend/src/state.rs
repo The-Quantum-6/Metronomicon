@@ -69,7 +69,7 @@ pub async fn get(config: &AppConfig) -> AppState {
     let course_cqrs = Arc::new(postgres_es::postgres_cqrs(db.clone(), course_queries, ()));
 
     let link_queries: Vec<Box<dyn Query<Link>>> = vec![
-        Box::new(logging_query),
+        Box::new(logging_query.clone()),
         Box::new(CourseLinkQuery::new(course_view_repo.clone())),
     ];
     let link_aggregate_services = LinkAggregateServices {
