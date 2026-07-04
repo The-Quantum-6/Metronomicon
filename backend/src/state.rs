@@ -11,11 +11,13 @@ use crate::{
             aggregate::{Link, LinkAggregateServices},
             services::LinkServices,
         },
+        project_idea::aggregate::{ProjectIdea, ProjectIdeaAggregateServices},
     },
     config::AppConfig,
     queries::{
         course::{CourseListQuery, CourseQuery},
         link::CourseLinkQuery,
+        project_idea::CourseProjectIdeaQuery,
         test_logging_query,
     },
     views::course::active_detailed::{ActiveCourseViewRepo, CourseDetailViewRepo},
@@ -32,6 +34,7 @@ pub struct AppState {
 pub struct Cqrs {
     pub course: Arc<PostgresCqrs<Course>>,
     pub link: Arc<PostgresCqrs<Link>>,
+    pub project_idea: Arc<PostgresCqrs<ProjectIdea>>,
 }
 
 pub async fn get(config: &AppConfig) -> AppState {
@@ -79,10 +82,24 @@ pub async fn get(config: &AppConfig) -> AppState {
         link_aggregate_services,
     ));
 
+    let project_idea_queries: Vec<Box<dyn Query<ProjectIdea>>> = vec![
+        Box::new(logging_query),
+        Box::new(CourseProjectIdeaQuery::new(course_view_repo.clone())),
+    ];
+    let project_idea_aggregate_services = ProjectIdeaAggregateServices {
+        course: CourseServices(db.clone()),
+    };
+    let project_idea_cqrs = Arc::new(postgres_es::postgres_cqrs(
+        db.clone(),
+        project_idea_queries,
+        project_idea_aggregate_services,
+    ));
+
     AppState {
         cqrs: Arc::new(Cqrs {
             course: course_cqrs,
             link: link_cqrs,
+            project_idea: project_idea_cqrs,
         }),
         course_view_repo: ActiveCourseViewRepo(course_view_repo),
         pool: db,
