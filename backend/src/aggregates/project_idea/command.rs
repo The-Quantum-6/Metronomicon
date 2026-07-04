@@ -10,6 +10,7 @@ pub enum ProjectIdeaCommand {
     /// Requires `write_text`
     Create {
         idea_id: Uuid,
+        course_id: Uuid,
         title: String,
         body: String,
         difficulty: Difficulty,
@@ -32,20 +33,9 @@ pub enum ProjectIdeaCommand {
 impl ProjectIdeaCommand {
     pub fn id(&self) -> &Uuid {
         match self {
-            ProjectIdeaCommand::Create {
-                idea_id,
-                course_id,
-                title,
-                body
-                difficulty,
-            } => idea_id,
-            ProjectIdeaCommand::Update {
-                idea_id,
-                title,
-                body,
-                difficulty,
-            } => idea_id,
-            ProjectIdeaCommand::Delete { idea_id } => idea_id,
+            ProjectIdeaCommand::Create { idea_id, .. } => idea_id,
+            ProjectIdeaCommand::Update { idea_id, .. } => idea_id,
+            ProjectIdeaCommand::Delete { idea_id, .. } => idea_id,
         }
     }
 }

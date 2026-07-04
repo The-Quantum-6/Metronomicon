@@ -66,7 +66,7 @@ impl Aggregate for ProjectIdea {
                                         course_id,
                                         title,
                                         body,
-                                        difficulty,
+                                        difficulty: Some(difficulty),
                                     },
                                     self,
                                 )
@@ -91,7 +91,7 @@ impl Aggregate for ProjectIdea {
                             .write(
                                 ProjectIdeaEvent::ProjectUpdated {
                                     idea_id,
-                                    course_id
+                                    course_id: self.course_id, // Use the aggregate's own course_id
                                     title,
                                     body,
                                     difficulty,
