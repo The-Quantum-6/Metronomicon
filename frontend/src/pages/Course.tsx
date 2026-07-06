@@ -1,7 +1,10 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import Navbar from "../components/Navbar";
+import ContributeAlert from "../components/ContributeAlert";
 import { apiUrl } from "../config";
+
+const DISCLAIMER_SEEN = "metronomicon_policy_acknowledged"
 
 type Course = {
   id: string;
@@ -25,6 +28,7 @@ export default function Course() {
   const { id } = useParams();
   const [course, setCourse] = useState<Course | null>(null);
   const [tab, setTab] = useState<CourseTab>("overview");
+  const [showAlert, setShowAlert] = useState(false);
 
   useEffect(() => {
     fetch(apiUrl(`courses/${id}`))
@@ -32,6 +36,15 @@ export default function Course() {
       .then((data) => setCourse(data))
       .catch(console.error);
   }, [id]);
+
+  const handleContribute = () => {
+    if (localStorage.getItem(DISCLAIMER_SEEN)){
+      console.log("open contribute form")
+    }
+    else {
+      setShowAlert(true)
+    }
+  }
 
   if (!course) return null;
 
@@ -55,10 +68,10 @@ return (
             {course.name}
           </h1>
           <div className="flex gap-2">
-            <button className="flex items-center gap-1.5 px-4 py-2 rounded-lg bg-[#1A1F3A] text-white font-medium hover:bg-gray-200 transition-colors">
+            <button onClick={ handleContribute }className="flex items-center gap-1.5 px-4 py-2 rounded-lg bg-[#1A1F3A] text-white font-medium hover:opacity-90 transition-colors">
               + Contribute
             </button>
-            <button className="flex items-center gap-1.5 px-4 py-2 text-[#6B6B5A] rounded-lg bg-transparent border border-[#6B6B5A] hover:bg-gray-200 transition-colors">
+            <button className="flex items-center gap-1.5 px-4 py-2 text-[#6B6B5A] rounded-lg bg-transparent border border-[#6B6B5A] hover:bg-gray-100 transition-colors">
               + Report
             </button>
           </div>
@@ -85,6 +98,12 @@ return (
       {tab === "faq"       && <div>FAQ</div>}
 
     </main>
+
+    {showAlert && (
+      <ContributeAlert onConfirm={() => {setShowAlert(false)}} onCancel={() => setShowAlert(false)}
+      />
+      
+    )}
   </>
 );
 }
