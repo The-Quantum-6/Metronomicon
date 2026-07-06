@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import Navbar from "../components/Navbar";
 import ContributeAlert from "../components/ContributeAlert";
+import Contribute, {type ContributionType} from "../components/Contribute";
 import { apiUrl } from "../config";
 
 const DISCLAIMER_SEEN = "metronomicon_policy_acknowledged"
@@ -29,6 +30,9 @@ export default function Course() {
   const [course, setCourse] = useState<Course | null>(null);
   const [tab, setTab] = useState<CourseTab>("overview");
   const [showAlert, setShowAlert] = useState(false);
+  const [showContribute, setShowContribute] = useState(false);
+  const [preselecteType, setPreselectedType] = useState<ContributionType | null>(null);
+
 
   useEffect(() => {
     fetch(apiUrl(`courses/${id}`))
@@ -39,7 +43,7 @@ export default function Course() {
 
   const handleContribute = () => {
     if (localStorage.getItem(DISCLAIMER_SEEN)){
-      console.log("open contribute form")
+      setShowContribute(true);
     }
     else {
       setShowAlert(true)
@@ -91,19 +95,48 @@ return (
         ))}
       </div>
 
-      {tab === "overview"  && <div>Overview</div>}
-      {tab === "resources" && <div>Resources</div>}
-      {tab === "links"     && <div>Links</div>}
-      {tab === "projects"  && <div>Projects</div>}
-      {tab === "faq"       && <div>FAQ</div>}
+      {tab === "overview"  && 
+      <div>
+        <h2>About this course</h2>
+        <p>{course.content}</p>
+      </div>
+      }
+
+
+      {tab === "resources" && 
+      <div>
+        <button onClick={() => { setPreselectedType("resource"); handleContribute();}}className="border border-dashed border-[#6B6B5A] rounded-lg px-4 py-2 text-[#6B6B5A]">+ Add resources</button>
+        </div>}
+      {tab === "links"     && 
+      <div>
+        <button onClick={() => { setPreselectedType("link"); handleContribute();}}className="border border-dashed border-[#6B6B5A] rounded-lg px-4 py-2 text-[#6B6B5A]">+ Add link</button>
+        </div>}
+      {tab === "projects"  && 
+      <div>
+        <button onClick={() => { setPreselectedType("project_idea"); handleContribute();}}className="border border-dashed border-[#6B6B5A] rounded-lg px-4 py-2 text-[#6B6B5A]">+ Add project idea</button>
+        </div>}
+      {tab === "faq"       && 
+      <div>
+        <button onClick={() => { setPreselectedType("faq"); handleContribute();}}className="border border-dashed border-[#6B6B5A] rounded-lg px-4 py-2 text-[#6B6B5A]">+ Add FAQ</button>
+        </div>}
 
     </main>
 
     {showAlert && (
-      <ContributeAlert onConfirm={() => {setShowAlert(false)}} onCancel={() => setShowAlert(false)}
+      <ContributeAlert onConfirm={() => {setShowAlert(false); setShowContribute(true)}} onCancel={() => setShowAlert(false)}
       />
-      
     )}
+
+    {showContribute && (
+      <Contribute 
+      preselected={preselecteType}
+      onCancel={() => {setShowContribute(false); setPreselectedType(null)}}
+        />
+    )
+
+    }
+
+
   </>
 );
 }
