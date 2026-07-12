@@ -49,17 +49,20 @@ export default function ContributeModal({ onCancel, preselected = null }: Contri
           <>
             <button
               onClick={() => setSelected(null)}
-              className="text-lg text-[#6B6B5A] mb-4 hover:text-[#1A1F3A] transition-colors">←
+              className="text-lg text-[#6B6B5A] mb-4 hover:text-[#1A1F3A] transition-colors"><svg className="w-6 h-6" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 14 10">
+                <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M13 5H1m0 0 4 4M1 5l4-4"/></svg>
               </button>
             <h2 className="text-2xl font-semibold font-display mb-6">
               {selectedOption?.description}
             </h2>
             <div className="bg-[#F4F2EB] rounded-xl p-4 mb-6">
             </div>
-            <div className="flex justify-end">
+            <div className="flex gap-2 justify-end">
+              <button onClick={() => alert("contribution sent for review. Thank you!")}
+              className="p-2 text-lg bg-[#1A1F3A] text-white rounded-lg hover:opacity-90 transition-colors">Send for review</button>
               <button
                 onClick={onCancel}
-                className="px-4 py-2 text-xl text-[#6B6B5A] border border-[#6B6B5A] rounded-lg hover:bg-gray-100 transition-colors"
+                className="p-2 text-lg text-[#6B6B5A] border border-[#6B6B5A] rounded-lg hover:bg-gray-100 transition-colors"
               >
                 Cancel
               </button>

@@ -55,34 +55,35 @@ export default function Course() {
 return (
   <>
     <Navbar />
-    <main className="max-w-5xl mx-auto px-4 sm:px-6 py-8">
-
+    <main className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
+    <div className="text-[#6B6B5A] hover:text-[#1A1F3A] transition-colors">
       <button
-        onClick={() => navigate("/")}
-        className="flex items-center gap-2 py-4 font-sans text-[#6B6B5A] hover:text-[#1A1F3A] transition-colors">
-        ← Back to courses
-      </button>
-
-      <div className="mb-7 pb-6 border-b border-[#F4F2EB]">
-        <p className="font-mono text-sm py-2 text-[#6B6B5A]">
+      onClick={() => navigate("/")}
+      className="inline-flex items-center gap-1.5 py-4 font-sans"><svg className="w-5 h-5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 14 10">
+        <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M13 5H1m0 0 4 4M1 5l4-4"/>
+        </svg>Back to courses</button>
+        </div>
+      <div className="pb-3 border-b border-[#F4F2EB]">
+        <p className="font-mono text-m text-[#6B6B5A]">
           {course.code}
         </p>
-        <div className="flex items-start justify-between gap-4 flex-wrap">
+        <div className="flex items-start justify-between gap-4 flex-wrap pb-4 border-b border-[#DAD8D6]">
           <h1 className="text-4xl font-semibold font-display text-[#1A1F3A]">
             {course.name}
           </h1>
           <div className="flex gap-2">
-            <button onClick={ handleContribute }className="flex items-center gap-1.5 px-4 py-2 rounded-lg bg-[#1A1F3A] text-white font-medium hover:opacity-90 transition-colors">
+            <button onClick={ handleContribute }className="flex items-center px-4 py-2 rounded-lg bg-[#1A1F3A] text-white font-medium hover:opacity-90 transition-colors">
               + Contribute
             </button>
-            <button className="flex items-center gap-1.5 px-4 py-2 text-[#6B6B5A] rounded-lg bg-transparent border border-[#6B6B5A] hover:bg-gray-100 transition-colors">
-              + Report
+            <button onClick={() => alert("Coming soon..")}
+            className="flex items-center gap-1.5 px-4 py-2 text-[#6B6B5A] rounded-lg bg-transparent border border-[#6B6B5A] hover:bg-gray-100 transition-colors">
+              Report
             </button>
           </div>
         </div>
       </div>
 
-      <div className="flex overflow-x-auto">
+      <div className="flex overflow-x-auto pt-3">
         {tabs.map((t) => (
           <button
             key={t.id}
@@ -96,28 +97,28 @@ return (
       </div>
 
       {tab === "overview"  && 
-      <div>
-        <h2>About this course</h2>
-        <p>{course.content}</p>
+      <div className="bg-white border border-[#DAD8D6] rounded-2xl p-5 mt-5 max-w-4xl w-full">
+        <h2 className="font-bold font-display text-xl pb-2">About this course</h2>
+        <p className="text-[#6B6B5A]">{course.content}</p>
       </div>
       }
 
 
       {tab === "resources" && 
       <div>
-        <button onClick={() => { setPreselectedType("resource"); handleContribute();}}className="border border-dashed border-[#6B6B5A] rounded-lg px-4 py-2 text-[#6B6B5A]">+ Add resources</button>
+        <button onClick={() => { setPreselectedType("resource"); handleContribute();}}className="border border-dashed border-[#6B6B5A] rounded-lg px-4 py-2 text-[#6B6B5A] w-full hover:bg-gray-200">+ Add resources</button>
         </div>}
       {tab === "links"     && 
       <div>
-        <button onClick={() => { setPreselectedType("link"); handleContribute();}}className="border border-dashed border-[#6B6B5A] rounded-lg px-4 py-2 text-[#6B6B5A]">+ Add link</button>
+        <button onClick={() => { setPreselectedType("link"); handleContribute();}}className="border border-dashed border-[#6B6B5A] rounded-lg px-4 py-2 text-[#6B6B5A] w-full hover:bg-gray-200">+ Add link</button>
         </div>}
       {tab === "projects"  && 
       <div>
-        <button onClick={() => { setPreselectedType("project_idea"); handleContribute();}}className="border border-dashed border-[#6B6B5A] rounded-lg px-4 py-2 text-[#6B6B5A]">+ Add project idea</button>
+        <button onClick={() => { setPreselectedType("project_idea"); handleContribute();}}className="border border-dashed border-[#6B6B5A] rounded-lg px-4 py-2 text-[#6B6B5A] w-full hover:bg-gray-200">+ Add project idea</button>
         </div>}
       {tab === "faq"       && 
       <div>
-        <button onClick={() => { setPreselectedType("faq"); handleContribute();}}className="border border-dashed border-[#6B6B5A] rounded-lg px-4 py-2 text-[#6B6B5A]">+ Add FAQ</button>
+        <button onClick={() => { setPreselectedType("faq"); handleContribute();}}className="border border-dashed border-[#6B6B5A] rounded-lg px-4 py-2 text-[#6B6B5A] w-full hover:bg-gray-200">+ Add FAQ</button>
         </div>}
 
     </main>
