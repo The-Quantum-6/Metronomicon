@@ -11,7 +11,7 @@ use crate::{
         faq::{aggregate::Faq, service::FaqAggregateServices},
         link::{
             aggregate::{Link, LinkAggregateServices},
-            services::{LinkValidityService, LinkExistanceService, LinkServices},
+            services::{LinkExistanceService, LinkServices, LinkValidityService},
         },
         project_idea::aggregate::{ProjectIdea, ProjectIdeaAggregateServices},
     },
@@ -123,6 +123,7 @@ pub async fn get(config: &AppConfig) -> AppState {
             LinkValidityService(reqwest::Client::new()),
             LinkExistanceService(db.clone()),
         ),
+        course: CourseServices(db.clone()),
     };
     let contribution_cqrs = Arc::new(postgres_es::postgres_cqrs(
         db.clone(),

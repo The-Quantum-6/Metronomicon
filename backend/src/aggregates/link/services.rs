@@ -22,7 +22,7 @@ pub struct LinkExistanceService(pub Pool<Postgres>);
 impl LinkExistanceService {
     pub async fn link_exists(&self, course_id: &str, link_id: &Uuid) -> Result<bool, sqlx::Error> {
         let link_id_str = link_id.to_string();
-        let exists: Option<bool> = sqlx::query_scalar!(
+        let exists: Option<bool> = sqlx::query_scalar(
             "SELECT EXISTS(
                 SELECT 1
                 FROM course_detail_view,
@@ -31,9 +31,9 @@ impl LinkExistanceService {
                   AND payload->>'status' = 'Active'
                   AND link->>'link_id' = $2
             )",
-            course_id,
-            &link_id_str
         )
+        .bind(course_id)
+        .bind(&link_id_str)
         .fetch_one(&self.0)
         .await?;
 

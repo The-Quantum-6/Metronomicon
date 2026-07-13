@@ -4,10 +4,14 @@ use uuid::Uuid;
 
 use crate::aggregates::{
     contribution::{
-        command::{Contribution as ContributionKind, ContributionCommand, ModerationVerdict, TextContributionKind},
+        command::{
+            Contribution as ContributionKind, ContributionCommand, ModerationVerdict,
+            TextContributionKind,
+        },
         error::ContributionError,
         event::ContributionEvent,
     },
+    course::service::CourseServices,
     link::services::LinkServices,
 };
 
@@ -22,6 +26,7 @@ pub enum ContributionStatus {
 
 pub struct ContributionAggregateServices {
     pub link: LinkServices,
+    pub course: CourseServices,
 }
 
 #[derive(Serialize, Default, Deserialize)]
@@ -52,25 +57,59 @@ impl Aggregate for Contribution {
                     contribution,
                 } => match self.status {
                     ContributionStatus::Uninitialized => {
+                        // Ensure the course exists before accepting contributions
+                        let course_exists = service
+                            .course
+                            .course_exists(&course_id.to_string())
+                            .await
+                            .map_err(|e| format!("database error: {}", e))?;
+                        if !course_exists {
+                            return Err("course not found".into());
+                        }
+
                         // Validate link-related contributions
                         match &contribution {
-                            ContributionKind::Text(TextContributionKind::AddLink { url, .. }) => {
-                                service.link.0.check_valid(url).await
+                            ContributionKind::Text(TextContributionKind::AddLink {
+                                url, ..
+                            }) => {
+                                service
+                                    .link
+                                    .0
+                                    .check_valid(url)
+                                    .await
                                     .map_err(|e| format!("link validation error: {}", e))?;
                             }
-                            ContributionKind::Text(TextContributionKind::EditLink { link_id, url, .. }) => {
-                                let exists = service.link.1.link_exists(&course_id.to_string(), link_id).await
+                            ContributionKind::Text(TextContributionKind::EditLink {
+                                link_id,
+                                url,
+                                ..
+                            }) => {
+                                let exists = service
+                                    .link
+                                    .1
+                                    .link_exists(&course_id.to_string(), link_id)
+                                    .await
                                     .map_err(|e| format!("database error: {}", e))?;
                                 if !exists {
                                     return Err("link does not exist in course".into());
                                 }
                                 if let Some(new_url) = url {
-                                    service.link.0.check_valid(new_url).await
+                                    service
+                                        .link
+                                        .0
+                                        .check_valid(new_url)
+                                        .await
                                         .map_err(|e| format!("link validation error: {}", e))?;
                                 }
                             }
-                            ContributionKind::Text(TextContributionKind::RemoveLink { link_id }) => {
-                                let exists = service.link.1.link_exists(&course_id.to_string(), link_id).await
+                            ContributionKind::Text(TextContributionKind::RemoveLink {
+                                link_id,
+                            }) => {
+                                let exists = service
+                                    .link
+                                    .1
+                                    .link_exists(&course_id.to_string(), link_id)
+                                    .await
                                     .map_err(|e| format!("database error: {}", e))?;
                                 if !exists {
                                     return Err("link does not exist in course".into());
@@ -147,10 +186,12 @@ impl Aggregate for Contribution {
 mod tests {
     use uuid::Uuid;
 
+    #[allow(dead_code)]
     fn contribution_id() -> Uuid {
         Uuid::parse_str("00000000-0000-0000-0000-000000000001").unwrap()
     }
 
+    #[allow(dead_code)]
     fn course_id() -> Uuid {
         Uuid::parse_str("00000000-0000-0000-0000-000000000002").unwrap()
     }
