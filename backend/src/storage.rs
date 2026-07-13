@@ -95,6 +95,29 @@ impl Storage {
         Ok(data.into_bytes().to_vec())
     }
 
+    /// Check whether an object exists under `key`, without downloading it.
+    pub async fn exists(&self, key: &str) -> Result<bool, StorageError> {
+        match self
+            .client
+            .head_object()
+            .bucket(self.bucket.clone())
+            .key(key)
+            .send()
+            .await
+        {
+            Ok(_) => Ok(true),
+            Err(e) => {
+                // "Not found" is a normal answer here, not an error. Any
+                // other failure (connection refused, auth, ...) is real.
+                if e.as_service_error().map(|se| se.is_not_found()) == Some(true) {
+                    Ok(false)
+                } else {
+                    Err(StorageError::Sdk(e.to_string()))
+                }
+            }
+        }
+    }
+
     /// List object keys, optionally restricted to those starting with `prefix`.
     pub async fn list(&self, prefix: Option<&str>) -> Result<Vec<String>, StorageError> {
         let mut req = self.client.list_objects_v2().bucket(self.bucket.clone());

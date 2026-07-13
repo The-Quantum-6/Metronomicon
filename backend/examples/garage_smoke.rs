@@ -72,5 +72,29 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let bytes = got.body.collect().await?.into_bytes();
     println!("Downloaded: {}", String::from_utf8_lossy(&bytes));
 
+    // 4) Existence checks via HeadObject — same mechanism as Storage::exists.
+    //    A key we just uploaded must be found; a bogus key must not be.
+    let found = client
+        .head_object()
+        .bucket(bucket.clone())
+        .key("rust-test.txt")
+        .send()
+        .await
+        .is_ok();
+    println!("exists(rust-test.txt) = {found} (expected true)");
+
+    let missing = client
+        .head_object()
+        .bucket(bucket.clone())
+        .key("does-not-exist.bin")
+        .send()
+        .await;
+    let not_found = match &missing {
+        Ok(_) => false,
+        Err(e) => e.as_service_error().map(|se| se.is_not_found()) == Some(true),
+    };
+    println!("exists(does-not-exist.bin) = {} (expected false)", !not_found);
+    assert!(found && not_found, "existence checks failed");
+
     Ok(())
 }
