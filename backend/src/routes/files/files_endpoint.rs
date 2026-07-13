@@ -36,7 +36,6 @@ pub fn router() -> Router<AppState> {
                 .layer(DefaultBodyLimit::max(upload_max_bytes)),
         )
         .route("/files/{key}", get(download_file))
-        .layer(DefaultBodyLimit::max(10 * 1024 * 1024))
 }
 
 /// Uploads a file sent as `multipart/form-data` under the field name `file`,
