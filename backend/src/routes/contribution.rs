@@ -1,17 +1,20 @@
+use axum::Json;
 use axum::Router;
+use axum::extract::State;
 use axum::http::StatusCode;
 use axum::response::IntoResponse;
 use axum::response::Response;
-use axum::routing::post;
-use axum::extract::State;
+use axum::routing::get;
+use serde::{Deserialize, Serialize};
 
 use crate::extractors::contribution::ContributionCommandExtractor;
 use crate::state::AppState;
 
 pub fn router() -> Router<AppState> {
-    Router::new()
-        .route("/contributions", post(handle_command))
+    Router::new().route("/contributions", get(list_contributions).post(handle_command))
 }
+
+
 
 pub async fn handle_command(
     State(state): State<AppState>,
@@ -31,4 +34,30 @@ pub async fn handle_command(
             (StatusCode::BAD_REQUEST, e.to_string()).into_response()
         }
     }
+}
+
+pub async fn list_contributions(
+    State(state): State<AppState>,
+) -> Result<Json<Vec<ContributionDTO>>, StatusCode> {
+    Ok(Json(
+        sqlx::query_as!(
+            ContributionDTO,
+            r#"
+            SELECT aggregate_id, course_id, contribution, status
+            FROM contribution_list_view
+            ORDER BY aggregate_id
+            "#
+        )
+        .fetch_all(&state.pool)
+        .await
+        .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?,
+    ))
+}
+
+#[derive(Serialize, Deserialize)]
+pub struct ContributionDTO {
+    aggregate_id: String,
+    course_id: String,
+    contribution: serde_json::Value,
+    status: String,
 }

@@ -1,13 +1,13 @@
 use async_trait::async_trait;
 use cqrs_es::{EventEnvelope, Query};
-use uuid::Uuid;
+use sqlx::{Pool, Postgres};
 
 use crate::{
     aggregates::contribution::{
-        aggregate::{ContributionAggregate, ContributionStatus},
+        aggregate::ContributionAggregate,
         event::ContributionEvent,
     },
-    views::contribution::ContributionDetailView,
+    
 };
 
 pub struct ContributionQuery;
@@ -16,41 +16,60 @@ pub struct ContributionQuery;
 impl Query<ContributionAggregate> for ContributionQuery {
     async fn dispatch(
         &self,
-        contribution_id: &str,
-        events: &[EventEnvelope<ContributionAggregate>],
+        _contribution_id: &str,
+        _events: &[EventEnvelope<ContributionAggregate>],
     ) {
-        let contribution_id = Uuid::parse_str(contribution_id).unwrap();
-        let mut view = ContributionDetailView {
-            status: ContributionStatus::Uninitialized,
-            contribution_id,
-            course_id: Uuid::nil(),
-            contribution: None,
-        };
+        // lightweight logging query kept for compatibility; actual DB projection
+        // is implemented in `ContributionListQuery` below.
+    }
+}
 
+pub struct ContributionListQuery {
+    pool: Pool<Postgres>,
+}
+
+impl ContributionListQuery {
+    pub fn new(pool: Pool<Postgres>) -> Self {
+        Self { pool }
+    }
+}
+
+#[async_trait]
+impl Query<ContributionAggregate> for ContributionListQuery {
+    async fn dispatch(&self, aggregate_id: &str, events: &[EventEnvelope<ContributionAggregate>]) {
         for event in events {
-            match &event.payload {
-                ContributionEvent::ContributionProposed {
-                    contribution_id: id,
-                    course_id,
-                    kind,
-                } => {
-                    view.contribution_id = *id;
-                    view.course_id = *course_id;
-                    view.status = ContributionStatus::Proposed;
-                    view.contribution = Some(kind.clone());
-                    println!(
-                        "ContributionQuery: contribution {} proposed for course {}",
-                        id, course_id
-                    );
+            let result = match &event.payload {
+                ContributionEvent::ContributionProposed { course_id, kind, .. } => {
+                    // serialize the contribution payload to JSONB
+                    let contribution_json = serde_json::to_value(kind).unwrap_or(serde_json::Value::Null);
+                    sqlx::query(
+                        "INSERT INTO contribution_list_view (aggregate_id, course_id, contribution, status)
+                         VALUES ($1, $2, $3::jsonb, 'Proposed')
+                         ON CONFLICT (aggregate_id) DO UPDATE
+                         SET course_id = $2, contribution = $3::jsonb, status = 'Proposed'",
+                    )
+                    .bind(aggregate_id)
+                    .bind(course_id.to_string())
+                    .bind(contribution_json)
+                    .execute(&self.pool)
+                    .await
                 }
-                ContributionEvent::ContributionApproved { contribution_id: id } => {
-                    view.status = ContributionStatus::Approved;
-                    println!("ContributionQuery: contribution {} approved", id);
+                ContributionEvent::ContributionApproved { .. } => {
+                    sqlx::query("UPDATE contribution_list_view SET status = 'Approved' WHERE aggregate_id = $1")
+                        .bind(aggregate_id)
+                        .execute(&self.pool)
+                        .await
                 }
-                ContributionEvent::ContributionDenied { contribution_id: id } => {
-                    view.status = ContributionStatus::Denied;
-                    println!("ContributionQuery: contribution {} denied", id);
+                ContributionEvent::ContributionDenied { .. } => {
+                    sqlx::query("UPDATE contribution_list_view SET status = 'Denied' WHERE aggregate_id = $1")
+                        .bind(aggregate_id)
+                        .execute(&self.pool)
+                        .await
                 }
+            };
+
+            if let Err(e) = result {
+                println!("ContributionListQuery error: {e}");
             }
         }
     }

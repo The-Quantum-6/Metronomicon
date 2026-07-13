@@ -21,7 +21,7 @@ use crate::{
         faq::CourseFaqQuery,
         link::CourseLinkQuery,
         project_idea::CourseProjectIdeaQuery,
-        contribution::ContributionQuery,
+        contribution::{ContributionQuery, ContributionListQuery},
         test_logging_query,
     },
     views::course::active_detailed::{ActiveCourseViewRepo, CourseDetailViewRepo},
@@ -101,7 +101,7 @@ pub async fn get(config: &AppConfig) -> AppState {
     ));
 
     let project_idea_queries: Vec<Box<dyn Query<ProjectIdea>>> = vec![
-        Box::new(logging_query),
+        Box::new(logging_query.clone()),
         Box::new(CourseProjectIdeaQuery::new(course_view_repo.clone())),
     ];
     let project_idea_aggregate_services = ProjectIdeaAggregateServices {
@@ -113,13 +113,12 @@ pub async fn get(config: &AppConfig) -> AppState {
         project_idea_aggregate_services,
     ));
 
-    let contribution_queries: Vec<Box<dyn Query<ContributionAggregate>>> =
-        vec![Box::new(ContributionQuery)];
-    let contribution_cqrs = Arc::new(postgres_es::postgres_cqrs(
-        db.clone(),
-        contribution_queries,
-        (),
-    ));
+    let contribution_queries: Vec<Box<dyn Query<ContributionAggregate>>> = vec![
+        Box::new(ContributionListQuery::new(db.clone())),
+        Box::new(logging_query.clone()),
+        Box::new(ContributionQuery),
+    ];
+    let contribution_cqrs = Arc::new(postgres_es::postgres_cqrs(db.clone(), contribution_queries, ()));
 
     AppState {
         cqrs: Arc::new(Cqrs {
