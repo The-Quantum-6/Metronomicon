@@ -3,6 +3,8 @@ use serde::{Deserialize, Serialize};
 use strum::Display;
 use uuid::Uuid;
 
+use crate::aggregates::shared::Officiality;
+
 #[derive(Debug, Serialize, Deserialize, PartialEq, Clone, Display)]
 pub enum FaqEvent {
     FaqCreated {
@@ -13,11 +15,17 @@ pub enum FaqEvent {
     },
     FaqUpdated {
         faq_id: Uuid,
+        course_id: Uuid,
         question: Option<String>,
         answer: Option<String>,
     },
     FaqDeleted {
         faq_id: Uuid,
+        course_id: Uuid,
+    },
+    FaqOfficialStatusChanged {
+        course_id: Uuid,
+        officiality: Officiality,
     },
 }
 
