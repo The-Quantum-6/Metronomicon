@@ -59,6 +59,9 @@ services:
       GARAGE_DEFAULT_ACCESS_KEY: ${AWS_ACCESS_KEY_ID}
       GARAGE_DEFAULT_SECRET_KEY: ${AWS_SECRET_ACCESS_KEY}
       GARAGE_DEFAULT_BUCKET: ${S3_BUCKET:-test-bucket}
+      # RPC secret lives in .env, not in garage.toml. `:?` makes compose fail
+      # with a clear message if it is missing instead of starting a broken node.
+      GARAGE_RPC_SECRET: ${GARAGE_RPC_SECRET:?Generate one with `openssl rand -hex 32` and put it in .env — see GARAGE.md}
     volumes:
       - ./garage.toml:/etc/garage.toml:ro
       - garage_meta:/var/lib/garage/meta
