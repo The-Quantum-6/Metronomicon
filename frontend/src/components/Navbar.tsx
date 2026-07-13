@@ -22,7 +22,7 @@ function Navbar() {
         <Spacer />
 
         <Link
-          to="/login"
+          to="/profile"
           aria-label="Profil"
           className="inline-flex items-center justify-center w-10 h-10 rounded-full shrink-0 bg-surface-light text-text border border-border no-underline transition-colors hover:bg-surface"
         >

@@ -5,6 +5,7 @@ import CoursePage from "./pages/Course";
 import Admin from "./pages/Admin";
 import AdminCreate from "./pages/AdminCreate";
 import AdminEdit from "./pages/AdminEdit";
+import Profile from "./pages/Profile";
 
 function App() {
   return (
@@ -12,6 +13,7 @@ function App() {
       <Route path="/" element={<Home />} />
       
       <Route path="/login" element={<Login />} />
+      <Route path="/profile" element={<Profile />} />
       <Route path="/courses/:id" element={<CoursePage />} />
       <Route path="/admin" element={<Admin />} />
       <Route path="/admin/create" element={<AdminCreate />} />
