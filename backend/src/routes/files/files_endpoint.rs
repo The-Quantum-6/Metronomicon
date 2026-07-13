@@ -72,6 +72,9 @@ async fn download_file(
     State(storage): State<Storage>,
     Path(key): Path<String>,
 ) -> Result<Response, AppError> {
+    if !storage.exists(&key).await? {
+        return Err(AppError::BadRequest(RequestError::NonExsistant("file")));
+    }
     let bytes = storage.download(&key).await?;
     // Content types are not tracked yet, so serve as a generic download.
     Ok(([(header::CONTENT_TYPE, "application/octet-stream")], bytes).into_response())
