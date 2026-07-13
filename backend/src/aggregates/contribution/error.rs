@@ -16,3 +16,9 @@ impl From<&str> for ContributionError {
         ContributionError(value.to_string())
     }
 }
+
+impl From<String> for ContributionError {
+    fn from(value: String) -> Self {
+        ContributionError(value)
+    }
+}

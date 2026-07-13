@@ -6,12 +6,12 @@ use sqlx::{Pool, Postgres, postgres::PgPoolOptions};
 
 use crate::{
     aggregates::{
-        contribution::aggregate::Contribution,
+        contribution::aggregate::{Contribution, ContributionAggregateServices},
         course::{aggregate::Course, service::CourseServices},
         faq::{aggregate::Faq, service::FaqAggregateServices},
         link::{
             aggregate::{Link, LinkAggregateServices},
-            services::LinkServices,
+            services::{LinkValidityService, LinkExistanceService, LinkServices},
         },
         project_idea::aggregate::{ProjectIdea, ProjectIdeaAggregateServices},
     },
@@ -80,7 +80,7 @@ pub async fn get(config: &AppConfig) -> AppState {
     ];
     let link_aggregate_services = LinkAggregateServices {
         course: CourseServices(db.clone()),
-        link: LinkServices(reqwest::Client::new()),
+        link: LinkValidityService(reqwest::Client::new()),
     };
     let link_cqrs = Arc::new(postgres_es::postgres_cqrs(
         db.clone(),
@@ -118,10 +118,16 @@ pub async fn get(config: &AppConfig) -> AppState {
         Box::new(logging_query.clone()),
         Box::new(ContributionQuery),
     ];
+    let contribution_aggregate_services = ContributionAggregateServices {
+        link: LinkServices(
+            LinkValidityService(reqwest::Client::new()),
+            LinkExistanceService(db.clone()),
+        ),
+    };
     let contribution_cqrs = Arc::new(postgres_es::postgres_cqrs(
         db.clone(),
         contribution_queries,
-        (),
+        contribution_aggregate_services,
     ));
 
     AppState {

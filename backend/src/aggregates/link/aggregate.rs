@@ -4,13 +4,15 @@ use uuid::Uuid;
 
 use crate::aggregates::{
     course::service::CourseServices,
-    link::{command::LinkCommand, error::LinkError, event::LinkEvent, services::LinkServices},
+    link::{
+        command::LinkCommand, error::LinkError, event::LinkEvent, services::LinkValidityService,
+    },
     shared::Status,
 };
 
 pub struct LinkAggregateServices {
     pub course: CourseServices,
-    pub link: LinkServices,
+    pub link: LinkValidityService,
 }
 
 #[derive(Serialize, Default, Deserialize)]

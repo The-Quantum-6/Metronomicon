@@ -8,11 +8,7 @@ pub struct ContributionQuery;
 
 #[async_trait]
 impl Query<Contribution> for ContributionQuery {
-    async fn dispatch(
-        &self,
-        _contribution_id: &str,
-        _events: &[EventEnvelope<Contribution>],
-    ) {
+    async fn dispatch(&self, _contribution_id: &str, _events: &[EventEnvelope<Contribution>]) {
         // lightweight logging query kept for compatibility; actual DB projection
         // is implemented in `ContributionListQuery` below.
     }

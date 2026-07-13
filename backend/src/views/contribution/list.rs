@@ -8,8 +8,7 @@ use crate::aggregates::contribution::{
     event::ContributionEvent,
 };
 
-pub type ContributionListViewRepo =
-    PostgresViewRepository<ContributionListView, Contribution>;
+pub type ContributionListViewRepo = PostgresViewRepository<ContributionListView, Contribution>;
 
 #[derive(Serialize, Debug, Deserialize, Default)]
 pub struct ContributionListView {

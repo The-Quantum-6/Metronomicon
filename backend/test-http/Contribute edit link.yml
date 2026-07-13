@@ -1,7 +1,7 @@
 info:
-  name: Create contribution
+  name: Contribute edit link
   type: http
-  seq: 19
+  seq: 23
 
 http:
   method: POST
@@ -14,10 +14,10 @@ http:
           "course_id": "a218c56a-df18-4ebb-b007-68460e132a5c",
           "contribution": {
             "Text": {
-              "AddLink": {
-                "course_id": "a218c56a-df18-4ebb-b007-68460e132a5c",
-                "label": "Useful Tutorial",
-                "url": "https://oslomet.no"
+              "EditLink": {
+                "link_id": "a218c56a-df18-4ebb-b007-68460e132a5c",
+                "label": "A new label",
+                "url": null
               }
             }
           }
