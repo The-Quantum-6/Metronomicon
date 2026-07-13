@@ -5,10 +5,11 @@ use axum::extract::{Json, Path, State};
 use axum::{Router, routing::delete, routing::get, routing::post, routing::put};
 use serde::Deserialize;
 use sqlx::PgPool;
+use crate::state::AppState;
 use uuid::Uuid;
 
 /// Routes for course CRUD operations, mounted under `/courses`.
-pub fn router() -> Router<PgPool> {
+pub fn router() -> Router<AppState> {
     Router::new()
         .route("/courses", get(get_courses))
         .route("/courses/create", post(create_course))

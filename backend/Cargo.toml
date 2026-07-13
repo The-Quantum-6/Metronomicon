@@ -4,7 +4,7 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
-axum = "0.8.9"
+axum = { version = "0.8.9", features = ["multipart"] }
 dotenvy = "0.15.7"
 serde = "1.0.228"
 sqlx = { version = "0.9.0", features = ["uuid", "postgres", "macros", "migrate", "runtime-tokio"] }
@@ -13,8 +13,11 @@ base64 = "0.22.1"
 reqwest = { version = "0.12.28", default-features = false, features = ["json", "rustls-tls"] }
 rand = "0.10.1"
 tower-http = { version = "0.7.0", features = ["cors"] }
-uuid = { version = "1.23.3", features = ["serde"] }
+uuid = { version = "1.23.3", features = ["serde", "v4"] }
 thiserror = "2.0.18"
+# S3 client for talking to Garage (S3-compatible object storage).
+aws-config = { version = "1", features = ["behavior-version-latest"] }
+aws-sdk-s3 = "1"
 
 [dev-dependencies]
 uuid = { version = "1.23.3", features = ["serde", "v4"] }

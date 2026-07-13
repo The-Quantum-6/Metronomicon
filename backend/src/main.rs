@@ -7,6 +7,8 @@ use tower_http::cors::CorsLayer;
 pub mod error;
 pub mod models;
 mod repositories;
+mod state;
+mod storage;
 
 #[tokio::main]
 async fn main() {
@@ -24,10 +26,13 @@ async fn main() {
 
     let environment = std::env::var("ENVIRONMENT").unwrap_or_default();
 
+    let storage = storage::Storage::from_env().await;
+    let state = state::AppState { db, storage };
+
     let app = Router::new()
         .route("/", get(|| async { "Hello, World!" }))
         .merge(routes::router())
-        .with_state(db);
+        .with_state(state);
 
     let app = if environment == "dev" {
         app.layer(CorsLayer::permissive())
