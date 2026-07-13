@@ -4,6 +4,6 @@ use axum::{Router, routing::get};
 
 pub fn router() -> Router<AppState> {
     Router::new()
-        .route("/login/feide", get(oidc::login_send))
+        .route("/login/google", get(oidc::login_send))
         .route("/login/callback", get(oidc::login_callback))
 }

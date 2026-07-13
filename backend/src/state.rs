@@ -24,11 +24,11 @@ pub struct AppState {
 impl AppState {
     pub async fn new(pool: Pool<Postgres>) -> Self {
         let client_id: String =
-            std::env::var("FEIDE_CLIENT_ID").expect("FEIDE_CLIENT_ID must be set");
+            std::env::var("GOOGLE_CLIENT_ID").expect("GOOGLE_CLIENT_ID must be set");
         let client_secret: String =
-            std::env::var("FEIDE_SECRET").expect("FEIDE_SECRET must be set");
+            std::env::var("GOOGLE_SECRET").expect("GOOGLE_SECRET must be set");
         let redirect_uri: String =
-            std::env::var("FEIDE_REDIRECT_URI").expect("FEIDE_REDIRECT_URI must be set");
+            std::env::var("GOOGLE_REDIRECT_URI").expect("GOOGLE_REDIRECT_URI must be set");
 
         let http_client: Client = reqwest::ClientBuilder::new()
             .redirect(reqwest::redirect::Policy::none())
@@ -36,7 +36,7 @@ impl AppState {
             .expect("Client should build");
 
         let provider_metadata = CoreProviderMetadata::discover_async(
-            IssuerUrl::new("https://auth.dataporten.no".to_string()).unwrap(),
+            IssuerUrl::new("https://accounts.google.com".to_string()).unwrap(),
             &http_client,
         )
         .await
