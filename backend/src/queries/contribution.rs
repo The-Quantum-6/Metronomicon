@@ -2,16 +2,16 @@ use async_trait::async_trait;
 use cqrs_es::{EventEnvelope, Query};
 use sqlx::{Pool, Postgres};
 
-use crate::aggregates::contribution::{aggregate::ContributionAggregate, event::ContributionEvent};
+use crate::aggregates::contribution::{aggregate::Contribution, event::ContributionEvent};
 
 pub struct ContributionQuery;
 
 #[async_trait]
-impl Query<ContributionAggregate> for ContributionQuery {
+impl Query<Contribution> for ContributionQuery {
     async fn dispatch(
         &self,
         _contribution_id: &str,
-        _events: &[EventEnvelope<ContributionAggregate>],
+        _events: &[EventEnvelope<Contribution>],
     ) {
         // lightweight logging query kept for compatibility; actual DB projection
         // is implemented in `ContributionListQuery` below.
@@ -29,8 +29,8 @@ impl ContributionListQuery {
 }
 
 #[async_trait]
-impl Query<ContributionAggregate> for ContributionListQuery {
-    async fn dispatch(&self, aggregate_id: &str, events: &[EventEnvelope<ContributionAggregate>]) {
+impl Query<Contribution> for ContributionListQuery {
+    async fn dispatch(&self, aggregate_id: &str, events: &[EventEnvelope<Contribution>]) {
         for event in events {
             let result = match &event.payload {
                 ContributionEvent::ContributionProposed {

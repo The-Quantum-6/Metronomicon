@@ -6,7 +6,7 @@ use sqlx::{Pool, Postgres, postgres::PgPoolOptions};
 
 use crate::{
     aggregates::{
-        contribution::aggregate::ContributionAggregate,
+        contribution::aggregate::Contribution,
         course::{aggregate::Course, service::CourseServices},
         faq::{aggregate::Faq, service::FaqAggregateServices},
         link::{
@@ -40,7 +40,7 @@ pub struct Cqrs {
     pub link: Arc<PostgresCqrs<Link>>,
     pub project_idea: Arc<PostgresCqrs<ProjectIdea>>,
     pub faq: Arc<PostgresCqrs<Faq>>,
-    pub contribution: Arc<PostgresCqrs<ContributionAggregate>>,
+    pub contribution: Arc<PostgresCqrs<Contribution>>,
 }
 
 pub async fn get(config: &AppConfig) -> AppState {
@@ -113,7 +113,7 @@ pub async fn get(config: &AppConfig) -> AppState {
         project_idea_aggregate_services,
     ));
 
-    let contribution_queries: Vec<Box<dyn Query<ContributionAggregate>>> = vec![
+    let contribution_queries: Vec<Box<dyn Query<Contribution>>> = vec![
         Box::new(ContributionListQuery::new(db.clone())),
         Box::new(logging_query.clone()),
         Box::new(ContributionQuery),

@@ -4,12 +4,12 @@ use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
 use crate::aggregates::contribution::{
-    aggregate::{ContributionAggregate, ContributionStatus},
+    aggregate::{Contribution, ContributionStatus},
     event::ContributionEvent,
 };
 
 pub type ContributionListViewRepo =
-    PostgresViewRepository<ContributionListView, ContributionAggregate>;
+    PostgresViewRepository<ContributionListView, Contribution>;
 
 #[derive(Serialize, Debug, Deserialize, Default)]
 pub struct ContributionListView {
@@ -19,8 +19,8 @@ pub struct ContributionListView {
     pub status: ContributionStatus,
 }
 
-impl View<ContributionAggregate> for ContributionListView {
-    fn update(&mut self, event: &cqrs_es::EventEnvelope<ContributionAggregate>) {
+impl View<Contribution> for ContributionListView {
+    fn update(&mut self, event: &cqrs_es::EventEnvelope<Contribution>) {
         match &event.payload {
             ContributionEvent::ContributionProposed {
                 contribution_id,

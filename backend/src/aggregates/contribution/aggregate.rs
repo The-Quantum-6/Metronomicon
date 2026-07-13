@@ -18,13 +18,13 @@ pub enum ContributionStatus {
 }
 
 #[derive(Serialize, Default, Deserialize)]
-pub struct ContributionAggregate {
+pub struct Contribution {
     pub status: ContributionStatus,
     pub course_id: Uuid,
     pub contribution: Option<ContributionKind>,
 }
 
-impl Aggregate for ContributionAggregate {
+impl Aggregate for Contribution {
     const TYPE: &'static str = "contribution";
     type Command = ContributionCommand;
     type Event = ContributionEvent;
@@ -117,7 +117,7 @@ mod tests {
     use cqrs_es::test::TestFramework;
     use uuid::Uuid;
 
-    type ContributionTestFramework = TestFramework<ContributionAggregate>;
+    type ContributionTestFramework = TestFramework<Contribution>;
 
     fn contribution_id() -> Uuid {
         Uuid::parse_str("00000000-0000-0000-0000-000000000001").unwrap()
