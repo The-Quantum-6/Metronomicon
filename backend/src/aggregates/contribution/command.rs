@@ -2,33 +2,33 @@ use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
 #[derive(Debug, Serialize, Deserialize, PartialEq, Clone)]
-pub enum SuggestionCommand {
+pub enum ContributionCommand {
     /// Suggest a change
     ///
-    /// Requires `suggest_file` for resource suggestions and `suggest_text` for other suggestions
+    /// Requires `contribute_file` for resource contributions and `contribute_text` for other contributions
     Propose {
-        suggestion_id: Uuid,
+        contribution_id: Uuid,
         course_id: Uuid,
-        suggestion: Suggestion,
+        contribution: Contribution,
     },
 
     /// Suggest a change
     ///
-    /// Requires `moderate_file` for resource suggestions and `moderate_text` for other suggestions
+    /// Requires `moderate_file` for resource contributions and `moderate_text` for other contributions
     Moderate {
-        suggestion_id: Uuid,
+        contribution_id: Uuid,
         verdict: ModerationVerdict,
     },
 }
 
 #[derive(Debug, Serialize, Deserialize, PartialEq, Clone)]
-pub enum Suggestion {
-    File(FileSuggestionKind),
-    Text(TextSuggestionKind),
+pub enum Contribution {
+    File(FileContributionKind),
+    Text(TextContributionKind),
 }
 
 #[derive(Debug, Serialize, Deserialize, PartialEq, Clone)]
-pub enum FileSuggestionKind {
+pub enum FileContributionKind {
     AddResource {
         course_id: Uuid,
         title: String,
@@ -40,7 +40,7 @@ pub enum FileSuggestionKind {
 }
 
 #[derive(Debug, Serialize, Deserialize, PartialEq, Clone)]
-pub enum TextSuggestionKind {
+pub enum TextContributionKind {
     AddLink {
         course_id: Uuid,
         label: String,
@@ -86,4 +86,13 @@ pub enum TextSuggestionKind {
 pub enum ModerationVerdict {
     Approve,
     Deny,
+}
+
+impl ContributionCommand {
+    pub fn id(&self) -> Uuid {
+        match self {
+            ContributionCommand::Propose { contribution_id, .. } => *contribution_id,
+            ContributionCommand::Moderate { contribution_id, .. } => *contribution_id,
+        }
+    }
 }

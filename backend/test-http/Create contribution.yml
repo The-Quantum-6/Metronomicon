@@ -1,0 +1,32 @@
+info:
+  name: Create contribution
+  type: http
+  seq: 19
+
+http:
+  method: POST
+  url: http://localhost:3000/contributions
+  body:
+    type: json
+    data: |-
+      {
+        "Propose": {
+          "course_id": "a218c56a-df18-4ebb-b007-68460e132a5c",
+          "contribution": {
+            "Text": {
+              "AddLink": {
+                "course_id": "a218c56a-df18-4ebb-b007-68460e132a5c",
+                "label": "Useful Tutorial",
+                "url": "https://example.com/tutorial"
+              }
+            }
+          }
+        }
+      }
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

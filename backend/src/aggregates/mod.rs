@@ -4,4 +4,4 @@ pub mod link;
 pub mod project_idea;
 pub mod resource;
 pub mod shared;
-pub mod suggestion;
+pub mod contribution;

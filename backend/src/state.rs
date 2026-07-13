@@ -13,6 +13,7 @@ use crate::{
             services::LinkServices,
         },
         project_idea::aggregate::{ProjectIdea, ProjectIdeaAggregateServices},
+        contribution::aggregate::ContributionAggregate,
     },
     config::AppConfig,
     queries::{
@@ -20,6 +21,7 @@ use crate::{
         faq::CourseFaqQuery,
         link::CourseLinkQuery,
         project_idea::CourseProjectIdeaQuery,
+        contribution::ContributionQuery,
         test_logging_query,
     },
     views::course::active_detailed::{ActiveCourseViewRepo, CourseDetailViewRepo},
@@ -38,6 +40,7 @@ pub struct Cqrs {
     pub link: Arc<PostgresCqrs<Link>>,
     pub project_idea: Arc<PostgresCqrs<ProjectIdea>>,
     pub faq: Arc<PostgresCqrs<Faq>>,
+    pub contribution: Arc<PostgresCqrs<ContributionAggregate>>,
 }
 
 pub async fn get(config: &AppConfig) -> AppState {
@@ -110,12 +113,21 @@ pub async fn get(config: &AppConfig) -> AppState {
         project_idea_aggregate_services,
     ));
 
+    let contribution_queries: Vec<Box<dyn Query<ContributionAggregate>>> =
+        vec![Box::new(ContributionQuery)];
+    let contribution_cqrs = Arc::new(postgres_es::postgres_cqrs(
+        db.clone(),
+        contribution_queries,
+        (),
+    ));
+
     AppState {
         cqrs: Arc::new(Cqrs {
             course: course_cqrs,
             link: link_cqrs,
             project_idea: project_idea_cqrs,
             faq: faq_cqrs,
+            contribution: contribution_cqrs,
         }),
         course_view_repo: ActiveCourseViewRepo(course_view_repo),
         pool: db,
