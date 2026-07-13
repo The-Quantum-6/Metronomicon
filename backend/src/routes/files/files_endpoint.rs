@@ -1,7 +1,7 @@
 use crate::error::{AppError, RequestError};
 use crate::state::AppState;
 use crate::storage::Storage;
-use axum::extract::{Multipart, Path, State};
+use axum::extract::{DefaultBodyLimit, Multipart, Path, State};
 use axum::http::header;
 use axum::response::{IntoResponse, Response};
 use axum::{Json, Router, routing::get};
@@ -20,6 +20,7 @@ pub fn router() -> Router<AppState> {
     Router::new()
         .route("/files", get(list_files).post(upload_file))
         .route("/files/{key}", get(download_file))
+        .layer(DefaultBodyLimit::max(10 * 1024 * 1024))
 }
 
 /// Uploads a file sent as `multipart/form-data` under the field name `file`,
