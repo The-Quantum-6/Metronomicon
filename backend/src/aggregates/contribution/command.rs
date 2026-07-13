@@ -29,20 +29,13 @@ pub enum Contribution {
 
 #[derive(Debug, Serialize, Deserialize, PartialEq, Clone)]
 pub enum FileContributionKind {
-    AddResource {
-        course_id: Uuid,
-        title: String,
-        key: Uuid,
-    },
-    RemoveResource {
-        resource_id: Uuid,
-    },
+    AddResource { title: String, key: Uuid },
+    RemoveResource { resource_id: Uuid },
 }
 
 #[derive(Debug, Serialize, Deserialize, PartialEq, Clone)]
 pub enum TextContributionKind {
     AddLink {
-        course_id: Uuid,
         label: String,
         url: String,
     },
@@ -55,7 +48,6 @@ pub enum TextContributionKind {
         link_id: Uuid,
     },
     AddFaqEntry {
-        course_id: Uuid,
         question: String,
         answer: String,
     },
@@ -68,7 +60,6 @@ pub enum TextContributionKind {
         faq_id: Uuid,
     },
     AddProjectIdea {
-        course_id: Uuid,
         title: String,
         body: String,
     },
@@ -91,8 +82,12 @@ pub enum ModerationVerdict {
 impl ContributionCommand {
     pub fn id(&self) -> Uuid {
         match self {
-            ContributionCommand::Propose { contribution_id, .. } => *contribution_id,
-            ContributionCommand::Moderate { contribution_id, .. } => *contribution_id,
+            ContributionCommand::Propose {
+                contribution_id, ..
+            } => *contribution_id,
+            ContributionCommand::Moderate {
+                contribution_id, ..
+            } => *contribution_id,
         }
     }
 }

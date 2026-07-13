@@ -2,13 +2,7 @@ use async_trait::async_trait;
 use cqrs_es::{EventEnvelope, Query};
 use sqlx::{Pool, Postgres};
 
-use crate::{
-    aggregates::contribution::{
-        aggregate::ContributionAggregate,
-        event::ContributionEvent,
-    },
-    
-};
+use crate::aggregates::contribution::{aggregate::ContributionAggregate, event::ContributionEvent};
 
 pub struct ContributionQuery;
 
@@ -39,9 +33,12 @@ impl Query<ContributionAggregate> for ContributionListQuery {
     async fn dispatch(&self, aggregate_id: &str, events: &[EventEnvelope<ContributionAggregate>]) {
         for event in events {
             let result = match &event.payload {
-                ContributionEvent::ContributionProposed { course_id, kind, .. } => {
+                ContributionEvent::ContributionProposed {
+                    course_id, kind, ..
+                } => {
                     // serialize the contribution payload to JSONB
-                    let contribution_json = serde_json::to_value(kind).unwrap_or(serde_json::Value::Null);
+                    let contribution_json =
+                        serde_json::to_value(kind).unwrap_or(serde_json::Value::Null);
                     sqlx::query(
                         "INSERT INTO contribution_list_view (aggregate_id, course_id, contribution, status)
                          VALUES ($1, $2, $3::jsonb, 'Proposed')
@@ -54,18 +51,18 @@ impl Query<ContributionAggregate> for ContributionListQuery {
                     .execute(&self.pool)
                     .await
                 }
-                ContributionEvent::ContributionApproved { .. } => {
-                    sqlx::query("UPDATE contribution_list_view SET status = 'Approved' WHERE aggregate_id = $1")
-                        .bind(aggregate_id)
-                        .execute(&self.pool)
-                        .await
-                }
-                ContributionEvent::ContributionDenied { .. } => {
-                    sqlx::query("UPDATE contribution_list_view SET status = 'Denied' WHERE aggregate_id = $1")
-                        .bind(aggregate_id)
-                        .execute(&self.pool)
-                        .await
-                }
+                ContributionEvent::ContributionApproved { .. } => sqlx::query(
+                    "UPDATE contribution_list_view SET status = 'Approved' WHERE aggregate_id = $1",
+                )
+                .bind(aggregate_id)
+                .execute(&self.pool)
+                .await,
+                ContributionEvent::ContributionDenied { .. } => sqlx::query(
+                    "UPDATE contribution_list_view SET status = 'Denied' WHERE aggregate_id = $1",
+                )
+                .bind(aggregate_id)
+                .execute(&self.pool)
+                .await,
             };
 
             if let Err(e) = result {

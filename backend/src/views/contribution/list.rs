@@ -8,7 +8,8 @@ use crate::aggregates::contribution::{
     event::ContributionEvent,
 };
 
-pub type ContributionListViewRepo = PostgresViewRepository<ContributionListView, ContributionAggregate>;
+pub type ContributionListViewRepo =
+    PostgresViewRepository<ContributionListView, ContributionAggregate>;
 
 #[derive(Serialize, Debug, Deserialize, Default)]
 pub struct ContributionListView {
@@ -21,7 +22,11 @@ pub struct ContributionListView {
 impl View<ContributionAggregate> for ContributionListView {
     fn update(&mut self, event: &cqrs_es::EventEnvelope<ContributionAggregate>) {
         match &event.payload {
-            ContributionEvent::ContributionProposed { contribution_id, course_id, kind } => {
+            ContributionEvent::ContributionProposed {
+                contribution_id,
+                course_id,
+                kind,
+            } => {
                 self.aggregate_id = *contribution_id;
                 self.course_id = *course_id;
                 self.contribution = serde_json::to_value(kind).unwrap_or(serde_json::Value::Null);

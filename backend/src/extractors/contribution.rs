@@ -24,7 +24,10 @@ where
         let mut json_value: serde_json::Value = serde_json::from_slice(&body)?;
 
         // Inject a generated contribution_id for Propose commands
-        if let Some(propose_obj) = json_value.get_mut("Propose").and_then(|v| v.as_object_mut()) {
+        if let Some(propose_obj) = json_value
+            .get_mut("Propose")
+            .and_then(|v| v.as_object_mut())
+        {
             propose_obj.insert(
                 "contribution_id".to_string(),
                 serde_json::Value::String(Uuid::new_v4().to_string()),

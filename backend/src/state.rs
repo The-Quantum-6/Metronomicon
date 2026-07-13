@@ -6,22 +6,22 @@ use sqlx::{Pool, Postgres, postgres::PgPoolOptions};
 
 use crate::{
     aggregates::{
-        faq::{aggregate::Faq, service::FaqAggregateServices},
+        contribution::aggregate::ContributionAggregate,
         course::{aggregate::Course, service::CourseServices},
+        faq::{aggregate::Faq, service::FaqAggregateServices},
         link::{
             aggregate::{Link, LinkAggregateServices},
             services::LinkServices,
         },
         project_idea::aggregate::{ProjectIdea, ProjectIdeaAggregateServices},
-        contribution::aggregate::ContributionAggregate,
     },
     config::AppConfig,
     queries::{
+        contribution::{ContributionListQuery, ContributionQuery},
         course::{CourseListQuery, CourseQuery},
         faq::CourseFaqQuery,
         link::CourseLinkQuery,
         project_idea::CourseProjectIdeaQuery,
-        contribution::{ContributionQuery, ContributionListQuery},
         test_logging_query,
     },
     views::course::active_detailed::{ActiveCourseViewRepo, CourseDetailViewRepo},
@@ -118,7 +118,11 @@ pub async fn get(config: &AppConfig) -> AppState {
         Box::new(logging_query.clone()),
         Box::new(ContributionQuery),
     ];
-    let contribution_cqrs = Arc::new(postgres_es::postgres_cqrs(db.clone(), contribution_queries, ()));
+    let contribution_cqrs = Arc::new(postgres_es::postgres_cqrs(
+        db.clone(),
+        contribution_queries,
+        (),
+    ));
 
     AppState {
         cqrs: Arc::new(Cqrs {

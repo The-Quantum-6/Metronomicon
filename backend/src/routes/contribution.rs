@@ -11,10 +11,11 @@ use crate::extractors::contribution::ContributionCommandExtractor;
 use crate::state::AppState;
 
 pub fn router() -> Router<AppState> {
-    Router::new().route("/contributions", get(list_contributions).post(handle_command))
+    Router::new().route(
+        "/contributions",
+        get(list_contributions).post(handle_command),
+    )
 }
-
-
 
 pub async fn handle_command(
     State(state): State<AppState>,

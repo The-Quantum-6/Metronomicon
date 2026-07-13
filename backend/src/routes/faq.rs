@@ -13,7 +13,7 @@ pub fn router() -> Router<AppState> {
 
 pub async fn handle_command(
     State(state): State<AppState>,
-    FaqCommandExtractor(metadata, command): FaqCommandExtractor
+    FaqCommandExtractor(metadata, command): FaqCommandExtractor,
 ) -> Response {
     let faq_id = command.id();
 

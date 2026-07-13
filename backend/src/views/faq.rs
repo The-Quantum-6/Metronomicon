@@ -1,7 +1,6 @@
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
-
 use crate::aggregates::shared::{Officiality, Status};
 
 #[derive(Serialize, Debug, Deserialize, Default)]
@@ -13,5 +12,3 @@ pub struct FaqDetailView {
     pub question: String,
     pub answer: String,
 }
-
-

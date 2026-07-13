@@ -13,7 +13,8 @@ use crate::{
         course::{aggregate::Course, event::CourseEvent},
         link::{aggregate::Link, event::LinkEvent},
         shared::Status,
-    }, views::{faq::FaqDetailView, link::LinkDetailView, project_idea::ProjectIdeaDetailView},
+    },
+    views::{faq::FaqDetailView, link::LinkDetailView, project_idea::ProjectIdeaDetailView},
 };
 
 pub type CourseDetailViewRepo = PostgresViewRepository<CourseDetailView, Course>;
