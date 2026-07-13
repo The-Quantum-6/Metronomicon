@@ -16,3 +16,9 @@ impl From<&str> for FaqError {
         FaqError(value.to_string())
     }
 }
+
+impl From<String> for FaqError {
+    fn from(value: String) -> Self {
+        FaqError(value)
+    }
+}

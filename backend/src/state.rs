@@ -6,6 +6,7 @@ use sqlx::{Pool, Postgres, postgres::PgPoolOptions};
 
 use crate::{
     aggregates::{
+        faq::{aggregate::Faq, service::FaqAggregateServices},
         course::{aggregate::Course, service::CourseServices},
         link::{
             aggregate::{Link, LinkAggregateServices},
@@ -35,6 +36,7 @@ pub struct Cqrs {
     pub course: Arc<PostgresCqrs<Course>>,
     pub link: Arc<PostgresCqrs<Link>>,
     pub project_idea: Arc<PostgresCqrs<ProjectIdea>>,
+    pub faq: Arc<PostgresCqrs<Faq>>,
 }
 
 pub async fn get(config: &AppConfig) -> AppState {
@@ -81,6 +83,15 @@ pub async fn get(config: &AppConfig) -> AppState {
         link_queries,
         link_aggregate_services,
     ));
+    let faq_queries: Vec<Box<dyn Query<Faq>>> = vec![];
+    let faq_aggregate_services = FaqAggregateServices {
+        course: CourseServices(db.clone()),
+    };
+    let faq_cqrs = Arc::new(postgres_es::postgres_cqrs(
+        db.clone(),
+        faq_queries,
+        faq_aggregate_services,
+    ));
 
     let project_idea_queries: Vec<Box<dyn Query<ProjectIdea>>> = vec![
         Box::new(logging_query),
@@ -100,6 +111,7 @@ pub async fn get(config: &AppConfig) -> AppState {
             course: course_cqrs,
             link: link_cqrs,
             project_idea: project_idea_cqrs,
+            faq: faq_cqrs,
         }),
         course_view_repo: ActiveCourseViewRepo(course_view_repo),
         pool: db,
