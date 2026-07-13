@@ -120,19 +120,39 @@ impl Storage {
 
     /// List object keys, optionally restricted to those starting with `prefix`.
     pub async fn list(&self, prefix: Option<&str>) -> Result<Vec<String>, StorageError> {
-        let mut req = self.client.list_objects_v2().bucket(self.bucket.clone());
-        if let Some(p) = prefix {
-            req = req.prefix(p);
+        let mut keys = Vec::new();
+        let mut continuation_token: Option<String> = None;
+
+        loop {
+            let mut req = self.client.list_objects_v2().bucket(self.bucket.clone());
+            if let Some(p) = prefix {
+                req = req.prefix(p);
+            }
+            if let Some(token) = continuation_token.as_deref() {
+                req = req.continuation_token(token);
+            }
+
+            let resp = req
+                .send()
+                .await
+                .map_err(|e| StorageError::Sdk(e.to_string()))?;
+
+            keys.extend(
+                resp.contents()
+                    .iter()
+                    .filter_map(|o| o.key().map(String::from)),
+            );
+
+            if resp.is_truncated().unwrap_or(false) {
+                continuation_token = resp.next_continuation_token().map(str::to_owned);
+                if continuation_token.is_none() {
+                    break;
+                }
+            } else {
+                break;
+            }
         }
-        let resp = req
-            .send()
-            .await
-            .map_err(|e| StorageError::Sdk(e.to_string()))?;
-        let keys = resp
-            .contents()
-            .iter()
-            .filter_map(|o| o.key().map(String::from))
-            .collect();
+
         Ok(keys)
     }
 }

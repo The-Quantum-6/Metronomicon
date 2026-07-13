@@ -8,6 +8,16 @@ use axum::{Json, Router, routing::get};
 use serde::Serialize;
 use uuid::Uuid;
 
+const DEFAULT_UPLOAD_MAX_BYTES: usize = 10 * 1024 * 1024; // 10 MiB
+
+fn upload_max_bytes() -> usize {
+    std::env::var("UPLOAD_MAX_BYTES")
+        .ok()
+        .and_then(|value| value.parse::<usize>().ok())
+        .filter(|value| *value > 0)
+        .unwrap_or(DEFAULT_UPLOAD_MAX_BYTES)
+}
+
 #[derive(Serialize)]
 struct UploadResponse {
     /// The storage key the file was saved under. Persist this (e.g. in an event)
@@ -17,8 +27,14 @@ struct UploadResponse {
 
 /// File upload/download routes, mounted under `/files`.
 pub fn router() -> Router<AppState> {
+    let upload_max_bytes = upload_max_bytes();
     Router::new()
-        .route("/files", get(list_files).post(upload_file))
+        .route(
+            "/files",
+            get(list_files)
+                .post(upload_file)
+                .layer(DefaultBodyLimit::max(upload_max_bytes)),
+        )
         .route("/files/{key}", get(download_file))
         .layer(DefaultBodyLimit::max(10 * 1024 * 1024))
 }
