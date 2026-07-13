@@ -1,9 +1,9 @@
 # Garage S3-compatible object storage — local/dev configuration.
 # Used by the `garage` service in compose.yaml.
 #
-# This is a single-node setup for development. After the first `docker compose up`,
-# you must assign a layout once (see GARAGE.md). The bucket and keys then persist
-# in the named volumes across restarts.
+# Single-node setup for development. Garage runs with `--single-node
+# --default-bucket` (see compose.yaml), so layout, bucket and access key are
+# created automatically on first start — no manual setup (see GARAGE.md).
 
 metadata_dir = "/var/lib/garage/meta"
 data_dir = "/var/lib/garage/data"

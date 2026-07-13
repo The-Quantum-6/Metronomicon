@@ -8,53 +8,33 @@ if we ever switch.
 Garage runs as the `garage` service in `compose.yaml`, configured by `garage.toml`.
 Data lives in the named volumes `garage_meta` / `garage_data` and survives restarts.
 
-## One-time setup
+## Setup
 
-After the first time you start Garage, you must assign it a storage layout once.
-The bucket and access keys you create then persist in the volumes.
+There is none. Garage v2.3+ runs with `--single-node --default-bucket`
+(see compose.yaml), which auto-creates the cluster layout, the bucket and the
+access key on first start. The bucket name and credentials come from `.env`
+(`S3_BUCKET`, `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`), so:
 
-1. **Start Garage:**
+```
+cp .env.template .env          # if you don't have one already
+docker compose up -d garage
+```
 
-   ```
-   docker compose up -d garage
-   ```
+The committed credentials in `.env.template` are local-dev-only values for a
+localhost-only service (same reasoning as `rpc_secret` in `garage.toml`).
+Never reuse them in production.
 
-2. **Find the node ID** (look for `NO ROLE ASSIGNED`):
+**Upgrading from the old v1.0.1 setup:** the old volumes are not compatible.
+Wipe them and start fresh — it's only dev data:
 
-   ```
-   docker compose exec garage /garage status
-   ```
-
-3. **Assign and apply a layout** (use the node ID from step 2):
-
-   ```
-   docker compose exec garage /garage layout assign -z dc1 -c 1G <node-id>
-   docker compose exec garage /garage layout apply --version 1
-   ```
-
-4. **Create the bucket and an access key:**
-
-   ```
-   docker compose exec garage /garage bucket create test-bucket
-   docker compose exec garage /garage key create backend-key
-   docker compose exec garage /garage bucket allow --read --write test-bucket --key backend-key
-   ```
-
-   `key create` prints a **Key ID** (`GK...`) and a **Secret key** — copy both.
-
-5. **Put the keys in your `.env`** (both `./.env` for docker and `backend/.env`
-   for running the backend on the host):
-
-   ```
-   AWS_ACCESS_KEY_ID=GK...
-   AWS_SECRET_ACCESS_KEY=...
-   ```
-
-   The `.env` files are gitignored, so keys never get committed.
+```
+docker compose down -v
+docker compose up -d
+```
 
 ## Verify it works
 
-With Garage running and keys in `backend/.env`:
+With Garage running and `backend/.env` in place (copy from `backend/.env.template`):
 
 ```
 cd backend
@@ -70,7 +50,10 @@ can reach storage.
   `http://garage:3900` inside docker compose (set via `S3_ENDPOINT`).
 - Garage only supports **path-style** addressing, so the SDK config sets
   `force_path_style(true)`. Forgetting this is the most common error.
-- To reset storage completely: `docker compose down -v` wipes the volumes — then
-  redo the one-time setup. A plain `docker compose down` keeps your data.
-- The `rpc_secret` in `garage.toml` is a local-dev value only; do not reuse it
-  in production.
+- To reset storage completely: `docker compose down -v` wipes the volumes.
+  A plain `docker compose down` keeps your data. Since setup is automatic,
+  a wipe costs nothing but the stored files.
+- The access key ID must start with `GK`. Generate a fresh pair with
+  `echo "GK$(openssl rand -hex 16)"` and `openssl rand -hex 32`.
+- The `rpc_secret` in `garage.toml` and the keys in `.env.template` are
+  local-dev values only; do not reuse them in production.
