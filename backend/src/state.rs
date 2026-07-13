@@ -17,6 +17,7 @@ use crate::{
     config::AppConfig,
     queries::{
         course::{CourseListQuery, CourseQuery},
+        faq::CourseFaqQuery,
         link::CourseLinkQuery,
         project_idea::CourseProjectIdeaQuery,
         test_logging_query,
@@ -83,7 +84,10 @@ pub async fn get(config: &AppConfig) -> AppState {
         link_queries,
         link_aggregate_services,
     ));
-    let faq_queries: Vec<Box<dyn Query<Faq>>> = vec![];
+    let faq_queries: Vec<Box<dyn Query<Faq>>> = vec![
+        Box::new(logging_query.clone()),
+        Box::new(CourseFaqQuery::new(course_view_repo.clone())),
+    ];
     let faq_aggregate_services = FaqAggregateServices {
         course: CourseServices(db.clone()),
     };
