@@ -13,6 +13,10 @@ use crate::{
             services::LinkServices,
         },
         project_idea::aggregate::{ProjectIdea, ProjectIdeaAggregateServices},
+        resource::{
+            aggregate::{Resource, ResourceAggregateServices},
+            services::ResourceServices,
+        },
     },
     config::AppConfig,
     queries::{
@@ -20,6 +24,7 @@ use crate::{
         faq::CourseFaqQuery,
         link::CourseLinkQuery,
         project_idea::CourseProjectIdeaQuery,
+        resource::CourseResourceQuery,
         test_logging_query,
     },
     views::course::active_detailed::{ActiveCourseViewRepo, CourseDetailViewRepo},
@@ -38,6 +43,7 @@ pub struct Cqrs {
     pub link: Arc<PostgresCqrs<Link>>,
     pub project_idea: Arc<PostgresCqrs<ProjectIdea>>,
     pub faq: Arc<PostgresCqrs<Faq>>,
+    pub resource: Arc<PostgresCqrs<Resource>>,
 }
 
 pub async fn get(config: &AppConfig) -> AppState {
@@ -98,7 +104,7 @@ pub async fn get(config: &AppConfig) -> AppState {
     ));
 
     let project_idea_queries: Vec<Box<dyn Query<ProjectIdea>>> = vec![
-        Box::new(logging_query),
+        Box::new(logging_query.clone()),
         Box::new(CourseProjectIdeaQuery::new(course_view_repo.clone())),
     ];
     let project_idea_aggregate_services = ProjectIdeaAggregateServices {
@@ -110,12 +116,27 @@ pub async fn get(config: &AppConfig) -> AppState {
         project_idea_aggregate_services,
     ));
 
+    let resource_queries: Vec<Box<dyn Query<Resource>>> = vec![
+        Box::new(logging_query),
+        Box::new(CourseResourceQuery::new(course_view_repo.clone())),
+    ];
+    let resource_aggregate_services = ResourceAggregateServices {
+        course: CourseServices(db.clone()),
+        resource: ResourceServices(reqwest::Client::new()),
+    };
+    let resource_cqrs = Arc::new(postgres_es::postgres_cqrs(
+        db.clone(),
+        resource_queries,
+        resource_aggregate_services,
+    ));
+
     AppState {
         cqrs: Arc::new(Cqrs {
             course: course_cqrs,
             link: link_cqrs,
             project_idea: project_idea_cqrs,
             faq: faq_cqrs,
+            resource: resource_cqrs,
         }),
         course_view_repo: ActiveCourseViewRepo(course_view_repo),
         pool: db,
