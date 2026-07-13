@@ -3,6 +3,8 @@ use serde::{Deserialize, Serialize};
 use strum::Display;
 use uuid::Uuid;
 
+use crate::aggregates::project_idea::difficulty::Difficulty;
+
 #[derive(Debug, Serialize, Deserialize, PartialEq, Clone, Display)]
 pub enum ProjectIdeaEvent {
     ProjectCreated {
@@ -10,14 +12,18 @@ pub enum ProjectIdeaEvent {
         course_id: Uuid,
         title: String,
         body: String,
+        difficulty: Option<Difficulty>,
     },
     ProjectUpdated {
         idea_id: Uuid,
+        course_id: Uuid,
         title: Option<String>,
         body: Option<String>,
+        difficulty: Option<Difficulty>,
     },
     ProjectDeleted {
         idea_id: Uuid,
+        course_id: Uuid,
     },
 }
 

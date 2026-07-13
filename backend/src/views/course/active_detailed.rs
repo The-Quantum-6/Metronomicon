@@ -14,7 +14,7 @@ use crate::{
         link::{aggregate::Link, event::LinkEvent},
         shared::Status,
     },
-    views::link::LinkDetailView,
+    views::{link::LinkDetailView, project_idea::ProjectIdeaDetailView},
 };
 
 pub type CourseDetailViewRepo = PostgresViewRepository<CourseDetailView, Course>;
@@ -28,6 +28,7 @@ pub struct CourseDetailView {
     pub description: String,
     pub tags: Vec<String>,
     pub links: Vec<LinkDetailView>,
+    pub project_ideas: Vec<ProjectIdeaDetailView>,
 }
 
 impl View<Course> for CourseDetailView {
