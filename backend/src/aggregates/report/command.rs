@@ -8,6 +8,7 @@ pub enum ReportCommand {
     /// Requires `read` (any logged-in user)
     Create {
         issue_id: Uuid,
+        course_id: Option<Uuid>,
         title: String,
         description: String,
         contact_email: Option<String>,

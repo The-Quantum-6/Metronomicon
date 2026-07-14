@@ -43,60 +43,102 @@ impl Aggregate for Report {
         sink: &cqrs_es::event_sink::EventSink<Self>,
     ) -> impl Future<Output = Result<(), Self::Error>> + Send {
         async move {
-            let res = match command {
+            match command {
                 ReportCommand::Create {
                     issue_id,
+                    course_id,
                     title: _,
                     description,
                     contact_email,
-                } => match self.status {
-                    ReportStatus::Uninitialized => {
-                        sink
-                            .write(
-                                ReportEvent::ReportCreated {
-                                    issue_id,
-                                    target: ReportTarget::Site,
-                                    description,
-                                    contact_email,
-                                },
-                                self,
-                            )
-                            .await;
+                } => {
+                    match self.status {
+                        ReportStatus::Uninitialized => {
+                            let target = match course_id {
+                                Some(id) => {
+                                    let exists = service
+                                        .course
+                                        .course_exists(&id.to_string())
+                                        .await
+                                        .map_err(|_| "could not check course")?;
 
-                        Ok(())
+                                    if !exists {
+                                        return Err("course does not exist".into());
+                                    }
+
+                                    ReportTarget::Course(id)
+                                }
+
+                                None => ReportTarget::Site,
+                            };
+
+                            sink
+                                .write(
+                                    ReportEvent::ReportCreated {
+                                        issue_id,
+                                        target,
+                                        description,
+                                        contact_email,
+                                    },
+                                    self,
+                                )
+                                .await;
+
+                            Ok(())
+                        }
+
+                        _ => Err("report already exists".into()),
                     }
+                }
 
-                    _ => Err("report already exists".into()),
-                },
+                ReportCommand::ResolveReport { issue_id } => {
+                    match self.status {
+                        ReportStatus::Open => {
+                            sink
+                                .write(
+                                    ReportEvent::ReportResolved {
+                                        issue_id,
+                                    },
+                                    self,
+                                )
+                                .await;
 
-                ReportCommand::ResolveReport { issue_id } => match self.status {
-                    ReportStatus::Open => {
-                        sink
-                            .write(ReportEvent::ReportResolved { issue_id }, self)
-                            .await;
+                            Ok(())
+                        }
 
-                        Ok(())
+                        ReportStatus::Resolved => {
+                            Err("report already resolved".into())
+                        }
+
+                        ReportStatus::Uninitialized => {
+                            Err("report not found".into())
+                        }
                     }
+                }
 
-                    ReportStatus::Resolved => Err("report already resolved".into()),
+                ReportCommand::ReopenReport { issue_id } => {
+                    match self.status {
+                        ReportStatus::Resolved => {
+                            sink
+                                .write(
+                                    ReportEvent::ReportReopened {
+                                        issue_id,
+                                    },
+                                    self,
+                                )
+                                .await;
 
-                    ReportStatus::Uninitialized => Err("report not found".into()),
-                },
+                            Ok(())
+                        }
 
-                ReportCommand::ReopenReport { issue_id } => match self.status {
-                    ReportStatus::Resolved => {
-                        sink
-                            .write(ReportEvent::ReportReopened { issue_id }, self)
-                            .await;
+                        ReportStatus::Open => {
+                            Err("report already open".into())
+                        }
 
-                        Ok(())
+                        ReportStatus::Uninitialized => {
+                            Err("report not found".into())
+                        }
                     }
-
-                    ReportStatus::Open => Err("report already open".into()),
-
-                    ReportStatus::Uninitialized => Err("report not found".into()),
-                },
-
+                }
                 /*ReportCommand::Delete { issue_id } => match self.status {
                     ReportStatus::Uninitialized => Err("report not found".into()),
                     ReportStatus::Deleted => Err("report already deleted".into()),
@@ -106,12 +148,8 @@ impl Aggregate for Report {
                             .write(ReportEvent::ReportDeleted { issue_id }, self)
                             .await;
 
-                        Ok(())
-                    }
-                },*/
-            };
-
-            res
+                        Ok(())*/
+            }
         }
     }
 
