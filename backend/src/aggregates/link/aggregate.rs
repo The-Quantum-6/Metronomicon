@@ -3,7 +3,7 @@ use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
 use crate::aggregates::{
-    course::service::CourseServices,
+    course::service::CourseExistanceService,
     link::{
         command::LinkCommand, error::LinkError, event::LinkEvent, services::LinkValidityService,
     },
@@ -11,7 +11,7 @@ use crate::aggregates::{
 };
 
 pub struct LinkAggregateServices {
-    pub course: CourseServices,
+    pub course: CourseExistanceService,
     pub link: LinkValidityService,
 }
 

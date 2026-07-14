@@ -7,7 +7,7 @@ use sqlx::{Pool, Postgres, postgres::PgPoolOptions};
 use crate::{
     aggregates::{
         contribution::aggregate::{Contribution, ContributionAggregateServices},
-        course::{aggregate::Course, service::CourseServices},
+        course::{aggregate::Course, service::CourseExistanceService},
         faq::{aggregate::Faq, service::FaqAggregateServices},
         link::{
             aggregate::{Link, LinkAggregateServices},
@@ -79,7 +79,7 @@ pub async fn get(config: &AppConfig) -> AppState {
         Box::new(CourseLinkQuery::new(course_view_repo.clone())),
     ];
     let link_aggregate_services = LinkAggregateServices {
-        course: CourseServices(db.clone()),
+        course: CourseExistanceService(db.clone()),
         link: LinkValidityService(reqwest::Client::new()),
     };
     let link_cqrs = Arc::new(postgres_es::postgres_cqrs(
@@ -92,7 +92,7 @@ pub async fn get(config: &AppConfig) -> AppState {
         Box::new(CourseFaqQuery::new(course_view_repo.clone())),
     ];
     let faq_aggregate_services = FaqAggregateServices {
-        course: CourseServices(db.clone()),
+        course: CourseExistanceService(db.clone()),
     };
     let faq_cqrs = Arc::new(postgres_es::postgres_cqrs(
         db.clone(),
@@ -105,7 +105,7 @@ pub async fn get(config: &AppConfig) -> AppState {
         Box::new(CourseProjectIdeaQuery::new(course_view_repo.clone())),
     ];
     let project_idea_aggregate_services = ProjectIdeaAggregateServices {
-        course: CourseServices(db.clone()),
+        course: CourseExistanceService(db.clone()),
     };
     let project_idea_cqrs = Arc::new(postgres_es::postgres_cqrs(
         db.clone(),
@@ -123,7 +123,7 @@ pub async fn get(config: &AppConfig) -> AppState {
             LinkValidityService(reqwest::Client::new()),
             LinkExistanceService(db.clone()),
         ),
-        course: CourseServices(db.clone()),
+        course: CourseExistanceService(db.clone()),
     };
     let contribution_cqrs = Arc::new(postgres_es::postgres_cqrs(
         db.clone(),

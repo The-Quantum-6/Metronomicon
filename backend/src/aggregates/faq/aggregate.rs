@@ -158,7 +158,7 @@ impl Aggregate for Faq {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::aggregates::course::service::CourseServices;
+    use crate::aggregates::course::service::CourseExistanceService;
     use cqrs_es::test::TestFramework;
     use uuid::Uuid;
 
@@ -183,7 +183,7 @@ mod tests {
 
     fn framework() -> FaqTestFramework {
         FaqTestFramework::with(FaqAggregateServices {
-            course: CourseServices(
+            course: CourseExistanceService(
                 sqlx::PgPool::connect_lazy("postgres://invalid/invalid")
                     .expect("connect_lazy should not require a live connection"),
             ),
@@ -193,7 +193,7 @@ mod tests {
     // ── Create ────────────────────────────────────────────────────────────────
 
     #[test]
-    #[ignore = "hits CourseServices::course_exists; needs a live Postgres connection"]
+    #[ignore = "hits CourseExistanceService::course_exists; needs a live Postgres connection"]
     fn test_create_faq() {
         framework()
             .given_no_previous_events()
@@ -207,7 +207,7 @@ mod tests {
     }
 
     #[test]
-    #[ignore = "hits CourseServices::course_exists; needs a live Postgres connection"]
+    #[ignore = "hits CourseExistanceService::course_exists; needs a live Postgres connection"]
     fn test_cannot_create_faq_for_nonexistent_course() {
         framework()
             .given_no_previous_events()

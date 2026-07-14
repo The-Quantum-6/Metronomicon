@@ -11,7 +11,7 @@ use crate::aggregates::{
         error::ContributionError,
         event::ContributionEvent,
     },
-    course::service::CourseServices,
+    course::service::CourseExistanceService,
     link::services::LinkServices,
 };
 
@@ -26,7 +26,7 @@ pub enum ContributionStatus {
 
 pub struct ContributionAggregateServices {
     pub link: LinkServices,
-    pub course: CourseServices,
+    pub course: CourseExistanceService,
 }
 
 #[derive(Serialize, Default, Deserialize)]
