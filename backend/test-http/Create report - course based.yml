@@ -1,0 +1,26 @@
+info:
+  name: Create report
+  type: http
+  seq: 30
+
+http:
+  method: POST
+  url: http://localhost:3000/reports
+  body:
+    type: json
+    data: |-
+      {
+        "Create": {
+          "course_id": "01f00e4a-8f81-48fc-8d96-f5c2fcfcbfe4",
+          "title": "Broken link on course page",
+          "description": "The syllabus PDF link on the CS-401 page returns a 404.",
+          "contact_email": "student@example.com"
+        }
+      }
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

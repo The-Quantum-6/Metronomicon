@@ -1,0 +1,23 @@
+info:
+  name: Reopen report
+  type: http
+  seq: 29
+
+http:
+  method: POST
+  url: http://localhost:3000/reports
+  body:
+    type: json
+    data: |-
+      {
+        "ReopenReport": {
+          "issue_id": "550e8400-e29b-41d4-a716-446655440002"
+        }
+      }
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
