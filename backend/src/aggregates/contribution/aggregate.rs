@@ -50,7 +50,7 @@ impl Aggregate for Contribution {
         async move {
             match command {
                 ContributionCommand::Propose {
-                    contribution_id,
+                    contribution_id: _,
                     course_id,
                     contribution,
                     comment,
@@ -69,7 +69,8 @@ impl Aggregate for Contribution {
                         // Validate link-related contributions
                         match &contribution {
                             ContributionKind::Text(TextContributionKind::AddLink {
-                                url, ..
+                                url,
+                                label: _,
                             }) => {
                                 service
                                     .link
@@ -81,7 +82,7 @@ impl Aggregate for Contribution {
                             ContributionKind::Text(TextContributionKind::EditLink {
                                 link_id,
                                 url,
-                                ..
+                                label: _,
                             }) => {
                                 let exists = service
                                     .link
@@ -119,7 +120,6 @@ impl Aggregate for Contribution {
                         let _: () = sink
                             .write(
                                 ContributionEvent::ContributionProposed {
-                                    contribution_id,
                                     course_id,
                                     kind: contribution,
                                     comment,
@@ -132,26 +132,20 @@ impl Aggregate for Contribution {
                     _ => Err("contribution already exists".into()),
                 },
                 ContributionCommand::Moderate {
-                    contribution_id,
+                    contribution_id: _,
                     verdict,
                 } => match self.status {
                     ContributionStatus::Uninitialized => Err("contribution not found".into()),
                     ContributionStatus::Proposed => match verdict {
                         ModerationVerdict::Approve => {
                             let _: () = sink
-                                .write(
-                                    ContributionEvent::ContributionApproved { contribution_id },
-                                    self,
-                                )
+                                .write(ContributionEvent::ContributionApproved, self)
                                 .await;
                             Ok(())
                         }
                         ModerationVerdict::Deny => {
                             let _: () = sink
-                                .write(
-                                    ContributionEvent::ContributionDenied { contribution_id },
-                                    self,
-                                )
+                                .write(ContributionEvent::ContributionDenied, self)
                                 .await;
                             Ok(())
                         }
@@ -166,16 +160,19 @@ impl Aggregate for Contribution {
     fn apply(&mut self, event: Self::Event) {
         match event {
             ContributionEvent::ContributionProposed {
-                course_id, kind, ..
+                course_id,
+                kind,
+                comment,
             } => {
                 self.status = ContributionStatus::Proposed;
                 self.course_id = course_id;
                 self.contribution = Some(kind);
+                self.comment = comment;
             }
-            ContributionEvent::ContributionApproved { .. } => {
+            ContributionEvent::ContributionApproved => {
                 self.status = ContributionStatus::Approved;
             }
-            ContributionEvent::ContributionDenied { .. } => {
+            ContributionEvent::ContributionDenied => {
                 self.status = ContributionStatus::Denied;
             }
         }

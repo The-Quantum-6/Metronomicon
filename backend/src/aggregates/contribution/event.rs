@@ -8,17 +8,12 @@ use crate::aggregates::contribution::command::ContributionKind;
 #[derive(Debug, Serialize, Deserialize, PartialEq, Clone, Display)]
 pub enum ContributionEvent {
     ContributionProposed {
-        contribution_id: Uuid,
         course_id: Uuid,
         kind: ContributionKind,
         comment: String,
     },
-    ContributionApproved {
-        contribution_id: Uuid,
-    },
-    ContributionDenied {
-        contribution_id: Uuid,
-    },
+    ContributionApproved,
+    ContributionDenied,
 }
 
 impl DomainEvent for ContributionEvent {

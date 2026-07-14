@@ -100,10 +100,14 @@ impl ContributionCommand {
     pub fn id(&self) -> Uuid {
         match self {
             ContributionCommand::Propose {
-                contribution_id, ..
+                contribution_id,
+                course_id: _,
+                contribution: _,
+                comment: _,
             } => *contribution_id,
             ContributionCommand::Moderate {
-                contribution_id, ..
+                contribution_id,
+                verdict: _,
             } => *contribution_id,
         }
     }

@@ -23,21 +23,20 @@ impl View<Contribution> for ContributionListView {
     fn update(&mut self, event: &cqrs_es::EventEnvelope<Contribution>) {
         match &event.payload {
             ContributionEvent::ContributionProposed {
-                contribution_id,
                 course_id,
                 kind,
                 comment,
             } => {
-                self.aggregate_id = *contribution_id;
+                self.aggregate_id = Uuid::parse_str(&event.aggregate_id).unwrap();
                 self.course_id = *course_id;
                 self.contribution = serde_json::to_value(kind).unwrap_or(serde_json::Value::Null);
                 self.status = ContributionStatus::Proposed;
                 self.comment = comment.clone();
             }
-            ContributionEvent::ContributionApproved { .. } => {
+            ContributionEvent::ContributionApproved => {
                 self.status = ContributionStatus::Approved;
             }
-            ContributionEvent::ContributionDenied { .. } => {
+            ContributionEvent::ContributionDenied => {
                 self.status = ContributionStatus::Denied;
             }
         }

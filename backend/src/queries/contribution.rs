@@ -44,7 +44,6 @@ impl Query<Contribution> for ContributionListQuery {
                     course_id,
                     kind,
                     comment,
-                    ..
                 } => {
                     // serialize the contribution payload to JSONB
                     let contribution_json =
@@ -62,13 +61,13 @@ impl Query<Contribution> for ContributionListQuery {
                     .execute(&self.pool)
                     .await
                 }
-                ContributionEvent::ContributionApproved { .. } => sqlx::query(
+                ContributionEvent::ContributionApproved => sqlx::query(
                     "UPDATE contribution_list_view SET status = 'Approved' WHERE aggregate_id = $1",
                 )
                 .bind(aggregate_id)
                 .execute(&self.pool)
                 .await,
-                ContributionEvent::ContributionDenied { .. } => sqlx::query(
+                ContributionEvent::ContributionDenied => sqlx::query(
                     "UPDATE contribution_list_view SET status = 'Denied' WHERE aggregate_id = $1",
                 )
                 .bind(aggregate_id)
@@ -176,12 +175,16 @@ impl Query<Contribution> for ContributionProcessManager {
     async fn dispatch(&self, _aggregate_id: &str, events: &[EventEnvelope<Contribution>]) {
         for event in events {
             match &event.payload {
-                ContributionEvent::ContributionProposed { .. } => {}
-                ContributionEvent::ContributionApproved { contribution_id } => {
-                    let id = contribution_id.to_string();
-                    self.handle_approved(&id).await;
+                ContributionEvent::ContributionProposed {
+                    course_id: _,
+                    kind: _,
+                    comment: _,
+                } => (),
+                ContributionEvent::ContributionApproved => {
+                    let id = &event.aggregate_id;
+                    self.handle_approved(id).await;
                 }
-                ContributionEvent::ContributionDenied { .. } => {}
+                ContributionEvent::ContributionDenied => {}
             }
         }
     }
