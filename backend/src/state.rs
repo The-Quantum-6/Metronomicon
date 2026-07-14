@@ -117,7 +117,10 @@ pub async fn get(config: &AppConfig) -> AppState {
         Box::new(ContributionListQuery::new(db.clone())),
         Box::new(logging_query.clone()),
         Box::new(ContributionQuery),
-        Box::new(ContributionProcessManager::new(db.clone(), link_cqrs.clone()))
+        Box::new(ContributionProcessManager::new(
+            db.clone(),
+            link_cqrs.clone(),
+        )),
     ];
     let contribution_aggregate_services = ContributionAggregateServices {
         link: LinkServices(

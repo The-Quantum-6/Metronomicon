@@ -41,7 +41,10 @@ impl Query<Contribution> for ContributionListQuery {
         for event in events {
             let result = match &event.payload {
                 ContributionEvent::ContributionProposed {
-                    course_id, kind, comment, ..
+                    course_id,
+                    kind,
+                    comment,
+                    ..
                 } => {
                     // serialize the contribution payload to JSONB
                     let contribution_json =

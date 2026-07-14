@@ -22,20 +22,34 @@ pub enum ContributionCommand {
     },
 }
 
+/// The kind of contribution, containing the relevant data.
+/// Either Text or File type, further divided.
 #[derive(Debug, Serialize, Deserialize, PartialEq, Clone)]
 pub enum Contribution {
+    /// Represents contributions that may include file uploads, like resources on courses.
+    /// This is seperate from Text suggestions due to permission management. File uploads are considered to be of higher risk than text changes.
     File(FileContributionKind),
+    /// Represents most contributions, including info, links, project ideas, etc.
     Text(TextContributionKind),
 }
 
+/// Rename for export, better clarity in some modules
 pub type ContributionKind = Contribution;
 
+/// The only file contribution currently available are course resources.
 #[derive(Debug, Serialize, Deserialize, PartialEq, Clone)]
 pub enum FileContributionKind {
-    AddResource { title: String, key: Uuid },
-    RemoveResource { resource_id: Uuid },
+    /// Key refers to the objects key in S3(Garage)
+    AddResource {
+        title: String,
+        key: Uuid,
+    },
+    RemoveResource {
+        resource_id: Uuid,
+    },
 }
 
+/// Most contributions are text contributions. Text contributions are considered lower risk than file contributions and are thus seperated for permission management.
 #[derive(Debug, Serialize, Deserialize, PartialEq, Clone)]
 pub enum TextContributionKind {
     AddLink {

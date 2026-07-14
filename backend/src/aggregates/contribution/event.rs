@@ -3,14 +3,14 @@ use serde::{Deserialize, Serialize};
 use strum::Display;
 use uuid::Uuid;
 
-use crate::aggregates::contribution::command::Contribution;
+use crate::aggregates::contribution::command::ContributionKind;
 
 #[derive(Debug, Serialize, Deserialize, PartialEq, Clone, Display)]
 pub enum ContributionEvent {
     ContributionProposed {
         contribution_id: Uuid,
         course_id: Uuid,
-        kind: Contribution,
+        kind: ContributionKind,
         comment: String,
     },
     ContributionApproved {
