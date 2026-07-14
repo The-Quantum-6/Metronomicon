@@ -178,21 +178,3 @@ impl Aggregate for Contribution {
         }
     }
 }
-
-#[cfg(test)]
-mod tests {
-    use uuid::Uuid;
-
-    #[allow(dead_code)]
-    fn contribution_id() -> Uuid {
-        Uuid::parse_str("00000000-0000-0000-0000-000000000001").unwrap()
-    }
-
-    #[allow(dead_code)]
-    fn course_id() -> Uuid {
-        Uuid::parse_str("00000000-0000-0000-0000-000000000002").unwrap()
-    }
-
-    // Note: Tests for command handling require async services and are tested via integration tests.
-    // Unit tests for apply (state transitions) would go here if needed.
-}
