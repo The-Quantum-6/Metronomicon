@@ -7,9 +7,7 @@ use crate::aggregates::{
         command::{ContributionCommand, ContributionKind, ModerationVerdict, TextContributionKind},
         error::ContributionError,
         event::ContributionEvent,
-    },
-    course::service::CourseExistanceService,
-    link::services::LinkServices,
+    }, course::service::CourseExistanceService, faq::services::FaqExistanceService, link::services::LinkServices
 };
 
 #[derive(Debug, Serialize, Deserialize, PartialEq, Default)]
@@ -24,6 +22,7 @@ pub enum ContributionStatus {
 pub struct ContributionAggregateServices {
     pub link: LinkServices,
     pub course: CourseExistanceService,
+    pub faq: FaqExistanceService,
 }
 
 #[derive(Serialize, Default, Deserialize)]
@@ -66,7 +65,7 @@ impl Aggregate for Contribution {
                             return Err("course not found".into());
                         }
 
-                        // Validate link-related contributions
+                        // Validate
                         match &contribution {
                             ContributionKind::Text(TextContributionKind::AddLink {
                                 url,
@@ -115,7 +114,37 @@ impl Aggregate for Contribution {
                                     return Err("link does not exist in course".into());
                                 }
                             }
-                            _ => {}
+                            ContributionKind::Text(TextContributionKind::AddFaqEntry {
+                                question: _,
+                                answer: _,
+                            }) => (),
+                            ContributionKind::Text(TextContributionKind::EditFaqEntry {
+                                faq_id,
+                                question: _,
+                                answer: _,
+                            }) => {
+                                let exists = service
+                                    .faq
+                                    .faq_exists(&course_id.to_string(), faq_id)
+                                    .await
+                                    .map_err(|e| format!("database error: {}", e))?;
+                                if !exists {
+                                    return Err("link does not exist in course".into());
+                                }
+                            }
+                            ContributionKind::Text(TextContributionKind::RemoveFaqEntry {
+                                faq_id,
+                            }) => {
+                                let exists = service
+                                    .faq
+                                    .faq_exists(&course_id.to_string(), faq_id)
+                                    .await
+                                    .map_err(|e| format!("database error: {}", e))?;
+                                if !exists {
+                                    return Err("link does not exist in course".into());
+                                }
+                            }
+                            _ => todo!("Add support for project_idea and resource"),
                         }
                         let _: () = sink
                             .write(
