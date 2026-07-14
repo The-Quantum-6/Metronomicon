@@ -16,6 +16,7 @@ pub struct ContributionListView {
     pub course_id: Uuid,
     pub contribution: serde_json::Value,
     pub status: ContributionStatus,
+    pub comment: String,
 }
 
 impl View<Contribution> for ContributionListView {
@@ -25,11 +26,13 @@ impl View<Contribution> for ContributionListView {
                 contribution_id,
                 course_id,
                 kind,
+                comment,
             } => {
                 self.aggregate_id = *contribution_id;
                 self.course_id = *course_id;
                 self.contribution = serde_json::to_value(kind).unwrap_or(serde_json::Value::Null);
                 self.status = ContributionStatus::Proposed;
+                self.comment = comment.clone();
             }
             ContributionEvent::ContributionApproved { .. } => {
                 self.status = ContributionStatus::Approved;

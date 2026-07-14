@@ -34,6 +34,7 @@ pub struct Contribution {
     pub status: ContributionStatus,
     pub course_id: Uuid,
     pub contribution: Option<ContributionKind>,
+    pub comment: String,
 }
 
 impl Aggregate for Contribution {
@@ -55,6 +56,7 @@ impl Aggregate for Contribution {
                     contribution_id,
                     course_id,
                     contribution,
+                    comment,
                 } => match self.status {
                     ContributionStatus::Uninitialized => {
                         // Ensure the course exists before accepting contributions
@@ -123,6 +125,7 @@ impl Aggregate for Contribution {
                                     contribution_id,
                                     course_id,
                                     kind: contribution,
+                                    comment,
                                 },
                                 self,
                             )

@@ -11,6 +11,7 @@ pub enum ContributionEvent {
         contribution_id: Uuid,
         course_id: Uuid,
         kind: Contribution,
+        comment: String,
     },
     ContributionApproved {
         contribution_id: Uuid,

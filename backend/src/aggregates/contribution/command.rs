@@ -10,6 +10,7 @@ pub enum ContributionCommand {
         contribution_id: Uuid,
         course_id: Uuid,
         contribution: Contribution,
+        comment: String,
     },
 
     /// Suggest a change
