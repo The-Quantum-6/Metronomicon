@@ -8,7 +8,7 @@ use crate::{
     aggregates::{
         contribution::aggregate::{Contribution, ContributionAggregateServices},
         course::{aggregate::Course, service::CourseExistanceService},
-        faq::aggregate::{Faq, FaqAggregateServices},
+        faq::{aggregate::{Faq, FaqAggregateServices}, services::FaqExistanceService},
         link::{
             aggregate::{Link, LinkAggregateServices},
             services::{LinkExistanceService, LinkServices, LinkValidityService},
@@ -128,6 +128,7 @@ pub async fn get(config: &AppConfig) -> AppState {
             LinkExistanceService(db.clone()),
         ),
         course: CourseExistanceService(db.clone()),
+        faq: FaqExistanceService(db.clone()),
     };
     let contribution_cqrs = Arc::new(postgres_es::postgres_cqrs(
         db.clone(),
