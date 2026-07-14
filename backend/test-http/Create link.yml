@@ -11,7 +11,7 @@ http:
     data: |-
       {
         "Create": {
-          "course_id": "a1500188-75b4-4433-819a-870fb1134e9a",
+          "course_id": "e25e0951-613f-4baf-8aa0-4316ace1e81f",
           "label": "An awful link",
           "url": "https://github.com/"
         }

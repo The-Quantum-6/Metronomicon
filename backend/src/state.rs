@@ -8,7 +8,10 @@ use crate::{
     aggregates::{
         contribution::aggregate::{Contribution, ContributionAggregateServices},
         course::{aggregate::Course, service::CourseExistanceService},
-        faq::{aggregate::{Faq, FaqAggregateServices}, services::FaqExistanceService},
+        faq::{
+            aggregate::{Faq, FaqAggregateServices},
+            services::FaqExistanceService,
+        },
         link::{
             aggregate::{Link, LinkAggregateServices},
             services::{LinkExistanceService, LinkServices, LinkValidityService},
@@ -120,6 +123,7 @@ pub async fn get(config: &AppConfig) -> AppState {
         Box::new(ContributionProcessManager::new(
             db.clone(),
             link_cqrs.clone(),
+            faq_cqrs.clone(),
         )),
     ];
     let contribution_aggregate_services = ContributionAggregateServices {

@@ -12,6 +12,7 @@ use crate::aggregates::{
         command::{ContributionKind, TextContributionKind},
         event::ContributionEvent,
     },
+    faq::{aggregate::Faq, command::FaqCommand},
     link::{aggregate::Link, command::LinkCommand},
 };
 
@@ -85,11 +86,30 @@ impl Query<Contribution> for ContributionListQuery {
 pub struct ContributionProcessManager {
     pool: Pool<Postgres>,
     link: Arc<PostgresCqrs<Link>>,
+    faq: Arc<PostgresCqrs<Faq>>,
+}
+
+enum AggregateCommand {
+    Link(LinkCommand),
+    Faq(FaqCommand),
+}
+
+impl AggregateCommand {
+    fn id(&self) -> &Uuid {
+        match self {
+            AggregateCommand::Link(cmd) => cmd.id(),
+            AggregateCommand::Faq(cmd) => cmd.id(),
+        }
+    }
 }
 
 impl ContributionProcessManager {
-    pub fn new(pool: Pool<Postgres>, link: Arc<PostgresCqrs<Link>>) -> Self {
-        Self { pool, link }
+    pub fn new(
+        pool: Pool<Postgres>,
+        link: Arc<PostgresCqrs<Link>>,
+        faq: Arc<PostgresCqrs<Faq>>,
+    ) -> Self {
+        Self { pool, link, faq }
     }
 
     async fn handle_approved(&self, contribution_id: &str) {
@@ -131,26 +151,54 @@ impl ContributionProcessManager {
         metadata.insert("type".to_string(), "contribution".to_string());
         let cmd = match kind {
             ContributionKind::Text(t) => match t {
-                TextContributionKind::AddLink { label, url } => LinkCommand::Create {
-                    link_id: Uuid::new_v4(),
-                    course_id: Uuid::parse_str(&course_id).unwrap(),
-                    label,
-                    url,
-                },
+                TextContributionKind::AddLink { label, url } => {
+                    AggregateCommand::Link(LinkCommand::Create {
+                        link_id: Uuid::new_v4(),
+                        course_id: Uuid::parse_str(&course_id).unwrap(),
+                        label,
+                        url,
+                    })
+                }
                 TextContributionKind::EditLink {
                     link_id,
                     label,
                     url,
-                } => LinkCommand::Update {
+                } => AggregateCommand::Link(LinkCommand::Update {
                     link_id,
                     course_id: Uuid::parse_str(&course_id).unwrap(),
                     label,
                     url,
-                },
-                TextContributionKind::RemoveLink { link_id } => LinkCommand::Delete {
-                    link_id,
+                }),
+                TextContributionKind::RemoveLink { link_id } => {
+                    AggregateCommand::Link(LinkCommand::Delete {
+                        link_id,
+                        course_id: Uuid::parse_str(&course_id).unwrap(),
+                    })
+                }
+                TextContributionKind::AddFaqEntry { question, answer } => {
+                    AggregateCommand::Faq(FaqCommand::Create {
+                        faq_id: Uuid::new_v4(),
+                        course_id: Uuid::parse_str(&course_id).unwrap(),
+                        question,
+                        answer,
+                    })
+                }
+                TextContributionKind::EditFaqEntry {
+                    faq_id,
+                    question,
+                    answer,
+                } => AggregateCommand::Faq(FaqCommand::Update {
+                    faq_id,
                     course_id: Uuid::parse_str(&course_id).unwrap(),
-                },
+                    question,
+                    answer,
+                }),
+                TextContributionKind::RemoveFaqEntry { faq_id } => {
+                    AggregateCommand::Faq(FaqCommand::Delete {
+                        faq_id,
+                        course_id: Uuid::parse_str(&course_id).unwrap(),
+                    })
+                }
                 _ => todo!("Not yet implemented"),
             },
             _ => {
@@ -162,10 +210,21 @@ impl ContributionProcessManager {
 
         let id = cmd.id().to_string();
 
-        if let Err(e) = self.link.execute_with_metadata(&id, cmd, metadata).await {
-            println!(
-                "ContributionProcessManager: failed to execute link command for {contribution_id}: {e:?}"
-            );
+        match cmd {
+            AggregateCommand::Link(cmd) => {
+                if let Err(e) = self.link.execute_with_metadata(&id, cmd, metadata).await {
+                    println!(
+                        "ContributionProcessManager: failed to execute link command for {contribution_id}: {e:?}"
+                    );
+                }
+            }
+            AggregateCommand::Faq(cmd) => {
+                if let Err(e) = self.faq.execute_with_metadata(&id, cmd, metadata).await {
+                    println!(
+                        "ContributionProcessManager: failed to execute link command for {contribution_id}: {e:?}"
+                    );
+                }
+            }
         }
     }
 }
@@ -184,7 +243,7 @@ impl Query<Contribution> for ContributionProcessManager {
                     let id = &event.aggregate_id;
                     self.handle_approved(id).await;
                 }
-                ContributionEvent::ContributionDenied => {}
+                ContributionEvent::ContributionDenied => (),
             }
         }
     }

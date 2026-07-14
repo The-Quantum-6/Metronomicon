@@ -7,7 +7,10 @@ use crate::aggregates::{
         command::{ContributionCommand, ContributionKind, ModerationVerdict, TextContributionKind},
         error::ContributionError,
         event::ContributionEvent,
-    }, course::service::CourseExistanceService, faq::services::FaqExistanceService, link::services::LinkServices
+    },
+    course::service::CourseExistanceService,
+    faq::services::FaqExistanceService,
+    link::services::LinkServices,
 };
 
 #[derive(Debug, Serialize, Deserialize, PartialEq, Default)]

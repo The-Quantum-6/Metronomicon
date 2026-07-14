@@ -1,7 +1,7 @@
 info:
-  name: Contribute add link
+  name: Contribute remove faq
   type: http
-  seq: 19
+  seq: 28
 
 http:
   method: POST
@@ -11,16 +11,15 @@ http:
     data: |-
       {
         "Propose": {
-          "course_id": "e25e0951-613f-4baf-8aa0-4316ace1e81f",
+          "course_id": "6b1f1e2a-3c1a-4b8a-9f0d-1a2b3c4d5e6f",
           "contribution": {
             "Text": {
-              "AddLink": {
-                "label": "Useful Tutorial",
-                "url": "https://oslomet.no"
+              "RemoveFaqEntry": {
+                "faq_id": "1a2b3c4d-5e6f-7a8b-9c0d-1e2f3a4b5c6d"
               }
             }
           },
-          "comment": "Adding a helpful reference link"
+          "comment": "No longer relevant"
         }
       }
   auth: inherit
