@@ -9,4 +9,5 @@ pub struct ContributionDetailView {
     pub contribution_id: Uuid,
     pub course_id: Uuid,
     pub contribution: Option<Contribution>,
+    pub comment: String,
 }

@@ -1,8 +1,19 @@
+use std::{collections::HashMap, sync::Arc};
+
 use async_trait::async_trait;
 use cqrs_es::{EventEnvelope, Query};
-use sqlx::{Pool, Postgres};
+use postgres_es::PostgresCqrs;
+use sqlx::{Pool, Postgres, Row};
+use uuid::Uuid;
 
-use crate::aggregates::contribution::{aggregate::Contribution, event::ContributionEvent};
+use crate::aggregates::{
+    contribution::{
+        aggregate::Contribution,
+        command::{ContributionKind, TextContributionKind},
+        event::ContributionEvent,
+    },
+    link::{aggregate::Link, command::LinkCommand},
+};
 
 pub struct ContributionQuery;
 
@@ -30,20 +41,21 @@ impl Query<Contribution> for ContributionListQuery {
         for event in events {
             let result = match &event.payload {
                 ContributionEvent::ContributionProposed {
-                    course_id, kind, ..
+                    course_id, kind, comment, ..
                 } => {
                     // serialize the contribution payload to JSONB
                     let contribution_json =
                         serde_json::to_value(kind).unwrap_or(serde_json::Value::Null);
                     sqlx::query(
-                        "INSERT INTO contribution_list_view (aggregate_id, course_id, contribution, status)
-                         VALUES ($1, $2, $3::jsonb, 'Proposed')
+                        "INSERT INTO contribution_list_view (aggregate_id, course_id, contribution, status, comment)
+                         VALUES ($1, $2, $3::jsonb, 'Proposed', $4)
                          ON CONFLICT (aggregate_id) DO UPDATE
-                         SET course_id = $2, contribution = $3::jsonb, status = 'Proposed'",
+                         SET course_id = $2, contribution = $3::jsonb, status = 'Proposed', comment = $4",
                     )
                     .bind(aggregate_id)
                     .bind(course_id.to_string())
                     .bind(contribution_json)
+                    .bind(comment)
                     .execute(&self.pool)
                     .await
                 }
@@ -63,6 +75,110 @@ impl Query<Contribution> for ContributionListQuery {
 
             if let Err(e) = result {
                 println!("ContributionListQuery error: {e}");
+            }
+        }
+    }
+}
+
+pub struct ContributionProcessManager {
+    pool: Pool<Postgres>,
+    link: Arc<PostgresCqrs<Link>>,
+}
+
+impl ContributionProcessManager {
+    pub fn new(pool: Pool<Postgres>, link: Arc<PostgresCqrs<Link>>) -> Self {
+        Self { pool, link }
+    }
+
+    async fn handle_approved(&self, contribution_id: &str) {
+        // Fetch the stored contribution row (course_id + contribution JSONB)
+        let row = match sqlx::query(
+            "SELECT course_id, contribution FROM contribution_list_view WHERE aggregate_id = $1",
+        )
+        .bind(contribution_id)
+        .fetch_optional(&self.pool)
+        .await
+        {
+            Ok(Some(row)) => row,
+            Ok(None) => {
+                println!(
+                    "ContributionProcessManager: no contribution_list_view row for {contribution_id}"
+                );
+                return;
+            }
+            Err(e) => {
+                println!("ContributionProcessManager: fetch error: {e}");
+                return;
+            }
+        };
+
+        let course_id: String = row.get("course_id");
+        let contribution_json: serde_json::Value = row.get("contribution");
+
+        // Deserialize back into your ContributionKind enum.
+        // Adjust the type path to match where ContributionKind actually lives.
+        let kind = match serde_json::from_value(contribution_json) {
+            Ok(k) => k,
+            Err(e) => {
+                println!("ContributionProcessManager: failed to deserialize kind: {e}");
+                return;
+            }
+        };
+
+        let mut metadata = HashMap::new();
+        metadata.insert("type".to_string(), "contribution".to_string());
+        let cmd = match kind {
+            ContributionKind::Text(t) => match t {
+                TextContributionKind::AddLink { label, url } => LinkCommand::Create {
+                    link_id: Uuid::new_v4(),
+                    course_id: Uuid::parse_str(&course_id).unwrap(),
+                    label,
+                    url,
+                },
+                TextContributionKind::EditLink {
+                    link_id,
+                    label,
+                    url,
+                } => LinkCommand::Update {
+                    link_id,
+                    course_id: Uuid::parse_str(&course_id).unwrap(),
+                    label,
+                    url,
+                },
+                TextContributionKind::RemoveLink { link_id } => LinkCommand::Delete {
+                    link_id,
+                    course_id: Uuid::parse_str(&course_id).unwrap(),
+                },
+                _ => todo!("Not yet implemented"),
+            },
+            _ => {
+                todo!(
+                    "ContributionProcessManager: contribution {contribution_id} has an unhandled kind, skipping"
+                )
+            }
+        };
+
+        let id = cmd.id().to_string();
+
+        if let Err(e) = self.link.execute_with_metadata(&id, cmd, metadata).await {
+            println!(
+                "ContributionProcessManager: failed to execute link command for {contribution_id}: {e:?}"
+            );
+        }
+    }
+}
+
+#[async_trait]
+impl Query<Contribution> for ContributionProcessManager {
+    async fn dispatch(&self, _aggregate_id: &str, events: &[EventEnvelope<Contribution>]) {
+        for event in events {
+            match &event.payload {
+                ContributionEvent::ContributionProposed { .. } => {}
+                ContributionEvent::ContributionApproved { contribution_id } => {
+                    let id = contribution_id.to_string();
+                    self.handle_approved(&id).await;
+                }
+                ContributionEvent::ContributionDenied { .. } => {}
             }
         }
     }

@@ -28,6 +28,8 @@ pub enum Contribution {
     Text(TextContributionKind),
 }
 
+pub type ContributionKind = Contribution;
+
 #[derive(Debug, Serialize, Deserialize, PartialEq, Clone)]
 pub enum FileContributionKind {
     AddResource { title: String, key: Uuid },

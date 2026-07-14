@@ -17,7 +17,7 @@ use crate::{
     },
     config::AppConfig,
     queries::{
-        contribution::{ContributionListQuery, ContributionQuery},
+        contribution::{ContributionListQuery, ContributionProcessManager, ContributionQuery},
         course::{CourseListQuery, CourseQuery},
         faq::CourseFaqQuery,
         link::CourseLinkQuery,
@@ -117,6 +117,7 @@ pub async fn get(config: &AppConfig) -> AppState {
         Box::new(ContributionListQuery::new(db.clone())),
         Box::new(logging_query.clone()),
         Box::new(ContributionQuery),
+        Box::new(ContributionProcessManager::new(db.clone(), link_cqrs.clone()))
     ];
     let contribution_aggregate_services = ContributionAggregateServices {
         link: LinkServices(

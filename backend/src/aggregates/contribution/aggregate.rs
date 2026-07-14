@@ -4,10 +4,7 @@ use uuid::Uuid;
 
 use crate::aggregates::{
     contribution::{
-        command::{
-            Contribution as ContributionKind, ContributionCommand, ModerationVerdict,
-            TextContributionKind,
-        },
+        command::{ContributionCommand, ContributionKind, ModerationVerdict, TextContributionKind},
         error::ContributionError,
         event::ContributionEvent,
     },

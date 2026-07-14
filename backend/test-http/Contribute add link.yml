@@ -11,16 +11,16 @@ http:
     data: |-
       {
         "Propose": {
-          "course_id": "a218c56a-df18-4ebb-b007-68460e132a5c",
+          "course_id": "0f2c796e-2122-4bec-b446-51dff32c18b2",
           "contribution": {
             "Text": {
               "AddLink": {
-                "course_id": "a218c56a-df18-4ebb-b007-68460e132a5c",
                 "label": "Useful Tutorial",
                 "url": "https://oslomet.no"
               }
             }
-          }
+          },
+          "comment": "Adding a helpful reference link"
         }
       }
   auth: inherit
