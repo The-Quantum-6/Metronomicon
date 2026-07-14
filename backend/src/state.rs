@@ -8,7 +8,7 @@ use crate::{
     aggregates::{
         contribution::aggregate::{Contribution, ContributionAggregateServices},
         course::{aggregate::Course, service::CourseExistanceService},
-        faq::{aggregate::Faq, service::FaqAggregateServices},
+        faq::aggregate::{Faq, FaqAggregateServices},
         link::{
             aggregate::{Link, LinkAggregateServices},
             services::{LinkExistanceService, LinkServices, LinkValidityService},

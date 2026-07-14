@@ -3,9 +3,17 @@ use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
 use crate::aggregates::{
-    faq::{command::FaqCommand, error::FaqError, event::FaqEvent, service::FaqAggregateServices},
+    course::service::CourseExistanceService,
+    faq::{command::FaqCommand, error::FaqError, event::FaqEvent},
     shared::{Officiality, Status},
 };
+
+/// External dependencies `Faq::handle` needs beyond its own state — currently
+/// just a way to check that a `course_id` refers to a real course before a
+/// FAQ can be created against it, mirroring `LinkAggregateServices`.
+pub struct FaqAggregateServices {
+    pub course: CourseExistanceService,
+}
 
 #[derive(Serialize, Default, Deserialize)]
 pub struct Faq {
