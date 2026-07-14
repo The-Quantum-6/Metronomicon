@@ -3,5 +3,6 @@ CREATE TABLE report_list_view (
     target        TEXT NOT NULL,
     description   TEXT NOT NULL,
     contact_email TEXT,
-    status        TEXT NOT NULL
+    status        TEXT NOT NULL,
+    PRIMARY KEY (aggregate_id)
 );
