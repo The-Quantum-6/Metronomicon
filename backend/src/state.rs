@@ -13,6 +13,7 @@ use crate::{
             services::LinkServices,
         },
         project_idea::aggregate::{ProjectIdea, ProjectIdeaAggregateServices},
+        report::aggregate::{Report, ReportAggregateServices},
     },
     config::AppConfig,
     queries::{
@@ -20,10 +21,16 @@ use crate::{
         faq::CourseFaqQuery,
         link::CourseLinkQuery,
         project_idea::CourseProjectIdeaQuery,
+        report::{ReportListQuery, ReportQuery},
         test_logging_query,
     },
-    views::course::active_detailed::{ActiveCourseViewRepo, CourseDetailViewRepo},
+    views::{
+        admin::report_detail::ReportDetailView,
+        course::active_detailed::{ActiveCourseViewRepo, CourseDetailViewRepo},
+    },
 };
+
+type ReportDetailViewRepo = PostgresViewRepository<ReportDetailView, Report>;
 
 #[derive(Clone)]
 pub struct AppState {
@@ -38,6 +45,7 @@ pub struct Cqrs {
     pub link: Arc<PostgresCqrs<Link>>,
     pub project_idea: Arc<PostgresCqrs<ProjectIdea>>,
     pub faq: Arc<PostgresCqrs<Faq>>,
+    pub report: Arc<PostgresCqrs<Report>>,
 }
 
 pub async fn get(config: &AppConfig) -> AppState {
@@ -98,7 +106,7 @@ pub async fn get(config: &AppConfig) -> AppState {
     ));
 
     let project_idea_queries: Vec<Box<dyn Query<ProjectIdea>>> = vec![
-        Box::new(logging_query),
+        Box::new(logging_query.clone()),
         Box::new(CourseProjectIdeaQuery::new(course_view_repo.clone())),
     ];
     let project_idea_aggregate_services = ProjectIdeaAggregateServices {
@@ -110,12 +118,37 @@ pub async fn get(config: &AppConfig) -> AppState {
         project_idea_aggregate_services,
     ));
 
+    // Report has its own view — it does NOT update CourseDetailView.
+    // Two views, same split as Course: a detail view (report_detail_view)
+    // for single-report lookups, and a flat list view (report_list_view)
+    // for the admin listing.
+    let report_detail_view_repo: Arc<ReportDetailViewRepo> = Arc::new(PostgresViewRepository::new(
+        "report_detail_view",
+        db.clone(),
+    ));
+    let report_query = ReportQuery::new(report_detail_view_repo.clone());
+    let report_list_query = ReportListQuery::new(db.clone());
+    let report_queries: Vec<Box<dyn Query<Report>>> = vec![
+        Box::new(logging_query),
+        Box::new(report_query),
+        Box::new(report_list_query),
+    ];
+    let report_aggregate_services = ReportAggregateServices {
+        course: CourseServices(db.clone()),
+    };
+    let report_cqrs = Arc::new(postgres_es::postgres_cqrs(
+        db.clone(),
+        report_queries,
+        report_aggregate_services,
+    ));
+
     AppState {
         cqrs: Arc::new(Cqrs {
             course: course_cqrs,
             link: link_cqrs,
             project_idea: project_idea_cqrs,
             faq: faq_cqrs,
+            report: report_cqrs,
         }),
         course_view_repo: ActiveCourseViewRepo(course_view_repo),
         pool: db,
