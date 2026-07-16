@@ -1,10 +1,13 @@
 import { useState } from "react"
+import LinkForm from "./forms/linkform";
 
 export type ContributionType = "resource" | "link" | "project_idea" | "faq"
 
 interface ContributeModalProps {
   onCancel: () => void
   preselected?: ContributionType | null
+  courseId: string
+
 }
 
 const options: { id: ContributionType; label: string; description: string}[] = [
@@ -14,7 +17,7 @@ const options: { id: ContributionType; label: string; description: string}[] = [
   { id: "faq",      label: "FAQ",           description: "Add a question and answer"},
 ]
 
-export default function ContributeModal({ onCancel, preselected = null }: ContributeModalProps) {
+export default function ContributeModal({ onCancel, courseId, preselected = null }: ContributeModalProps) {
   const [selected, setSelected] = useState<ContributionType | null>(preselected)
   const selectedOption = selected ? options.find((o) => o.id === selected) : null
 
@@ -56,16 +59,11 @@ export default function ContributeModal({ onCancel, preselected = null }: Contri
               {selectedOption?.description}
             </h2>
             <div className="bg-[#F4F2EB] rounded-xl p-4 mb-6">
-            </div>
-            <div className="flex gap-2 justify-end">
-              <button onClick={() => alert("contribution sent for review. Thank you!")}
-              className="p-2 text-lg bg-[#1A1F3A] text-white rounded-lg hover:opacity-90 transition-colors">Send for review</button>
-              <button
-                onClick={onCancel}
-                className="p-2 text-lg text-[#6B6B5A] border border-[#6B6B5A] rounded-lg hover:bg-gray-100 transition-colors"
-              >
-                Cancel
-              </button>
+              {selected === "link" && (
+                <LinkForm
+                courseId={courseId}
+                onCancel={onCancel}/>
+                )}
             </div>
           </>
         )}

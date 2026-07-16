@@ -8,11 +8,21 @@ import { apiUrl } from "../config";
 const DISCLAIMER_SEEN = "metronomicon_policy_acknowledged"
 
 type Course = {
-  id: string;
-  name: string;
-  code: string;
-  content?: string | null;
-};
+  name: string
+  code: string
+  field: string
+  description?: string | null
+  tags: string[]
+  links: Link[]
+}
+
+type Link = {
+  link_id: string
+  status: string
+  label: string
+  url: string
+  official: boolean
+}
 
 type CourseTab = "overview" | "resources" | "links" | "projects" | "faq";
 
@@ -35,11 +45,11 @@ export default function Course() {
 
 
   useEffect(() => {
-    fetch(apiUrl(`courses/${id}`))
-      .then((r) => r.json())
-      .then((data) => setCourse(data))
-      .catch(console.error);
-  }, [id]);
+  fetch(apiUrl(`courses/${id}`))
+    .then((r) => r.json())
+    .then((data) => setCourse(data))
+    .catch(console.error);
+}, [id]);
 
   const handleContribute = () => {
     if (localStorage.getItem(DISCLAIMER_SEEN)){
@@ -99,7 +109,7 @@ return (
       {tab === "overview"  && 
       <div className="bg-white border border-[#DAD8D6] rounded-2xl p-5 mt-5 max-w-4xl w-full">
         <h2 className="font-bold font-display text-xl pb-2">About this course</h2>
-        <p className="text-[#6B6B5A]">{course.content}</p>
+        <p className="text-[#6B6B5A]">{course.description}</p>
       </div>
       }
 
@@ -108,10 +118,33 @@ return (
       <div>
         <button onClick={() => { setPreselectedType("resource"); handleContribute();}}className="border border-dashed border-[#6B6B5A] rounded-lg px-4 py-2 text-[#6B6B5A] w-full hover:bg-gray-200">+ Add resources</button>
         </div>}
-      {tab === "links"     && 
-      <div>
-        <button onClick={() => { setPreselectedType("link"); handleContribute();}}className="border border-dashed border-[#6B6B5A] rounded-lg px-4 py-2 text-[#6B6B5A] w-full hover:bg-gray-200">+ Add link</button>
-        </div>}
+      {tab === "links" && (
+        <div className="pt-2">
+          {course.links.map((link) => (
+            <a key={link.link_id} href={link.url} target="_blank"
+            className="block border border-[#DAD8D6] rounded-xl p-3 mb-3 hover:bg-gray-200 transition-colors">
+              <div className="flex justify-between items-start">
+                <div>
+                  <h3 className="font-semibold text-[#1A1F3A]">{link.label}</h3>
+                  <p className="text-sm text-[#6B6B5A] hover:underline">{link.url}</p>
+                  </div>
+                  {link.official && (
+                    <p className="text-xs px-2 py-1 border border-[#1A1F3A] rounded-full text-[#1A1F3A]">Official</p>
+                    )}
+                    </div>
+                    </a>
+                  ))}
+                  <button
+                  onClick={() => {
+                    setPreselectedType("link");
+                    handleContribute();
+                  }}
+                  className="border border-dashed border-[#6B6B5A] rounded-lg px-4 py-2 mt-2 text-[#6B6B5A] w-full hover:bg-gray-200">
+                    + Add link
+                    </button>
+                    </div>
+                  )}
+      
       {tab === "projects"  && 
       <div>
         <button onClick={() => { setPreselectedType("project_idea"); handleContribute();}}className="border border-dashed border-[#6B6B5A] rounded-lg px-4 py-2 text-[#6B6B5A] w-full hover:bg-gray-200">+ Add project idea</button>
@@ -130,6 +163,7 @@ return (
 
     {showContribute && (
       <Contribute 
+      courseId={id ?? ""}
       preselected={preselecteType}
       onCancel={() => {setShowContribute(false); setPreselectedType(null)}}
         />
