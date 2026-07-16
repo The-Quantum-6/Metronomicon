@@ -1,8 +1,8 @@
 pub mod user_endpoint;
 
 use axum::Router;
-use sqlx::PgPool;
+use crate::state::AppState;
 
-pub fn router() -> Router<PgPool> {
+pub fn router() -> Router<AppState> {
     Router::new().merge(user_endpoint::router())
 }
