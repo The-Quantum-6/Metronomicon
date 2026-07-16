@@ -1,0 +1,33 @@
+info:
+  name: Contribute edit faq
+  type: http
+  seq: 2
+
+http:
+  method: POST
+  url: http://localhost:3000/contributions
+  body:
+    type: json
+    data: |-
+      {
+        "Propose": {
+          "course_id": "e25e0951-613f-4baf-8aa0-4316ace1e81f",
+          "contribution": {
+            "Text": {
+              "EditFaqEntry": {
+                "faq_id": "efbf6e3c-4fc0-4bfb-a89c-15fb95f85b1f",
+                "question": null,
+                "answer": "Use t............e sidebar (updated location)."
+              }
+            }
+          },
+          "comment": "Portal moved, updating answer"
+        }
+      }
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

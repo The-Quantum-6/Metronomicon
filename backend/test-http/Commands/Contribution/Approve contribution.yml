@@ -1,0 +1,24 @@
+info:
+  name: Approve contribution
+  type: http
+  seq: 1
+
+http:
+  method: POST
+  url: http://localhost:3000/contributions
+  body:
+    type: json
+    data: |-
+      {
+        "Moderate": {
+          "contribution_id": "27b6b941-12de-44ff-8462-34fbda1c4d85",
+          "verdict": "Approve"
+        }
+      }
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

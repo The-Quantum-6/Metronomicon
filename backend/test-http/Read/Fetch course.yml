@@ -1,0 +1,15 @@
+info:
+  name: Fetch course
+  type: http
+  seq: 2
+
+http:
+  method: GET
+  url: http://localhost:3000/courses/e25e0951-613f-4baf-8aa0-4316ace1e81f
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
