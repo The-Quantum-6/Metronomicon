@@ -11,11 +11,11 @@ http:
     data: |-
       {
         "Propose": {
-          "course_id": "6b1f1e2a-3c1a-4b8a-9f0d-1a2b3c4d5e6f",
+          "course_id": "4168a724-7206-4540-a632-87170ce4f7d5",
           "contribution": {
             "Text": {
               "RemoveLink": {
-                "link_id": "e6f8a1b2-1234-4a2b-9c3d-4e5f6a7b8c9d"
+                "link_id": "a2f9c367-7275-4793-96eb-875ec5cfcab2"
               }
             }
           },

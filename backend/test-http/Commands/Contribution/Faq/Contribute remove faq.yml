@@ -11,11 +11,11 @@ http:
     data: |-
       {
         "Propose": {
-          "course_id": "6b1f1e2a-3c1a-4b8a-9f0d-1a2b3c4d5e6f",
+          "course_id": "4168a724-7206-4540-a632-87170ce4f7d5",
           "contribution": {
             "Text": {
               "RemoveFaqEntry": {
-                "faq_id": "1a2b3c4d-5e6f-7a8b-9c0d-1e2f3a4b5c6d"
+                "faq_id": "ca67b55c-6d68-4356-9f54-85e0b5e4e8a8"
               }
             }
           },

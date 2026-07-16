@@ -10,7 +10,7 @@ use crate::aggregates::{
     },
     course::service::CourseExistanceService,
     faq::services::FaqExistanceService,
-    link::services::LinkServices,
+    link::services::LinkServices, project_idea::services::ProjectIdeaExistanceService,
 };
 
 #[derive(Debug, Serialize, Deserialize, PartialEq, Default)]
@@ -26,6 +26,7 @@ pub struct ContributionAggregateServices {
     pub link: LinkServices,
     pub course: CourseExistanceService,
     pub faq: FaqExistanceService,
+	pub project_idea: ProjectIdeaExistanceService,
 }
 
 #[derive(Serialize, Default, Deserialize)]
@@ -147,6 +148,27 @@ impl Aggregate for Contribution {
                                     return Err("link does not exist in course".into());
                                 }
                             }
+							ContributionKind::Text(TextContributionKind::AddProjectIdea { title: _, body: _, difficulty: _ }) => (),
+							ContributionKind::Text(TextContributionKind::EditProjectIdea { idea_id, title: _, body: _, difficulty: _ }) => {
+								let exists = service
+                                    .project_idea
+                                    .project_idea_exists(&course_id.to_string(), idea_id)
+                                    .await
+                                    .map_err(|e| format!("database error: {}", e))?;
+                                if !exists {
+                                    return Err("project idea does not exist in course".into());
+                                }
+							}
+							ContributionKind::Text(TextContributionKind::RemoveProjectIdea { idea_id }) => {
+								let exists = service
+                                    .project_idea
+                                    .project_idea_exists(&course_id.to_string(), idea_id)
+                                    .await
+                                    .map_err(|e| format!("database error: {}", e))?;
+                                if !exists {
+                                    return Err("project idea does not exist in course".into());
+                                }
+							}
                             _ => todo!("Add support for project_idea and resource"),
                         }
                         let _: () = sink

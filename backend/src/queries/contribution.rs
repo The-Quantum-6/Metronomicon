@@ -14,6 +14,7 @@ use crate::aggregates::{
     },
     faq::{aggregate::Faq, command::FaqCommand},
     link::{aggregate::Link, command::LinkCommand},
+    project_idea::{aggregate::ProjectIdea, command::ProjectIdeaCommand},
 };
 
 pub struct ContributionQuery;
@@ -87,11 +88,13 @@ pub struct ContributionProcessManager {
     pool: Pool<Postgres>,
     link: Arc<PostgresCqrs<Link>>,
     faq: Arc<PostgresCqrs<Faq>>,
+    project_idea: Arc<PostgresCqrs<ProjectIdea>>,
 }
 
 enum AggregateCommand {
     Link(LinkCommand),
     Faq(FaqCommand),
+    ProjectIdea(ProjectIdeaCommand),
 }
 
 impl AggregateCommand {
@@ -99,6 +102,7 @@ impl AggregateCommand {
         match self {
             AggregateCommand::Link(cmd) => cmd.id(),
             AggregateCommand::Faq(cmd) => cmd.id(),
+            AggregateCommand::ProjectIdea(cmd) => cmd.id(),
         }
     }
 }
@@ -108,8 +112,14 @@ impl ContributionProcessManager {
         pool: Pool<Postgres>,
         link: Arc<PostgresCqrs<Link>>,
         faq: Arc<PostgresCqrs<Faq>>,
+        project_idea: Arc<PostgresCqrs<ProjectIdea>>,
     ) -> Self {
-        Self { pool, link, faq }
+        Self {
+            pool,
+            link,
+            faq,
+            project_idea,
+        }
     }
 
     async fn handle_approved(&self, contribution_id: &str) {
@@ -199,7 +209,31 @@ impl ContributionProcessManager {
                         course_id: Uuid::parse_str(&course_id).unwrap(),
                     })
                 }
-                _ => todo!("Not yet implemented"),
+                TextContributionKind::AddProjectIdea {
+                    title,
+                    body,
+                    difficulty,
+                } => AggregateCommand::ProjectIdea(ProjectIdeaCommand::Create {
+                    idea_id: Uuid::new_v4(),
+                    course_id: Uuid::parse_str(&course_id).unwrap(),
+                    title,
+                    body,
+                    difficulty,
+                }),
+                TextContributionKind::EditProjectIdea {
+                    idea_id,
+                    title,
+                    body,
+                    difficulty,
+                } => AggregateCommand::ProjectIdea(ProjectIdeaCommand::Update {
+                    idea_id,
+                    title,
+                    body,
+                    difficulty,
+                }),
+                TextContributionKind::RemoveProjectIdea { idea_id } => {
+                    AggregateCommand::ProjectIdea(ProjectIdeaCommand::Delete { idea_id })
+                }
             },
             _ => {
                 todo!(
@@ -222,6 +256,17 @@ impl ContributionProcessManager {
                 if let Err(e) = self.faq.execute_with_metadata(&id, cmd, metadata).await {
                     println!(
                         "ContributionProcessManager: failed to execute link command for {contribution_id}: {e:?}"
+                    );
+                }
+            }
+            AggregateCommand::ProjectIdea(cmd) => {
+                if let Err(e) = self
+                    .project_idea
+                    .execute_with_metadata(&id, cmd, metadata)
+                    .await
+                {
+                    println!(
+                        "ContributionProcessManager: failed to execute project idea command for {contribution_id}: {e:?}"
                     );
                 }
             }

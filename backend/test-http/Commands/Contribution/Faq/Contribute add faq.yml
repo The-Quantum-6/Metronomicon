@@ -11,7 +11,7 @@ http:
     data: |-
       {
         "Propose": {
-          "course_id": "6b1f1e2a-3c1a-4b8a-9f0d-1a2b3c4d5e6f",
+          "course_id": "4168a724-7206-4540-a632-87170ce4f7d5",
           "contribution": {
             "Text": {
               "AddFaqEntry": {

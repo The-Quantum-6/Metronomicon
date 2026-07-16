@@ -16,7 +16,7 @@ use crate::{
             aggregate::{Link, LinkAggregateServices},
             services::{LinkExistanceService, LinkServices, LinkValidityService},
         },
-        project_idea::aggregate::{ProjectIdea, ProjectIdeaAggregateServices},
+        project_idea::{aggregate::{ProjectIdea, ProjectIdeaAggregateServices}, services::ProjectIdeaExistanceService},
     },
     config::AppConfig,
     queries::{
@@ -124,6 +124,7 @@ pub async fn get(config: &AppConfig) -> AppState {
             db.clone(),
             link_cqrs.clone(),
             faq_cqrs.clone(),
+            project_idea_cqrs.clone(),
         )),
     ];
     let contribution_aggregate_services = ContributionAggregateServices {
@@ -133,6 +134,7 @@ pub async fn get(config: &AppConfig) -> AppState {
         ),
         course: CourseExistanceService(db.clone()),
         faq: FaqExistanceService(db.clone()),
+        project_idea: ProjectIdeaExistanceService(db.clone()),
     };
     let contribution_cqrs = Arc::new(postgres_es::postgres_cqrs(
         db.clone(),

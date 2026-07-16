@@ -1,7 +1,7 @@
 info:
-  name: Contribute edit faq
+  name: Contribute add project idea
   type: http
-  seq: 2
+  seq: 1
 
 http:
   method: POST
@@ -14,14 +14,14 @@ http:
           "course_id": "4168a724-7206-4540-a632-87170ce4f7d5",
           "contribution": {
             "Text": {
-              "EditFaqEntry": {
-                "faq_id": "ca67b55c-6d68-4356-9f54-85e0b5e4e8a8",
-                "question": null,
-                "answer": "Use t............e sidebar (updated location)."
+              "AddProjectIdea": {
+                "title": "Build a CLI todo app",
+                "body": "A simple command-line todo list manager using Rust and serde for persistence.",
+                "difficulty": "Easy"
               }
             }
           },
-          "comment": "Portal moved, updating answer"
+          "comment": "Good beginner project"
         }
       }
   auth: inherit

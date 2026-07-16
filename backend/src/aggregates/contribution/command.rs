@@ -1,6 +1,8 @@
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
+use crate::aggregates::project_idea::difficulty::Difficulty;
+
 #[derive(Debug, Serialize, Deserialize, PartialEq, Clone)]
 pub enum ContributionCommand {
     /// Suggest a change
@@ -79,11 +81,13 @@ pub enum TextContributionKind {
     AddProjectIdea {
         title: String,
         body: String,
+        difficulty: Difficulty,
     },
     EditProjectIdea {
         idea_id: Uuid,
         title: Option<String>,
         body: Option<String>,
+        difficulty: Option<Difficulty>,
     },
     RemoveProjectIdea {
         idea_id: Uuid,
