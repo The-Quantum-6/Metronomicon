@@ -1,5 +1,6 @@
 import { useState } from "react"
 import LinkForm from "./forms/linkform";
+import ProjectIdeaForm from "./forms/ProjectIdeaForm";
 
 export type ContributionType = "resource" | "link" | "project_idea" | "faq"
 
@@ -64,6 +65,12 @@ export default function ContributeModal({ onCancel, courseId, preselected = null
                 courseId={courseId}
                 onCancel={onCancel}/>
                 )}
+                
+                {selected === "project_idea" && (
+                  <ProjectIdeaForm
+                  courseId={courseId}
+                  onCancel={onCancel}/>
+                  )}
             </div>
           </>
         )}

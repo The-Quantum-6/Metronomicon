@@ -14,6 +14,7 @@ type Course = {
   description?: string | null
   tags: string[]
   links: Link[]
+  project_ideas: ProjectIdea[]
 }
 
 type Link = {
@@ -22,6 +23,14 @@ type Link = {
   label: string
   url: string
   official: boolean
+}
+
+type ProjectIdea = {
+  idea_id: string
+  title: string
+  body: string
+  difficulty: "Easy" | "Medium" | "Hard"
+  status: string
 }
 
 type CourseTab = "overview" | "resources" | "links" | "projects" | "faq";
@@ -145,10 +154,28 @@ return (
                     </div>
                   )}
       
-      {tab === "projects"  && 
-      <div>
-        <button onClick={() => { setPreselectedType("project_idea"); handleContribute();}}className="border border-dashed border-[#6B6B5A] rounded-lg px-4 py-2 text-[#6B6B5A] w-full hover:bg-gray-200">+ Add project idea</button>
-        </div>}
+      {tab === "projects" && (
+        <div className="pt-5">
+          {course.project_ideas.map((idea) => (
+            <div key={idea.idea_id}
+            className="border border-[#DAD8D6] rounded-xl p-4 mb-3">
+              <div className="flex justify-between items-start">
+                <div>
+                  <h3 className="font-semibold text-[#1A1F3A]">{idea.title}</h3>
+                  <p className="text-sm text-[#6B6B5A] mt-2">{idea.body}</p>
+                  </div>
+                  <p className="text-xs px-3 py-1 rounded-full border border-[#DAD8D6] text-[#6B6B5A]">{idea.difficulty}</p>
+                  </div>
+                  </div>
+                ))}
+                
+                <button onClick={() => {
+                  setPreselectedType("project_idea");
+                  handleContribute();
+                }}
+                className="border border-dashed border-[#6B6B5A] rounded-lg px-4 py-2 text-[#6B6B5A] w-full hover:bg-gray-200">+ Add project idea</button>
+                </div>
+              )}
       {tab === "faq"       && 
       <div>
         <button onClick={() => { setPreselectedType("faq"); handleContribute();}}className="border border-dashed border-[#6B6B5A] rounded-lg px-4 py-2 text-[#6B6B5A] w-full hover:bg-gray-200">+ Add FAQ</button>
