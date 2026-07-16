@@ -1,10 +1,12 @@
 import Navbar from "../components/Navbar";
+import { Link } from "react-router-dom";
 import {
   CheckmarkIcon,
   XMarkIcon,
   TrashIcon,
   ExclamationmarkTriangleFillIcon,
-  PersonIcon
+  PersonIcon,
+  ShieldIcon
 } from "@navikt/aksel-icons";
 import {
   mockSuggestions,
@@ -18,10 +20,17 @@ export default function Profile() {
     <div className="min-h-screen bg-surface-dark text-text">
       <Navbar />
       <main className="container mx-auto max-w-4xl p-6">
-        <div className="flex items-center gap-4 mb-10">
+        <div className="flex items-center justify-between gap-4 mb-10">
           <div className="inline-flex items-center justify-center w-10 h-10 rounded-full shrink-0 bg-surface-light text-text border border-border no-underline transition-colors hover:bg-surface">
             <PersonIcon aria-hidden fontSize="1.375rem" />
           </div>
+
+          <Link
+            to="/staff"
+            className="inline-flex items-center gap-1.5 bg-accent hover:bg-accent-dark text-white px-4 py-2 rounded transition no-underline"
+          >
+            <ShieldIcon aria-hidden /> Staff portal
+          </Link>
         </div>
 
         <section className="mb-12">
