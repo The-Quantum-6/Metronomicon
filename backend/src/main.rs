@@ -1,15 +1,19 @@
+mod auth;
 mod routes;
+mod state;
 
 use axum::{Router, routing::get};
 use sqlx::postgres::PgPoolOptions;
+use state::AppState;
 use tower_http::cors::CorsLayer;
 
+use tower_sessions::{SessionManagerLayer, cookie::SameSite};
+use tower_sessions_sqlx_store::PostgresStore;
 pub mod error;
 pub mod models;
 pub mod middleware;
 
 mod repositories;
-mod state;
 mod storage;
 
 #[tokio::main]
@@ -26,14 +30,20 @@ async fn main() {
         .await
         .expect("Migrations should succeed");
 
+    let session_store = PostgresStore::new(db.clone());
+    session_store.migrate().await.unwrap();
+
+    let session_layer = SessionManagerLayer::new(session_store)
+        .with_secure(false)
+        .with_same_site(SameSite::Lax);
+
     let environment = std::env::var("ENVIRONMENT").unwrap_or_default();
 
-    let storage = storage::Storage::from_env().await;
-    let state = state::AppState { db, storage };
-
+    let state = AppState::new(db).await;
     let app = Router::new()
         .route("/", get(|| async { "Hello, World!" }))
         .merge(routes::router())
+        .layer(session_layer)
         .with_state(state);
 
     let app = if environment == "dev" {

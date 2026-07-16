@@ -12,7 +12,7 @@ pub enum UserRole {
 #[derive(Serialize, Deserialize, sqlx::Type)]
 pub struct User {
     pub id: Uuid,
-    pub sub: Uuid,
+    pub sub: String,
     pub name: String,
     pub role: UserRole,
     pub email: Option<String>,

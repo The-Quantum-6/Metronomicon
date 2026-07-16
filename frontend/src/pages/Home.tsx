@@ -51,6 +51,7 @@ function Home() {
   return (
     <div className="min-h-screen bg-gray-800 text-white">
       <Navbar />
+      <h1>Home</h1>
       <header className="container mx-auto p-6 border-b border-gray-700">
         <h1 className="text-4xl font-bold text-purple-400">Metronomicon</h1>
         <p className="text-gray-400 mt-2">A simple course prototype</p>

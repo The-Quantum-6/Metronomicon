@@ -1,6 +1,8 @@
 import { Routes, Route } from "react-router-dom";
 import Home from "./pages/Home";
 import Login from "./pages/Login";
+import "@navikt/ds-react";
+import "@navikt/ds-css";
 import CoursePage from "./pages/Course";
 import Admin from "./pages/Admin";
 import AdminCreate from "./pages/AdminCreate";

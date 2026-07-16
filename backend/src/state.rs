@@ -1,23 +1,71 @@
-//! Shared application state.
+use openidconnect::{
+    ClientId, ClientSecret, EndpointMaybeSet, EndpointNotSet, EndpointSet, IssuerUrl, RedirectUrl,
+    core::{CoreClient, CoreProviderMetadata},
+    reqwest::Client,
+};
+use sqlx::{Pool, Postgres};
 
 use crate::storage::Storage;
 use axum::extract::FromRef;
-use sqlx::PgPool;
 
-/// Everything handlers might need, bundled into one value given to the router.
-///
-/// The `FromRef` impls below let a handler ask for just one piece — for example
-/// `State<PgPool>` for the database or `State<Storage>` for object storage —
-/// without having to take the whole `AppState`.
+pub type OidcClient = CoreClient<
+    EndpointSet,      // HasAuthUrl
+    EndpointNotSet,   // HasDeviceAuthUrl
+    EndpointNotSet,   // HasIntrospectionUrl
+    EndpointNotSet,   // HasRevocationUrl
+    EndpointMaybeSet, // HasTokenUrl
+    EndpointMaybeSet, // HasUserInfoUrl (adjust if you set it)
+>;
+
 #[derive(Clone)]
 pub struct AppState {
-    pub db: PgPool,
+    pub oidc_client: OidcClient,
+    pub http_client: reqwest::Client,
+    pub pool: Pool<Postgres>,
     pub storage: Storage,
 }
 
-impl FromRef<AppState> for PgPool {
+impl AppState {
+    pub async fn new(pool: Pool<Postgres>) -> Self {
+        let client_id: String =
+            std::env::var("GOOGLE_CLIENT_ID").expect("GOOGLE_CLIENT_ID must be set");
+        let client_secret: String =
+            std::env::var("GOOGLE_SECRET").expect("GOOGLE_SECRET must be set");
+        let redirect_uri: String =
+            std::env::var("GOOGLE_REDIRECT_URI").expect("GOOGLE_REDIRECT_URI must be set");
+
+        let storage = Storage::from_env().await;
+
+        let http_client: Client = reqwest::ClientBuilder::new()
+            .redirect(reqwest::redirect::Policy::none())
+            .build()
+            .expect("Client should build");
+
+        let provider_metadata = CoreProviderMetadata::discover_async(
+            IssuerUrl::new("https://accounts.google.com".to_string()).unwrap(),
+            &http_client,
+        )
+        .await
+        .expect("Provider metadata should be discoverable");
+
+        let oidc_client = CoreClient::from_provider_metadata(
+            provider_metadata,
+            ClientId::new(client_id),
+            Some(ClientSecret::new(client_secret)),
+        )
+        .set_redirect_uri(RedirectUrl::new(redirect_uri).unwrap());
+        AppState {
+            oidc_client,
+            http_client,
+            pool,
+            storage,
+        }
+    }
+}
+
+impl FromRef<AppState> for Pool<Postgres> {
     fn from_ref(state: &AppState) -> Self {
-        state.db.clone()
+        state.pool.clone()
     }
 }
 

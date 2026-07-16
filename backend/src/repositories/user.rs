@@ -13,7 +13,7 @@ pub async fn get_users(pool: &PgPool) -> Result<Vec<User>, sqlx::Error> {
 
 pub async fn create_user(
     pool: &PgPool,
-    sub: Uuid,
+    sub: String,
     name: String,
     email: Option<String>,
 ) -> Result<(), sqlx::Error> {
@@ -38,7 +38,7 @@ pub async fn get_user_by_id(pool: &PgPool, id: Uuid) -> Result<Option<User>, sql
     .await
 }
 
-pub async fn get_user_by_sub(pool: &PgPool, sub: Uuid) -> Result<Option<User>, sqlx::Error> {
+pub async fn get_user_by_sub(pool: &PgPool, sub: String) -> Result<Option<User>, sqlx::Error> {
     sqlx::query_as!(
         User,
         r#"SELECT id, sub, name, role AS "role: UserRole", email FROM users WHERE sub=$1"#,
@@ -65,7 +65,7 @@ mod tests {
         assert!(users.is_empty());
 
         let name = "John".to_string();
-        let sub = Uuid::new_v4();
+        let sub = "1234567654321".to_string();
         let email = None::<String>;
 
         create_user(&pool, sub, name.clone(), email.clone()).await?;
@@ -85,7 +85,7 @@ mod tests {
         assert!(users.is_empty());
 
         let name = "John".to_string();
-        let sub = Uuid::new_v4();
+        let sub = "1234567654321".to_string();
         let email = None::<String>;
 
         create_user(&pool, sub, name.clone(), email.clone()).await?;
@@ -99,7 +99,7 @@ mod tests {
     }
     #[sqlx::test]
     async fn create_user_stores_correct_fields(pool: PgPool) -> sqlx::Result<()> {
-        let sub = Uuid::new_v4();
+        let sub = "1234675432".to_string();
         let name = "Jane".to_string();
         let email = Some("jane@example.com".to_string());
 
@@ -116,7 +116,7 @@ mod tests {
 
     #[sqlx::test]
     async fn create_user_with_no_email(pool: PgPool) -> sqlx::Result<()> {
-        let sub = Uuid::new_v4();
+        let sub = "1234675432".to_string();
         let name = "NoEmail".to_string();
 
         create_user(&pool, sub, name.clone(), None).await?;
@@ -130,7 +130,7 @@ mod tests {
 
     #[sqlx::test]
     async fn get_user_by_id_returns_correct_user(pool: PgPool) -> sqlx::Result<()> {
-        let sub = Uuid::new_v4();
+        let sub = "1234567654321".to_string();
         let name = "Found".to_string();
         create_user(&pool, sub, name.clone(), None).await?;
 
@@ -153,14 +153,14 @@ mod tests {
 
     #[sqlx::test]
     async fn get_user_by_sub_returns_none_for_unknown_sub(pool: PgPool) -> sqlx::Result<()> {
-        let result = get_user_by_sub(&pool, Uuid::new_v4()).await?;
+        let result = get_user_by_sub(&pool, "unknown_sub".to_string()).await?;
         assert!(result.is_none());
         Ok(())
     }
 
     #[sqlx::test]
     async fn delete_user_removes_user(pool: PgPool) -> sqlx::Result<()> {
-        let sub = Uuid::new_v4();
+        let sub = "1234567654321".to_string();
         create_user(&pool, sub, "ToDelete".to_string(), None).await?;
 
         let user = get_user_by_sub(&pool, sub).await?.expect("should exist");
@@ -182,9 +182,9 @@ mod tests {
 
     #[sqlx::test]
     async fn get_users_returns_multiple_distinct_users(pool: PgPool) -> sqlx::Result<()> {
-        create_user(&pool, Uuid::new_v4(), "A".to_string(), None).await?;
-        create_user(&pool, Uuid::new_v4(), "B".to_string(), None).await?;
-        create_user(&pool, Uuid::new_v4(), "C".to_string(), None).await?;
+        create_user(&pool, "sub_a".to_string(), "A".to_string(), None).await?;
+        create_user(&pool, "sub_b".to_string(), "B".to_string(), None).await?;
+        create_user(&pool, "sub_c".to_string(), "C".to_string(), None).await?;
 
         let users = get_users(&pool).await?;
         assert_eq!(users.len(), 3);

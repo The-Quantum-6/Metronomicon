@@ -34,23 +34,26 @@ struct CourseUpdateRequest {
 }
 
 /// Fetches all courses.
-async fn get_courses(State(pool): State<PgPool>) -> Result<Json<Vec<Course>>, AppError> {
+async fn get_courses(State(state): State<AppState>) -> Result<Json<Vec<Course>>, AppError> {
+    let pool = &state.pool;
     Ok(Json(course_repo::get_courses(&pool).await?))
 }
 
 /// Creates a new course.
 async fn create_course(
-    State(pool): State<PgPool>,
+    State(state): State<AppState>,
     Json(course): Json<CourseCreateRequest>,
 ) -> Result<(), AppError> {
+    let pool = &state.pool;
     Ok(course_repo::create_course(&pool, course.name, course.content, course.code).await?)
 }
 
 /// Fetches a course by its id, returning a `BadRequest` if none exists.
 async fn get_course_by_id(
-    State(pool): State<PgPool>,
+    State(state): State<AppState>,
     Path(id): Path<Uuid>,
 ) -> Result<Json<Course>, AppError> {
+    let pool = &state.pool;
     let course = course_repo::get_course_by_id(&pool, id)
         .await?
         .ok_or(AppError::BadRequest(RequestError::NonExsistant("Course")))?;
@@ -60,9 +63,10 @@ async fn get_course_by_id(
 
 /// Fetches a course by course code. There is no guarantee that a specific instance of course is fetched if several match the code. This is not enforced unique in the db.
 async fn get_course_by_code(
-    State(pool): State<PgPool>,
+    State(state): State<AppState>,
     Path(code): Path<String>,
 ) -> Result<Json<Course>, AppError> {
+    let pool = &state.pool;
     let course = course_repo::get_course_by_code(&pool, &code)
         .await?
         .ok_or(AppError::BadRequest(RequestError::NonExsistant("Course")))?;
@@ -71,15 +75,17 @@ async fn get_course_by_code(
 }
 
 /// Deletes a course by its id.
-async fn delete_course(State(pool): State<PgPool>, Path(id): Path<Uuid>) -> Result<(), AppError> {
+async fn delete_course(State(state): State<AppState>, Path(id): Path<Uuid>) -> Result<(), AppError> {
+    let pool = &state.pool;
     Ok(course_repo::delete_course(&pool, id).await?)
 }
 
 /// Updates an existing course by its id.
 async fn update_course(
-    State(pool): State<PgPool>,
+    State(state): State<AppState>,
     Path(id): Path<Uuid>,
     Json(course): Json<CourseUpdateRequest>,
 ) -> Result<(), AppError> {
+    let pool = &state.pool;
     Ok(course_repo::update_course(&pool, id, course.name, course.content, course.code).await?)
 }
