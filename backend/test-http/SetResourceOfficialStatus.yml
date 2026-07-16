@@ -1,0 +1,25 @@
+info:
+  name: SetResourceOfficialStatus
+  type: http
+  seq: 30
+
+http:
+  method: POST
+  url: http://localhost:3000/resources
+  body:
+    type: json
+    data: |-
+      {
+        "SetOfficial": {
+          "resource_id": "770e8400-e29b-41d4-a716-446655440001",
+          "course_id": "a1500188-75b4-4433-819a-870fb1134e9a",
+          "officiality": "Official"
+        }
+      }
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

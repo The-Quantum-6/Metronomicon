@@ -1,0 +1,25 @@
+info:
+  name: Create resource
+  type: http
+  seq: 27
+
+http:
+  method: POST
+  url: http://localhost:3000/resources
+  body:
+    type: json
+    data: |-
+      {
+        "Create": {
+          "course_id": "a1500188-75b4-4433-819a-870fb1134e9a",
+          "title": "Course syllabus",
+          "key": "resources/syllabus.pdf"
+        }
+      }
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

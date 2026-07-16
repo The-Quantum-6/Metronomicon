@@ -1,18 +1,23 @@
 use std::sync::Arc;
 
+use axum::extract::FromRef;
 use cqrs_es::Query;
 use postgres_es::{PostgresCqrs, PostgresViewRepository};
 use sqlx::{Pool, Postgres, postgres::PgPoolOptions};
 
 use crate::{
     aggregates::{
-        faq::{aggregate::Faq, service::FaqAggregateServices},
         course::{aggregate::Course, service::CourseServices},
+        faq::{aggregate::Faq, service::FaqAggregateServices},
         link::{
             aggregate::{Link, LinkAggregateServices},
             services::LinkServices,
         },
         project_idea::aggregate::{ProjectIdea, ProjectIdeaAggregateServices},
+        resource::{
+            aggregate::{Resource, ResourceAggregateServices},
+            services::ResourceServices,
+        },
         report::aggregate::{Report, ReportAggregateServices},
     },
     config::AppConfig,
@@ -21,9 +26,12 @@ use crate::{
         faq::CourseFaqQuery,
         link::CourseLinkQuery,
         project_idea::CourseProjectIdeaQuery,
+        resource::CourseResourceQuery,
         report::{ReportListQuery, ReportQuery},
         test_logging_query,
     },
+    storage::Storage,
+    views::course::active_detailed::{ActiveCourseViewRepo, CourseDetailViewRepo},
     views::{
         admin::report_detail::ReportDetailView,
         course::active_detailed::{ActiveCourseViewRepo, CourseDetailViewRepo},
@@ -37,6 +45,21 @@ pub struct AppState {
     pub cqrs: Arc<Cqrs>,
     pub course_view_repo: ActiveCourseViewRepo,
     pub pool: Pool<Postgres>,
+    pub storage: Storage,
+}
+
+// Let handlers extract just the piece of state they need: the file routes ask
+// for `State<Storage>`, repository-based handlers can ask for the pool.
+impl FromRef<AppState> for Storage {
+    fn from_ref(state: &AppState) -> Storage {
+        state.storage.clone()
+    }
+}
+
+impl FromRef<AppState> for Pool<Postgres> {
+    fn from_ref(state: &AppState) -> Pool<Postgres> {
+        state.pool.clone()
+    }
 }
 
 #[derive(Clone)]
@@ -45,6 +68,7 @@ pub struct Cqrs {
     pub link: Arc<PostgresCqrs<Link>>,
     pub project_idea: Arc<PostgresCqrs<ProjectIdea>>,
     pub faq: Arc<PostgresCqrs<Faq>>,
+    pub resource: Arc<PostgresCqrs<Resource>>,
     pub report: Arc<PostgresCqrs<Report>>,
 }
 
@@ -60,6 +84,10 @@ pub async fn get(config: &AppConfig) -> AppState {
         .run(&db)
         .await
         .expect("Migrations should succeed");
+
+    // Object storage (Garage). Constructing the client makes no network
+    // calls, so this is safe at startup even if Garage is not up yet.
+    let storage = Storage::from_env().await;
 
     // Queries setup
     let logging_query = test_logging_query::SimpleLoggingQuery {};
@@ -92,6 +120,7 @@ pub async fn get(config: &AppConfig) -> AppState {
         link_queries,
         link_aggregate_services,
     ));
+
     let faq_queries: Vec<Box<dyn Query<Faq>>> = vec![
         Box::new(logging_query.clone()),
         Box::new(CourseFaqQuery::new(course_view_repo.clone())),
@@ -107,6 +136,7 @@ pub async fn get(config: &AppConfig) -> AppState {
 
     let project_idea_queries: Vec<Box<dyn Query<ProjectIdea>>> = vec![
         Box::new(logging_query.clone()),
+        Box::new(logging_query.clone()),
         Box::new(CourseProjectIdeaQuery::new(course_view_repo.clone())),
     ];
     let project_idea_aggregate_services = ProjectIdeaAggregateServices {
@@ -116,6 +146,22 @@ pub async fn get(config: &AppConfig) -> AppState {
         db.clone(),
         project_idea_queries,
         project_idea_aggregate_services,
+    ));
+
+    let resource_queries: Vec<Box<dyn Query<Resource>>> = vec![
+        Box::new(logging_query),
+        Box::new(CourseResourceQuery::new(course_view_repo.clone())),
+    ];
+    let resource_aggregate_services = ResourceAggregateServices {
+        course: CourseServices(db.clone()),
+        // The aggregate verifies upload keys against Garage before recording
+        // events that reference them (Storage::exists via HeadObject).
+        resource: ResourceServices(storage.clone()),
+    };
+    let resource_cqrs = Arc::new(postgres_es::postgres_cqrs(
+        db.clone(),
+        resource_queries,
+        resource_aggregate_services,
     ));
 
     // Report has its own view — it does NOT update CourseDetailView.
@@ -148,9 +194,11 @@ pub async fn get(config: &AppConfig) -> AppState {
             link: link_cqrs,
             project_idea: project_idea_cqrs,
             faq: faq_cqrs,
+            resource: resource_cqrs,
             report: report_cqrs,
         }),
         course_view_repo: ActiveCourseViewRepo(course_view_repo),
         pool: db,
+        storage,
     }
 }
