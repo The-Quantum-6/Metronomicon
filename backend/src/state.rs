@@ -5,6 +5,9 @@ use openidconnect::{
 };
 use sqlx::{Pool, Postgres};
 
+use crate::storage::Storage;
+use axum::extract::FromRef;
+
 pub type OidcClient = CoreClient<
     EndpointSet,      // HasAuthUrl
     EndpointNotSet,   // HasDeviceAuthUrl
@@ -19,6 +22,7 @@ pub struct AppState {
     pub oidc_client: OidcClient,
     pub http_client: reqwest::Client,
     pub pool: Pool<Postgres>,
+    pub storage: Storage,
 }
 
 impl AppState {
@@ -29,6 +33,8 @@ impl AppState {
             std::env::var("GOOGLE_SECRET").expect("GOOGLE_SECRET must be set");
         let redirect_uri: String =
             std::env::var("GOOGLE_REDIRECT_URI").expect("GOOGLE_REDIRECT_URI must be set");
+
+        let storage = Storage::from_env().await;
 
         let http_client: Client = reqwest::ClientBuilder::new()
             .redirect(reqwest::redirect::Policy::none())
@@ -52,6 +58,19 @@ impl AppState {
             oidc_client,
             http_client,
             pool,
+            storage,
         }
+    }
+}
+
+impl FromRef<AppState> for Pool<Postgres> {
+    fn from_ref(state: &AppState) -> Self {
+        state.pool.clone()
+    }
+}
+
+impl FromRef<AppState> for Storage {
+    fn from_ref(state: &AppState) -> Self {
+        state.storage.clone()
     }
 }

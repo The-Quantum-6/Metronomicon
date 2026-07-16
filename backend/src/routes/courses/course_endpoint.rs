@@ -4,6 +4,7 @@ use crate::repositories::course as course_repo;
 use axum::extract::{Json, Path, State};
 use axum::{Router, routing::delete, routing::get, routing::post, routing::put};
 use serde::Deserialize;
+use sqlx::PgPool;
 use crate::state::AppState;
 use uuid::Uuid;
 

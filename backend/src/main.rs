@@ -12,6 +12,7 @@ use tower_sessions_sqlx_store::PostgresStore;
 pub mod error;
 pub mod models;
 mod repositories;
+mod storage;
 
 #[tokio::main]
 async fn main() {
