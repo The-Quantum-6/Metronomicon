@@ -4,7 +4,11 @@ use uuid::Uuid;
 pub struct ProjectIdeaExistanceService(pub Pool<Postgres>);
 
 impl ProjectIdeaExistanceService {
-    pub async fn project_idea_exists(&self, course_id: &str, project_idea_id: &Uuid) -> Result<bool, sqlx::Error> {
+    pub async fn project_idea_exists(
+        &self,
+        course_id: &str,
+        project_idea_id: &Uuid,
+    ) -> Result<bool, sqlx::Error> {
         let project_idea_id_str = project_idea_id.to_string();
         let exists: Option<bool> = sqlx::query_scalar(
             "SELECT EXISTS(

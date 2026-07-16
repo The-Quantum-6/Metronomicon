@@ -16,7 +16,10 @@ use crate::{
             aggregate::{Link, LinkAggregateServices},
             services::{LinkExistanceService, LinkServices, LinkValidityService},
         },
-        project_idea::{aggregate::{ProjectIdea, ProjectIdeaAggregateServices}, services::ProjectIdeaExistanceService},
+        project_idea::{
+            aggregate::{ProjectIdea, ProjectIdeaAggregateServices},
+            services::ProjectIdeaExistanceService,
+        },
     },
     config::AppConfig,
     queries::{
