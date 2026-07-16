@@ -3,6 +3,7 @@ pub mod faq;
 pub mod files;
 pub mod link;
 pub mod project_idea;
+pub mod resources;
 pub mod user;
 
 use axum::Router;
@@ -16,4 +17,5 @@ pub fn router() -> Router<AppState> {
         .merge(link::router())
         .merge(project_idea::router())
         .merge(faq::router())
+        .merge(resources::router())
 }

@@ -13,7 +13,7 @@ pub fn router() -> Router<AppState> {
 
 pub async fn handle_command(
     State(state): State<AppState>,
-    ResourceCommandExtractor(metadata, command): ResourceCommandExtractor
+    ResourceCommandExtractor(metadata, command): ResourceCommandExtractor,
 ) -> Response {
     let resource_id = command.id();
 
