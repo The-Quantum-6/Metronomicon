@@ -3,12 +3,9 @@ use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
 use crate::aggregates::{
-    faq::{
-        command::FaqCommand, error::FaqError, event::FaqEvent, service::FaqAggregateServices,
-    },
+    faq::{command::FaqCommand, error::FaqError, event::FaqEvent, service::FaqAggregateServices},
     shared::{Officiality, Status},
 };
-
 
 #[derive(Serialize, Default, Deserialize)]
 pub struct Faq {
@@ -22,8 +19,8 @@ pub struct Faq {
 
 impl Aggregate for Faq {
     const TYPE: &'static str = "faq";
-    type Command = FaqCommand; 
-    type Event = FaqEvent; 
+    type Command = FaqCommand;
+    type Event = FaqEvent;
     type Error = FaqError;
     type Services = FaqAggregateServices;
 
@@ -142,9 +139,7 @@ impl Aggregate for Faq {
             }
             FaqEvent::FaqDeleted { .. } => self.status = Status::Deleted,
             FaqEvent::FaqUpdated {
-                question,
-                answer,
-                ..
+                question, answer, ..
             } => {
                 if let Some(question) = question {
                     self.question = question;

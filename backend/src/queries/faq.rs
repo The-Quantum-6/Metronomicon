@@ -62,12 +62,10 @@ impl Query<Faq> for CourseFaqQuery {
                         answer: answer.clone(),
                     });
                 }
-                FaqEvent::FaqUpdated { question, answer, .. } => {
-                    let l = view
-                        .faqs
-                        .iter_mut()
-                        .find(|l| l.faq_id == faq_id)
-                        .unwrap();
+                FaqEvent::FaqUpdated {
+                    question, answer, ..
+                } => {
+                    let l = view.faqs.iter_mut().find(|l| l.faq_id == faq_id).unwrap();
                     if let Some(question) = question {
                         l.question = question.clone();
                     }
@@ -79,11 +77,7 @@ impl Query<Faq> for CourseFaqQuery {
                     view.faqs.retain(|l| l.faq_id != faq_id);
                 }
                 FaqEvent::FaqOfficialStatusChanged { officiality, .. } => {
-                    let l = view
-                        .faqs
-                        .iter_mut()
-                        .find(|l| l.faq_id == faq_id)
-                        .unwrap();
+                    let l = view.faqs.iter_mut().find(|l| l.faq_id == faq_id).unwrap();
                     l.officiality = officiality.clone();
                 }
             }

@@ -1,9 +1,9 @@
 pub mod course;
+pub mod faq;
 pub mod files;
 pub mod link;
-pub mod user;
 pub mod project_idea;
-pub mod faq;
+pub mod user;
 
 use axum::Router;
 

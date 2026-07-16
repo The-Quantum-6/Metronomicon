@@ -14,11 +14,11 @@ use crate::{
             services::LinkServices,
         },
         project_idea::aggregate::{ProjectIdea, ProjectIdeaAggregateServices},
+        report::aggregate::{Report, ReportAggregateServices},
         resource::{
             aggregate::{Resource, ResourceAggregateServices},
             services::ResourceServices,
         },
-        report::aggregate::{Report, ReportAggregateServices},
     },
     config::AppConfig,
     queries::{
@@ -26,16 +26,13 @@ use crate::{
         faq::CourseFaqQuery,
         link::CourseLinkQuery,
         project_idea::CourseProjectIdeaQuery,
-        resource::CourseResourceQuery,
         report::{ReportListQuery, ReportQuery},
+        resource::CourseResourceQuery,
         test_logging_query,
     },
     storage::Storage,
+    views::admin::report_detail::ReportDetailView,
     views::course::active_detailed::{ActiveCourseViewRepo, CourseDetailViewRepo},
-    views::{
-        admin::report_detail::ReportDetailView,
-        course::active_detailed::{ActiveCourseViewRepo, CourseDetailViewRepo},
-    },
 };
 
 type ReportDetailViewRepo = PostgresViewRepository<ReportDetailView, Report>;
@@ -149,7 +146,7 @@ pub async fn get(config: &AppConfig) -> AppState {
     ));
 
     let resource_queries: Vec<Box<dyn Query<Resource>>> = vec![
-        Box::new(logging_query),
+        Box::new(logging_query.clone()),
         Box::new(CourseResourceQuery::new(course_view_repo.clone())),
     ];
     let resource_aggregate_services = ResourceAggregateServices {
@@ -175,7 +172,7 @@ pub async fn get(config: &AppConfig) -> AppState {
     let report_query = ReportQuery::new(report_detail_view_repo.clone());
     let report_list_query = ReportListQuery::new(db.clone());
     let report_queries: Vec<Box<dyn Query<Report>>> = vec![
-        Box::new(logging_query),
+        Box::new(logging_query.clone()),
         Box::new(report_query),
         Box::new(report_list_query),
     ];

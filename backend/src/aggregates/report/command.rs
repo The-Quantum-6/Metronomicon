@@ -15,14 +15,10 @@ pub enum ReportCommand {
     },
 
     /// Requires `page_admin`
-    ResolveReport {
-        issue_id: Uuid,
-    },
+    ResolveReport { issue_id: Uuid },
 
     /// Requires `page_admin`
-    ReopenReport {
-        issue_id: Uuid,
-    },
+    ReopenReport { issue_id: Uuid },
     // Delete report
     //
     // Requires `page_admin`

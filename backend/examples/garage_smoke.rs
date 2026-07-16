@@ -52,7 +52,11 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("Uploaded rust-test.txt");
 
     // 2) List the bucket contents
-    let listed = client.list_objects_v2().bucket(bucket.clone()).send().await?;
+    let listed = client
+        .list_objects_v2()
+        .bucket(bucket.clone())
+        .send()
+        .await?;
     println!("Objects in '{bucket}':");
     for obj in listed.contents() {
         println!(
@@ -93,7 +97,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         Ok(_) => false,
         Err(e) => e.as_service_error().map(|se| se.is_not_found()) == Some(true),
     };
-    println!("exists(does-not-exist.bin) = {} (expected false)", !not_found);
+    println!(
+        "exists(does-not-exist.bin) = {} (expected false)",
+        !not_found
+    );
     assert!(found && not_found, "existence checks failed");
 
     Ok(())

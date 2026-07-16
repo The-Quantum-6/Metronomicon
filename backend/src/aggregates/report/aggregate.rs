@@ -7,10 +7,7 @@ use uuid::Uuid;
 use crate::aggregates::{
     course::service::CourseServices,
     report::{
-        command::ReportCommand,
-        error::ReportError,
-        event::ReportEvent,
-        status::ReportStatus,
+        command::ReportCommand, error::ReportError, event::ReportEvent, status::ReportStatus,
         target::ReportTarget,
     },
 };
@@ -50,105 +47,77 @@ impl Aggregate for Report {
                     title: _,
                     description,
                     contact_email,
-                } => {
-                    match self.status {
-                        ReportStatus::Uninitialized => {
-                            let target = match course_id {
-                                Some(id) => {
-                                    let exists = service
-                                        .course
-                                        .course_exists(&id.to_string())
-                                        .await
-                                        .map_err(|_| "could not check course")?;
+                } => match self.status {
+                    ReportStatus::Uninitialized => {
+                        let target = match course_id {
+                            Some(id) => {
+                                let exists = service
+                                    .course
+                                    .course_exists(&id.to_string())
+                                    .await
+                                    .map_err(|_| "could not check course")?;
 
-                                    if !exists {
-                                        return Err("course does not exist".into());
-                                    }
-
-                                    ReportTarget::Course(id)
+                                if !exists {
+                                    return Err("course does not exist".into());
                                 }
 
-                                None => ReportTarget::Site,
-                            };
+                                ReportTarget::Course(id)
+                            }
 
-                            sink
-                                .write(
-                                    ReportEvent::ReportCreated {
-                                        issue_id,
-                                        target,
-                                        description,
-                                        contact_email,
-                                    },
-                                    self,
-                                )
-                                .await;
+                            None => ReportTarget::Site,
+                        };
 
-                            Ok(())
-                        }
+                        sink.write(
+                            ReportEvent::ReportCreated {
+                                issue_id,
+                                target,
+                                description,
+                                contact_email,
+                            },
+                            self,
+                        )
+                        .await;
 
-                        _ => Err("report already exists".into()),
+                        Ok(())
                     }
-                }
 
-                ReportCommand::ResolveReport { issue_id } => {
-                    match self.status {
-                        ReportStatus::Open => {
-                            sink
-                                .write(
-                                    ReportEvent::ReportResolved {
-                                        issue_id,
-                                    },
-                                    self,
-                                )
-                                .await;
+                    _ => Err("report already exists".into()),
+                },
 
-                            Ok(())
-                        }
-
-                        ReportStatus::Resolved => {
-                            Err("report already resolved".into())
-                        }
-
-                        ReportStatus::Uninitialized => {
-                            Err("report not found".into())
-                        }
-                    }
-                }
-
-                ReportCommand::ReopenReport { issue_id } => {
-                    match self.status {
-                        ReportStatus::Resolved => {
-                            sink
-                                .write(
-                                    ReportEvent::ReportReopened {
-                                        issue_id,
-                                    },
-                                    self,
-                                )
-                                .await;
-
-                            Ok(())
-                        }
-
-                        ReportStatus::Open => {
-                            Err("report already open".into())
-                        }
-
-                        ReportStatus::Uninitialized => {
-                            Err("report not found".into())
-                        }
-                    }
-                }
-                /*ReportCommand::Delete { issue_id } => match self.status {
-                    ReportStatus::Uninitialized => Err("report not found".into()),
-                    ReportStatus::Deleted => Err("report already deleted".into()),
-
-                    ReportStatus::Open | ReportStatus::Resolved => {
-                        sink
-                            .write(ReportEvent::ReportDeleted { issue_id }, self)
+                ReportCommand::ResolveReport { issue_id } => match self.status {
+                    ReportStatus::Open => {
+                        sink.write(ReportEvent::ReportResolved { issue_id }, self)
                             .await;
 
-                        Ok(())*/
+                        Ok(())
+                    }
+
+                    ReportStatus::Resolved => Err("report already resolved".into()),
+
+                    ReportStatus::Uninitialized => Err("report not found".into()),
+                },
+
+                ReportCommand::ReopenReport { issue_id } => match self.status {
+                    ReportStatus::Resolved => {
+                        sink.write(ReportEvent::ReportReopened { issue_id }, self)
+                            .await;
+
+                        Ok(())
+                    }
+
+                    ReportStatus::Open => Err("report already open".into()),
+
+                    ReportStatus::Uninitialized => Err("report not found".into()),
+                }, /*ReportCommand::Delete { issue_id } => match self.status {
+                   ReportStatus::Uninitialized => Err("report not found".into()),
+                   ReportStatus::Deleted => Err("report already deleted".into()),
+
+                   ReportStatus::Open | ReportStatus::Resolved => {
+                       sink
+                           .write(ReportEvent::ReportDeleted { issue_id }, self)
+                           .await;
+
+                       Ok(())*/
             }
         }
     }
@@ -174,11 +143,9 @@ impl Aggregate for Report {
 
             ReportEvent::ReportReopened { .. } => {
                 self.status = ReportStatus::Open;
-            }
-
-            /*ReportEvent::ReportDeleted { .. } => {
-                self.status = ReportStatus::Deleted;
-            }*/
+            } /*ReportEvent::ReportDeleted { .. } => {
+                  self.status = ReportStatus::Deleted;
+              }*/
         }
     }
 }

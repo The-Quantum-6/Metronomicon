@@ -7,11 +7,11 @@ pub mod error;
 pub mod extractors;
 pub mod models;
 pub mod queries;
+mod repositories;
 pub mod routes;
 pub mod state;
 pub mod storage;
 pub mod views;
-mod repositories;
 
 #[tokio::main]
 async fn main() {
