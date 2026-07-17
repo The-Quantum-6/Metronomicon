@@ -11,6 +11,8 @@ use tower_sessions::{SessionManagerLayer, cookie::SameSite};
 use tower_sessions_sqlx_store::PostgresStore;
 pub mod error;
 pub mod models;
+pub mod middleware;
+
 mod repositories;
 mod storage;
 
