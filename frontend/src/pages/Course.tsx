@@ -3,6 +3,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import Navbar from "../components/Navbar";
 import ContributeAlert from "../components/ContributeAlert";
 import Contribute, {type ContributionType} from "../components/Contribute";
+import ReportForm from "../components/forms/RaportForm";
 import { apiUrl } from "../config";
 
 const DISCLAIMER_SEEN = "metronomicon_policy_acknowledged"
@@ -70,6 +71,7 @@ export default function Course() {
   const [showContribute, setShowContribute] = useState(false);
   const [preselecteType, setPreselectedType] = useState<ContributionType | null>(null);
   const [openFaqId, setOpenFaqId] = useState<string | null>(null);
+   const [showReport, setShowReport] = useState(false);
 
   useEffect(() => {
   fetch(apiUrl(`courses/${id}`))
@@ -112,7 +114,7 @@ return (
             <button onClick={ handleContribute }className="flex items-center px-4 py-2 rounded-lg bg-[#1A1F3A] text-white font-medium hover:opacity-90 transition-colors">
               + Contribute
             </button>
-            <button onClick={() => alert("Coming soon..")}
+            <button onClick={() => setShowReport(true)}
             className="flex items-center gap-1.5 px-4 py-2 text-[#6B6B5A] rounded-lg bg-transparent border border-[#6B6B5A] hover:bg-gray-100 transition-colors">
               Report
             </button>
@@ -261,11 +263,16 @@ return (
           preselected={preselecteType}
       onCancel={() => {setShowContribute(false); setPreselectedType(null)}}
         />
-    )
-
-    }
-
-
+    )}
+    
+    {showReport && (
+      <div className="fixed inset-0 z-50 flex items-center justify-center backdrop-blur-sm bg-black/40">
+        <div className="bg-white rounded-2xl p-7 max-w-lg w-full mx-4 shadow-md text-[#1A1F3A]">
+          <h2 className="text-2xl font-semibold font-display mb-6">Report an issue</h2>
+          <ReportForm courseId={id} onCancel={() => setShowReport(false)} />
+          </div>
+          </div>
+        )}
   </>
 );
 }
