@@ -24,7 +24,7 @@ type Resource = {
   title: string
   key: string
   status: string
-  official: boolean
+  officiality: string
 }
 
 type Link = {
@@ -47,7 +47,7 @@ type Faq = {
   faq_id: string
   question: string
   answer: string
-  official: boolean
+  officiality: string
   status: string
 }
 
@@ -150,12 +150,12 @@ return (
             className="block border border-[#DAD8D6] rounded-xl p-3 mb-3 hover:bg-gray-200 transition-colors">
               <div className="flex justify-between items-start">
                 <div>
-                  <h3 className="font-semibold text-[#1A1F3A]">{resource.title}</h3>
-                  <p className="text-sm text-[#6B6B5A]">{resource.key}</p>
+                  <h3 className="font-semibold text-lg text-[#1A1F3A]">{resource.title}</h3>
+                  <p className="text-base italic text-[#6B6B5A]">{resource.key}</p>
                   </div>
 
-                  {resource.official && (
-                    <p className="text-small px-2 py-1 border border-[#1A1F3A] rounded-full text-[#1A1F3A]">Official</p>
+                  {resource.officiality == "Official" && (
+                    <p className="text-sm px-2 py-1 border border-[#1A1F3A] rounded-full text-[#1A1F3A]">Official</p>
                     )}
                     </div>
                     </a>
@@ -175,8 +175,8 @@ return (
             className="block border border-[#DAD8D6] rounded-xl p-3 mb-3 hover:bg-gray-200 transition-colors">
               <div className="flex justify-between items-start">
                 <div>
-                  <h3 className="font-semibold text-[#1A1F3A]">{link.label}</h3>
-                  <p className="text-sm text-[#6B6B5A] hover:underline">{link.url}</p>
+                  <h3 className="font-semibold text-lg text-[#1A1F3A]">{link.label}</h3>
+                  <p className="text-base italic text-[#6B6B5A] hover:underline">{link.url}</p>
                   </div>
                   {link.official && (
                     <p className="text-sm px-2 py-1 border border-[#1A1F3A] rounded-full text-[#1A1F3A]">Official</p>
@@ -225,12 +225,16 @@ return (
             return (
             <div key={faq.faq_id} className="border border-[#DAD8D6] rounded-xl mb-2 overflow-hidden">
               <button onClick={() => setOpenFaqId(isOpen ? null : faq.faq_id)}
-                className={`relative flex justify-between items-center w-full text-left px-4 py-3 hover:bg-[#F4F2EB] transition-colors ${isOpen ? "after:absolute after:bottom-0 after:left-4 after:right-4 after:border-b after:border-[#DAD8D6]" : ""}`}>
-            <h3 className="font-medium text-[#1A1F3A]">{faq.question}</h3>
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className={`w-5 h-5 text-[#6B6B5A] transition-transform duration-200 
-            ${ isOpen ? "rotate-180" : ""}`}><path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7"/>
-            </svg>
-            </button>
+              className={`relative flex justify-between items-center w-full text-left px-4 py-3 hover:bg-[#F4F2EB] transition-colors ${isOpen ? "after:absolute after:bottom-0 after:left-4 after:right-4 after:border-b after:border-[#DAD8D6]" : ""}`}>
+                <h3 className="font-medium text-lg text-[#1A1F3A]">{faq.question}</h3>
+                <div className="flex items-center gap-2">{faq.officiality === "Official" && (
+                  <p className="text-sm px-2 py-1 border border-[#1A1F3A] rounded-full text-[#1A1F3A]">Official</p>)}
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"
+                  className={`w-5 h-5 text-[#6B6B5A] transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7"/>
+                    </svg>
+                    </div>
+                    </button>
             {isOpen && (
               <div className="px-4 pb-4 pt-1 border-t border-[#F4F2EB]">
                 <p className="text-base text-[#6B6B5A]">{faq.answer}</p>
