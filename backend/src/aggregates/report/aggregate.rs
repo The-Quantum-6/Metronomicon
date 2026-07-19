@@ -7,7 +7,7 @@ use uuid::Uuid;
 use crate::aggregates::{
     course::service::CourseServices,
     report::{
-        command::ReportCommand, error::ReportError, event::ReportEvent, status::ReportStatus,
+        command::ReportCommand, error::ReportError, event::ReportEvent, status::ReportStatus, // TODO: Add EmailService for validating email addresses
         target::ReportTarget,
     },
 };
