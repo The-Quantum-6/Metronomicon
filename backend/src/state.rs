@@ -3,6 +3,8 @@ use openidconnect::{
     core::{CoreClient, CoreProviderMetadata},
     reqwest::Client,
 };
+use std::sync::Arc;
+use jsonwebtoken::{DecodingKey, EncodingKey};
 use sqlx::{Pool, Postgres};
 
 use crate::storage::Storage;
@@ -23,6 +25,8 @@ pub struct AppState {
     pub http_client: reqwest::Client,
     pub pool: Pool<Postgres>,
     pub storage: Storage,
+    pub jwt_encode: Arc<EncodingKey>,
+    pub jwt_decode: Arc<DecodingKey>,
 }
 
 impl AppState {
@@ -33,6 +37,9 @@ impl AppState {
             std::env::var("GOOGLE_SECRET").expect("GOOGLE_SECRET must be set");
         let redirect_uri: String =
             std::env::var("GOOGLE_REDIRECT_URI").expect("GOOGLE_REDIRECT_URI must be set");
+
+        let jsonwebtoken_secret: String =
+            std::env::var("JWT_SECRET").expect("JWT_SECRET must be set");
 
         let storage = Storage::from_env().await;
 
@@ -59,6 +66,8 @@ impl AppState {
             http_client,
             pool,
             storage,
+            jwt_encode: Arc::new(EncodingKey::from_secret(jsonwebtoken_secret.as_ref())),
+            jwt_decode: Arc::new(DecodingKey::from_secret(jsonwebtoken_secret.as_ref())),
         }
     }
 }
