@@ -55,10 +55,10 @@ export default function ProjectIdeaForm({ courseId, onCancel }: Props) {
 
   if (submitted) {
     return (
-      <div className="text-center py-6">
+      <div className="text-center py-6 bg-[#F4F2EB] rounded-lg">
         <h3 className="text-xl font-semibold text-[#1A1F3A] mb-2">Thank you for your contribution!</h3>
         <p className="text-[#6B6B5A] mb-6">Your project idea has been submitted and is waiting for review.</p>
-        <button type="button" onClick={onCancel} className="px-4 py-2 bg-[#1A1F3A] text-white rounded-lg hover:opacity-90">
+        <button type="button" onClick={onCancel} className="px-4 py-2 bg-[#1A1F3A] text-lg text-white rounded-lg hover:opacity-90">
           Back to course
         </button>
       </div>
