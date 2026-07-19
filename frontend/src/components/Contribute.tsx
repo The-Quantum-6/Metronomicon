@@ -1,6 +1,8 @@
 import { useState } from "react"
-import LinkForm from "./forms/linkform";
+import ResourceForm from "./forms/ResourceForm";
+import LinkForm from "./forms/LinkForm";
 import ProjectIdeaForm from "./forms/ProjectIdeaForm";
+import FaqForm from "./forms/FaqForm";
 
 export type ContributionType = "resource" | "link" | "project_idea" | "faq"
 
@@ -8,7 +10,6 @@ interface ContributeModalProps {
   onCancel: () => void
   preselected?: ContributionType | null
   courseId: string
-
 }
 
 const options: { id: ContributionType; label: string; description: string}[] = [
@@ -51,15 +52,23 @@ export default function ContributeModal({ onCancel, courseId, preselected = null
           </>
         ) : (
           <>
+          <div className="flex items-center gap-3">
             <button
-              onClick={() => setSelected(null)}
-              className="text-lg text-[#6B6B5A] mb-4 hover:text-[#1A1F3A] transition-colors"><svg className="w-6 h-6" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 14 10">
+            onClick={() => setSelected(null)}
+            className="text-lg text-[#6B6B5A] mb-6 hover:text-[#1A1F3A] transition-colors"><svg className="w-6 h-6" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 14 10">
                 <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M13 5H1m0 0 4 4M1 5l4-4"/></svg>
               </button>
-            <h2 className="text-2xl font-semibold font-display mb-6">
+            <h2 className="text-3xl font-semibold font-display mb-8">
               {selectedOption?.description}
             </h2>
-            <div className="bg-[#F4F2EB] rounded-xl p-4 mb-6">
+            </div>
+            <div className="mb-6">
+              {selected === "resource" && (
+                  <ResourceForm
+                  courseId={courseId}
+                  onCancel={onCancel}/>
+                  )}
+
               {selected === "link" && (
                 <LinkForm
                 courseId={courseId}
@@ -71,10 +80,15 @@ export default function ContributeModal({ onCancel, courseId, preselected = null
                   courseId={courseId}
                   onCancel={onCancel}/>
                   )}
+                  
+                  {selected === "faq" && (
+                  <FaqForm
+                  courseId={courseId}
+                  onCancel={onCancel}/>
+                  )}
             </div>
           </>
         )}
-
       </div>
     </div>
   )
