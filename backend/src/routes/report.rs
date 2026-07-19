@@ -11,8 +11,8 @@ use serde::Serialize;
 
 pub fn router() -> Router<AppState> {
     Router::new()
-        .route("/reports", get(list_reports).post(handle_command))
-        .route("/reports/{id}", get(query_handler))
+       .route("/reports", get(list_reports))
+       .route("/reports", post(handle_command))
 }
 
 pub async fn handle_command(

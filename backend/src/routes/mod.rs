@@ -3,6 +3,7 @@ pub mod faq;
 pub mod files;
 pub mod link;
 pub mod project_idea;
+pub mod report;
 pub mod resources;
 pub mod user;
 
@@ -18,4 +19,5 @@ pub fn router() -> Router<AppState> {
         .merge(project_idea::router())
         .merge(faq::router())
         .merge(resources::router())
+        .merge(report::router())
 }
