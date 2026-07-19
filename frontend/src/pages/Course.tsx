@@ -13,8 +13,18 @@ type Course = {
   field: string
   description?: string | null
   tags: string[]
+  resources: Resource[]
   links: Link[]
   project_ideas: ProjectIdea[]
+  faqs: Faq[]
+}
+
+type Resource = {
+  resource_id: string
+  title: string
+  key: string
+  status: string
+  official: boolean
 }
 
 type Link = {
@@ -33,14 +43,22 @@ type ProjectIdea = {
   status: string
 }
 
-type CourseTab = "overview" | "resources" | "links" | "projects" | "faq";
+type Faq = {
+  faq_id: string
+  question: string
+  answer: string
+  official: boolean
+  status: string
+}
+
+type CourseTab = "overview" | "resources" | "links" | "projects" | "faqs";
 
 const tabs = [
   { id: "overview"  as CourseTab, label: "Overview" },
   { id: "resources" as CourseTab, label: "Resources" },
   { id: "links"     as CourseTab, label: "Links" },
   { id: "projects"  as CourseTab, label: "Projects" },
-  { id: "faq"       as CourseTab, label: "FAQ" },
+  { id: "faqs"       as CourseTab, label: "FAQs" },
 ];
 
 export default function Course() {
@@ -51,7 +69,7 @@ export default function Course() {
   const [showAlert, setShowAlert] = useState(false);
   const [showContribute, setShowContribute] = useState(false);
   const [preselecteType, setPreselectedType] = useState<ContributionType | null>(null);
-
+  const [openFaqId, setOpenFaqId] = useState<string | null>(null);
 
   useEffect(() => {
   fetch(apiUrl(`courses/${id}`))
@@ -82,7 +100,7 @@ return (
         <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M13 5H1m0 0 4 4M1 5l4-4"/>
         </svg>Back to courses</button>
         </div>
-      <div className="pb-3 border-b border-[#F4F2EB]">
+      <div className="border-b border-[#F4F2EB]">
         <p className="font-mono text-m text-[#6B6B5A]">
           {course.code}
         </p>
@@ -102,7 +120,7 @@ return (
         </div>
       </div>
 
-      <div className="flex overflow-x-auto pt-3">
+      <div className="flex overflow-x-auto pt-3 pb-3">
         {tabs.map((t) => (
           <button
             key={t.id}
@@ -116,19 +134,42 @@ return (
       </div>
 
       {tab === "overview"  && 
-      <div className="bg-white border border-[#DAD8D6] rounded-2xl p-5 mt-5 max-w-4xl w-full">
+      <div className="bg-white border border-[#DAD8D6] rounded-2xl p-5 max-w-4xl w-full">
         <h2 className="font-bold font-display text-xl pb-2">About this course</h2>
         <p className="text-[#6B6B5A]">{course.description}</p>
       </div>
       }
+      
+      
+      {tab === "resources" && (
+        <div>
+          {course.resources.map((resource) => (
+            <a key={resource.resource_id}
+            href={resource.key}
+            target="_blank"
+            className="block border border-[#DAD8D6] rounded-xl p-3 mb-3 hover:bg-gray-200 transition-colors">
+              <div className="flex justify-between items-start">
+                <div>
+                  <h3 className="font-semibold text-[#1A1F3A]">{resource.title}</h3>
+                  <p className="text-sm text-[#6B6B5A]">{resource.key}</p>
+                  </div>
 
+                  {resource.official && (
+                    <p className="text-small px-2 py-1 border border-[#1A1F3A] rounded-full text-[#1A1F3A]">Official</p>
+                    )}
+                    </div>
+                    </a>
+                  ))}
+                  <button onClick={() => { setPreselectedType("resource"); handleContribute();
+                  }}
+                  className="border border-dashed border-[#6B6B5A] rounded-lg px-4 py-2 text-lg text-[#6B6B5A] w-full hover:bg-gray-200">
+                    + Add resource
+                    </button>
+                    </div>
+                  )}
 
-      {tab === "resources" && 
-      <div>
-        <button onClick={() => { setPreselectedType("resource"); handleContribute();}}className="border border-dashed border-[#6B6B5A] rounded-lg px-4 py-2 text-[#6B6B5A] w-full hover:bg-gray-200">+ Add resources</button>
-        </div>}
       {tab === "links" && (
-        <div className="pt-2">
+        <div>
           {course.links.map((link) => (
             <a key={link.link_id} href={link.url} target="_blank"
             className="block border border-[#DAD8D6] rounded-xl p-3 mb-3 hover:bg-gray-200 transition-colors">
@@ -138,7 +179,7 @@ return (
                   <p className="text-sm text-[#6B6B5A] hover:underline">{link.url}</p>
                   </div>
                   {link.official && (
-                    <p className="text-xs px-2 py-1 border border-[#1A1F3A] rounded-full text-[#1A1F3A]">Official</p>
+                    <p className="text-sm px-2 py-1 border border-[#1A1F3A] rounded-full text-[#1A1F3A]">Official</p>
                     )}
                     </div>
                     </a>
@@ -148,23 +189,23 @@ return (
                     setPreselectedType("link");
                     handleContribute();
                   }}
-                  className="border border-dashed border-[#6B6B5A] rounded-lg px-4 py-2 mt-2 text-[#6B6B5A] w-full hover:bg-gray-200">
+                  className="border border-dashed border-[#6B6B5A] rounded-lg px-4 py-2 text-lg text-[#6B6B5A] w-full hover:bg-gray-200">
                     + Add link
                     </button>
                     </div>
                   )}
       
       {tab === "projects" && (
-        <div className="pt-5">
+        <div>
           {course.project_ideas.map((idea) => (
             <div key={idea.idea_id}
             className="border border-[#DAD8D6] rounded-xl p-4 mb-3">
               <div className="flex justify-between items-start">
                 <div>
-                  <h3 className="font-semibold text-[#1A1F3A]">{idea.title}</h3>
-                  <p className="text-sm text-[#6B6B5A] mt-2">{idea.body}</p>
+                  <h3 className="font-semibold text-lg text-[#1A1F3A]">{idea.title}</h3>
+                  <p className="text-base text-[#6B6B5A] mt-2">{idea.body}</p>
                   </div>
-                  <p className="text-xs px-3 py-1 rounded-full border border-[#DAD8D6] text-[#6B6B5A]">{idea.difficulty}</p>
+                  <p className="text-sm px-3 py-1 rounded-full border border-[#DAD8D6] text-[#6B6B5A]">{idea.difficulty}</p>
                   </div>
                   </div>
                 ))}
@@ -173,14 +214,36 @@ return (
                   setPreselectedType("project_idea");
                   handleContribute();
                 }}
-                className="border border-dashed border-[#6B6B5A] rounded-lg px-4 py-2 text-[#6B6B5A] w-full hover:bg-gray-200">+ Add project idea</button>
+                className="border border-dashed border-[#6B6B5A] rounded-lg px-4 py-2 text-lg text-[#6B6B5A] w-full hover:bg-gray-200">+ Add project idea</button>
                 </div>
               )}
-      {tab === "faq"       && 
-      <div>
-        <button onClick={() => { setPreselectedType("faq"); handleContribute();}}className="border border-dashed border-[#6B6B5A] rounded-lg px-4 py-2 text-[#6B6B5A] w-full hover:bg-gray-200">+ Add FAQ</button>
-        </div>}
-
+      {tab === "faqs" && (
+        <div>
+          {course.faqs.map((faq) => {
+            const isOpen = openFaqId === faq.faq_id;
+            
+            return (
+            <div key={faq.faq_id} className="border border-[#DAD8D6] rounded-xl mb-2 overflow-hidden">
+              <button onClick={() => setOpenFaqId(isOpen ? null : faq.faq_id)}
+                className={`relative flex justify-between items-center w-full text-left px-4 py-3 hover:bg-[#F4F2EB] transition-colors ${isOpen ? "after:absolute after:bottom-0 after:left-4 after:right-4 after:border-b after:border-[#DAD8D6]" : ""}`}>
+            <h3 className="font-medium text-[#1A1F3A]">{faq.question}</h3>
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className={`w-5 h-5 text-[#6B6B5A] transition-transform duration-200 
+            ${ isOpen ? "rotate-180" : ""}`}><path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7"/>
+            </svg>
+            </button>
+            {isOpen && (
+              <div className="px-4 pb-4 pt-1 border-t border-[#F4F2EB]">
+                <p className="text-base text-[#6B6B5A]">{faq.answer}</p>
+                </div>
+              )}
+              </div>
+              );
+              })}
+              <button onClick={() => { setPreselectedType("faq"); handleContribute(); }}
+              className="border border-dashed border-[#6B6B5A] rounded-lg px-4 py-2 mt-2 text-lg text-[#6B6B5A] w-full hover:bg-gray-200">+ Add FAQ
+              </button>
+              </div>
+            )}
     </main>
 
     {showAlert && (
@@ -189,9 +252,9 @@ return (
     )}
 
     {showContribute && (
-      <Contribute 
-      courseId={id ?? ""}
-      preselected={preselecteType}
+          <Contribute 
+          courseId={id ?? ""}
+          preselected={preselecteType}
       onCancel={() => {setShowContribute(false); setPreselectedType(null)}}
         />
     )
