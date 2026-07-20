@@ -15,7 +15,7 @@ pub fn generate_access(
     let claims = AccessClaim {
         sub,
         role,
-        iss: now,
+        iat: now,
         exp: now + 900,
     };
 
@@ -34,7 +34,7 @@ pub fn generate_perms(
         sub,
         resource_id,
         perms,
-        iss: now,
+        iat: now,
         exp: now + 180,
     };
 
