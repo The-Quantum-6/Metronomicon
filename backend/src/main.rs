@@ -39,6 +39,7 @@ async fn main() {
     let app = Router::new()
         .route("/", get(|| async { "Hello, World!" }))
         .merge(routes::router())
+        .merge(routes::protected_router(state.clone()))
         .layer(session_layer)
         .with_state(state);
     

@@ -7,16 +7,17 @@ pub mod link;
 pub mod project_idea;
 pub mod report;
 pub mod resources;
+pub mod user;
 use crate::state::AppState;
 use axum::Router;
 
-//pub fn router(state: AppState) -> Router<AppState> {
- //   Router::new()
-       // .merge(user::router(state))
+pub fn protected_router(state: AppState) -> Router<AppState> {
+    Router::new()
+        .merge(user::router(state.clone()))
+}
 
 pub fn router() -> Router<AppState> {
     Router::new()
-        .merge(user::router())
         .merge(course::router())
         .merge(link::router())
         .merge(project_idea::router())
