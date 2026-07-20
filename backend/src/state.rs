@@ -7,13 +7,19 @@ use sqlx::{Pool, Postgres, postgres::PgPoolOptions};
 
 use crate::{
     aggregates::{
-        course::{aggregate::Course, service::CourseServices},
-        faq::{aggregate::Faq, service::FaqAggregateServices},
+        contribution::aggregate::{Contribution, ContributionAggregateServices},
+        course::{aggregate::Course, service::CourseExistanceService},
+        faq::{
+            aggregate::{Faq, FaqAggregateServices},
+            services::FaqExistanceService,
+        },
         link::{
             aggregate::{Link, LinkAggregateServices},
-            services::LinkServices,
+            services::{LinkExistanceService, LinkServices, LinkValidityService},
         },
-        project_idea::aggregate::{ProjectIdea, ProjectIdeaAggregateServices},
+        project_idea::{
+            services::ProjectIdeaExistanceService, aggregate::{ProjectIdea, ProjectIdeaAggregateServices},
+        },
         report::aggregate::{Report, ReportAggregateServices},
         resource::{
             aggregate::{Resource, ResourceAggregateServices},
@@ -22,6 +28,7 @@ use crate::{
     },
     config::AppConfig,
     queries::{
+        contribution::{ContributionListQuery, ContributionProcessManager, ContributionQuery},
         course::{CourseListQuery, CourseQuery},
         faq::CourseFaqQuery,
         link::CourseLinkQuery,
@@ -65,6 +72,7 @@ pub struct Cqrs {
     pub link: Arc<PostgresCqrs<Link>>,
     pub project_idea: Arc<PostgresCqrs<ProjectIdea>>,
     pub faq: Arc<PostgresCqrs<Faq>>,
+    pub contribution: Arc<PostgresCqrs<Contribution>>,
     pub resource: Arc<PostgresCqrs<Resource>>,
     pub report: Arc<PostgresCqrs<Report>>,
 }
@@ -109,8 +117,8 @@ pub async fn get(config: &AppConfig) -> AppState {
         Box::new(CourseLinkQuery::new(course_view_repo.clone())),
     ];
     let link_aggregate_services = LinkAggregateServices {
-        course: CourseServices(db.clone()),
-        link: LinkServices(reqwest::Client::new()),
+        course: CourseExistanceService(db.clone()),
+        link: LinkValidityService(reqwest::Client::new()),
     };
     let link_cqrs = Arc::new(postgres_es::postgres_cqrs(
         db.clone(),
@@ -123,7 +131,7 @@ pub async fn get(config: &AppConfig) -> AppState {
         Box::new(CourseFaqQuery::new(course_view_repo.clone())),
     ];
     let faq_aggregate_services = FaqAggregateServices {
-        course: CourseServices(db.clone()),
+        course: CourseExistanceService(db.clone()),
     };
     let faq_cqrs = Arc::new(postgres_es::postgres_cqrs(
         db.clone(),
@@ -133,11 +141,10 @@ pub async fn get(config: &AppConfig) -> AppState {
 
     let project_idea_queries: Vec<Box<dyn Query<ProjectIdea>>> = vec![
         Box::new(logging_query.clone()),
-        Box::new(logging_query.clone()),
         Box::new(CourseProjectIdeaQuery::new(course_view_repo.clone())),
     ];
     let project_idea_aggregate_services = ProjectIdeaAggregateServices {
-        course: CourseServices(db.clone()),
+        course: CourseExistanceService(db.clone()),
     };
     let project_idea_cqrs = Arc::new(postgres_es::postgres_cqrs(
         db.clone(),
@@ -145,6 +152,30 @@ pub async fn get(config: &AppConfig) -> AppState {
         project_idea_aggregate_services,
     ));
 
+    let contribution_queries: Vec<Box<dyn Query<Contribution>>> = vec![
+        Box::new(ContributionListQuery::new(db.clone())),
+        Box::new(logging_query.clone()),
+        Box::new(ContributionQuery),
+        Box::new(ContributionProcessManager::new(
+            db.clone(),
+            link_cqrs.clone(),
+            faq_cqrs.clone(),
+            project_idea_cqrs.clone(),
+        )),
+    ];
+    let contribution_aggregate_services = ContributionAggregateServices {
+        link: LinkServices(
+            LinkValidityService(reqwest::Client::new()),
+            LinkExistanceService(db.clone()),
+        ),
+        course: CourseExistanceService(db.clone()),
+        faq: FaqExistanceService(db.clone()),
+        project_idea: ProjectIdeaExistanceService(db.clone()),
+    };
+    let contribution_cqrs = Arc::new(postgres_es::postgres_cqrs(
+        db.clone(),
+        contribution_queries,
+        contribution_aggregate_services,
     let resource_queries: Vec<Box<dyn Query<Resource>>> = vec![
         Box::new(logging_query.clone()),
         Box::new(CourseResourceQuery::new(course_view_repo.clone())),
@@ -191,6 +222,7 @@ pub async fn get(config: &AppConfig) -> AppState {
             link: link_cqrs,
             project_idea: project_idea_cqrs,
             faq: faq_cqrs,
+            contribution: contribution_cqrs,
             resource: resource_cqrs,
             report: report_cqrs,
         }),

@@ -5,7 +5,7 @@ use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
 use crate::aggregates::{
-    course::service::CourseServices,
+    course::service::CourseExistanceService,
     project_idea::{
         command::ProjectIdeaCommand, difficulty::Difficulty, error::ProjectIdeaError,
         event::ProjectIdeaEvent,
@@ -14,7 +14,7 @@ use crate::aggregates::{
 };
 
 pub struct ProjectIdeaAggregateServices {
-    pub course: CourseServices,
+    pub course: CourseExistanceService,
 }
 
 #[derive(Serialize, Default, Deserialize)]

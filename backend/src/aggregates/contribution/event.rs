@@ -3,24 +3,20 @@ use serde::{Deserialize, Serialize};
 use strum::Display;
 use uuid::Uuid;
 
-use crate::aggregates::suggestion::command::Suggestion;
+use crate::aggregates::contribution::command::ContributionKind;
 
 #[derive(Debug, Serialize, Deserialize, PartialEq, Clone, Display)]
-pub enum SuggestionEvent {
-    SuggestionProposed {
-        suggestion_id: Uuid,
+pub enum ContributionEvent {
+    ContributionProposed {
         course_id: Uuid,
-        kind: Suggestion,
+        kind: ContributionKind,
+        comment: String,
     },
-    SuggestionApproved {
-        suggestion_id: Uuid,
-    },
-    SuggestionDenied {
-        suggestion_id: Uuid,
-    },
+    ContributionApproved,
+    ContributionDenied,
 }
 
-impl DomainEvent for SuggestionEvent {
+impl DomainEvent for ContributionEvent {
     fn event_type(&self) -> String {
         self.to_string()
     }

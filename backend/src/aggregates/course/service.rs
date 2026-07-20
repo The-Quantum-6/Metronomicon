@@ -1,8 +1,8 @@
 use sqlx::{Pool, Postgres};
 
-pub struct CourseServices(pub Pool<Postgres>);
+pub struct CourseExistanceService(pub Pool<Postgres>);
 
-impl CourseServices {
+impl CourseExistanceService {
     pub async fn course_exists(&self, id: &str) -> Result<bool, sqlx::Error> {
         let exists = sqlx::query_scalar!(
             "SELECT EXISTS(

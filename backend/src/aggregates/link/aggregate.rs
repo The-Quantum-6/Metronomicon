@@ -3,14 +3,16 @@ use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
 use crate::aggregates::{
-    course::service::CourseServices,
-    link::{command::LinkCommand, error::LinkError, event::LinkEvent, services::LinkServices},
+    course::service::CourseExistanceService,
+    link::{
+        command::LinkCommand, error::LinkError, event::LinkEvent, services::LinkValidityService,
+    },
     shared::Status,
 };
 
 pub struct LinkAggregateServices {
-    pub course: CourseServices,
-    pub link: LinkServices,
+    pub course: CourseExistanceService,
+    pub link: LinkValidityService,
 }
 
 #[derive(Serialize, Default, Deserialize)]

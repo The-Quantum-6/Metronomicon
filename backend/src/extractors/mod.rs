@@ -1,3 +1,4 @@
+pub mod contribution;
 pub mod course;
 pub mod faq;
 pub mod link;

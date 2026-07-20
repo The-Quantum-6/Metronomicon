@@ -3,9 +3,17 @@ use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
 use crate::aggregates::{
+    course::service::CourseExistanceService,
     faq::{command::FaqCommand, error::FaqError, event::FaqEvent, service::FaqAggregateServices},
     shared::{Officiality, Status},
 };
+
+/// External dependencies `Faq::handle` needs beyond its own state — currently
+/// just a way to check that a `course_id` refers to a real course before a
+/// FAQ can be created against it, mirroring `LinkAggregateServices`.
+pub struct FaqAggregateServices {
+    pub course: CourseExistanceService,
+}
 
 #[derive(Serialize, Default, Deserialize)]
 pub struct Faq {
@@ -158,7 +166,7 @@ impl Aggregate for Faq {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::aggregates::course::service::CourseServices;
+    use crate::aggregates::course::service::CourseExistanceService;
     use cqrs_es::test::TestFramework;
     use uuid::Uuid;
 
@@ -183,7 +191,7 @@ mod tests {
 
     fn framework() -> FaqTestFramework {
         FaqTestFramework::with(FaqAggregateServices {
-            course: CourseServices(
+            course: CourseExistanceService(
                 sqlx::PgPool::connect_lazy("postgres://invalid/invalid")
                     .expect("connect_lazy should not require a live connection"),
             ),
@@ -193,7 +201,7 @@ mod tests {
     // ── Create ────────────────────────────────────────────────────────────────
 
     #[test]
-    #[ignore = "hits CourseServices::course_exists; needs a live Postgres connection"]
+    #[ignore = "hits CourseExistanceService::course_exists; needs a live Postgres connection"]
     fn test_create_faq() {
         framework()
             .given_no_previous_events()
@@ -207,7 +215,7 @@ mod tests {
     }
 
     #[test]
-    #[ignore = "hits CourseServices::course_exists; needs a live Postgres connection"]
+    #[ignore = "hits CourseExistanceService::course_exists; needs a live Postgres connection"]
     fn test_cannot_create_faq_for_nonexistent_course() {
         framework()
             .given_no_previous_events()

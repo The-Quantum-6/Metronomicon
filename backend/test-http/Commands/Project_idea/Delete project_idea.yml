@@ -1,0 +1,23 @@
+info:
+  name: Delete project idea
+  type: http
+  seq: 4
+
+http:
+  method: POST
+  url: http://localhost:3000/project_idea
+  body:
+    type: json
+    data: |-
+      {
+        "Delete": {
+          "idea_id": "550e8400-e29b-41d4-a716-446655440001"
+        }
+      }
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
