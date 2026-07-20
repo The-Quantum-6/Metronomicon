@@ -1,13 +1,16 @@
 use crate::models::permissions::Permissions;
 use sqlx::PgPool;
 use uuid::Uuid;
-const GROUP_ID: &str = "default";
 
-pub async fn get_user_permissions(pool: &PgPool, user_id: Uuid) -> Result<Permissions, sqlx::Error> {
+pub async fn get_user_permissions(
+    pool: &PgPool,
+    user_id: Uuid,
+    resource_id: &str,
+) -> Result<Permissions, sqlx::Error> {
     let row = sqlx::query!(
-        "SELECT perms FROM permissions WHERE user_id=$1 AND group_id=$2",
+        "SELECT perms FROM permissions WHERE user_id=$1 AND resource_id=$2",
         user_id,
-        GROUP_ID,
+        resource_id,
     )
     .fetch_optional(pool)
     .await?;
@@ -22,39 +25,47 @@ pub async fn get_user_permissions(pool: &PgPool, user_id: Uuid) -> Result<Permis
 pub async fn default_permissions(
     pool: &PgPool,
     user_id: Uuid,
+    resource_id: &str,
 ) -> Result<(), sqlx::Error> {
-
     sqlx::query!(
-        "INSERT INTO permissions(user_id, perms, group_id) VALUES ($1, $2, $3)",
+        "INSERT INTO permissions(user_id, perms, resource_id) VALUES ($1, $2, $3)",
         user_id,
         Permissions::READ.bits() as i32,
-        GROUP_ID,
+        resource_id,
     )
     .execute(pool)
     .await
     .map(|_| ())
 }
 
-pub async fn update_permissions(pool: &PgPool, id: Uuid, permissions: Permissions) -> Result<(), sqlx::Error> {
+pub async fn update_permissions(
+    pool: &PgPool,
+    user_id: Uuid,
+    resource_id: &str,
+    permissions: Permissions,
+) -> Result<(), sqlx::Error> {
     sqlx::query!(
-        "UPDATE permissions SET perms=$1 WHERE user_id=$2 AND group_id=$3",
+        "UPDATE permissions SET perms=$1 WHERE user_id=$2 AND resource_id=$3",
         permissions.bits() as i32,
-        id,
-        GROUP_ID,
+        user_id,
+        resource_id,
     )
     .execute(pool)
     .await
     .map(|_| ())
 }
 
-pub async fn delete_permissions(pool: &PgPool, user_id: Uuid) -> Result<(), sqlx::Error> {
+pub async fn delete_permissions(
+    pool: &PgPool,
+    user_id: Uuid,
+    resource_id: &str,
+) -> Result<(), sqlx::Error> {
     sqlx::query!(
-        "DELETE FROM permissions WHERE user_id=$1 AND group_id=$2",
+        "DELETE FROM permissions WHERE user_id=$1 AND resource_id=$2",
         user_id,
-        GROUP_ID,
+        resource_id,
     )
     .execute(pool)
     .await
     .map(|_| ())
-
 }

@@ -1,12 +1,13 @@
-use crate::{
-    models::claims::AccessClaim,
-    state::AppState,
-};
+use crate::{models::claims::AccessClaim, state::AppState};
 use axum::{
-    extract::{FromRequestParts, Request, State}, http::{HeaderMap, StatusCode, request::Parts}, middleware::Next, response::{IntoResponse, Redirect, Response},
+    extract::{FromRequestParts, Request, State},
+    http::{HeaderMap, StatusCode, request::Parts},
+    middleware::Next,
+    response::{IntoResponse, Redirect, Response},
 };
-use jsonwebtoken::{decode, errors::ErrorKind, Validation};
+use jsonwebtoken::{Validation, decode, errors::ErrorKind};
 pub struct AuthUser(pub AccessClaim);
+
 pub async fn jwt_middleware(
     State(state): State<AppState>,
     headers: HeaderMap,
@@ -30,11 +31,7 @@ pub async fn jwt_middleware(
     let mut validation = Validation::default();
     validation.set_required_spec_claims(&["exp", "sub"]);
 
-    let token = match decode::<AccessClaim>(
-        &token_str,
-        &state.jwt_decode,
-        &validation,
-    ) {
+    let token = match decode::<AccessClaim>(&token_str, &state.jwt_decode, &validation) {
         Ok(t) => t,
         Err(e) => match e.kind() {
             ErrorKind::ExpiredSignature => {

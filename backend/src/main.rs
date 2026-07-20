@@ -1,4 +1,5 @@
 mod auth;
+mod handlers;
 mod routes;
 mod state;
 
@@ -10,8 +11,8 @@ use tower_http::cors::CorsLayer;
 use tower_sessions::{SessionManagerLayer, cookie::SameSite};
 use tower_sessions_sqlx_store::PostgresStore;
 pub mod error;
-pub mod models;
 pub mod middleware;
+pub mod models;
 
 mod repositories;
 mod storage;
@@ -42,7 +43,7 @@ async fn main() {
     let state = AppState::new(db).await;
     let app = Router::new()
         .route("/", get(|| async { "Hello, World!" }))
-        .merge(routes::router())
+        .merge(routes::router(state.clone()))
         .layer(session_layer)
         .with_state(state);
 

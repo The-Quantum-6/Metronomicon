@@ -1,11 +1,11 @@
+use jsonwebtoken::{DecodingKey, EncodingKey};
 use openidconnect::{
     ClientId, ClientSecret, EndpointMaybeSet, EndpointNotSet, EndpointSet, IssuerUrl, RedirectUrl,
     core::{CoreClient, CoreProviderMetadata},
     reqwest::Client,
 };
-use std::sync::Arc;
-use jsonwebtoken::{DecodingKey, EncodingKey};
 use sqlx::{Pool, Postgres};
+use std::sync::Arc;
 
 use crate::storage::Storage;
 use axum::extract::FromRef;

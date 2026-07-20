@@ -1,10 +1,13 @@
+use crate::models::{
+    claims::{AccessClaim, PermsClaim},
+    user::UserRole,
+};
 use jsonwebtoken::{EncodingKey, Header, encode, get_current_timestamp};
 use uuid::Uuid;
-use crate::models::claims::{AccessClaim, PermsClaim};
 
 pub fn generate_access(
     key: &EncodingKey,
-    role: String,
+    role: UserRole,
     sub: String,
 ) -> Result<String, jsonwebtoken::errors::Error> {
     let now = get_current_timestamp();

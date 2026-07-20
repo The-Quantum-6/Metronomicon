@@ -5,7 +5,7 @@ bitflags! {
         // reading
         const READ = 1 << 1;
 
-        // writing 
+        // writing
         const WRITE_TEXT = 1 << 2;
         const WRITE_FILE = 1 << 3;
 

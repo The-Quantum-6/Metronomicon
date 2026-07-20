@@ -1,2 +1,2 @@
-pub mod oidc;
 pub mod jwt;
+pub mod oidc;

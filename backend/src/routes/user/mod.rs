@@ -1,8 +1,8 @@
 pub mod user_endpoint;
 
-use axum::Router;
 use crate::state::AppState;
+use axum::Router;
 
-pub fn router() -> Router<AppState> {
-    Router::new().merge(user_endpoint::router())
+pub fn router(state: AppState) -> Router<AppState> {
+    Router::new().merge(user_endpoint::router(state))
 }

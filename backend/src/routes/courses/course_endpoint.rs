@@ -1,11 +1,11 @@
 use crate::error::{AppError, RequestError};
 use crate::models::course::Course;
 use crate::repositories::course as course_repo;
+use crate::state::AppState;
 use axum::extract::{Json, Path, State};
 use axum::{Router, routing::delete, routing::get, routing::post, routing::put};
 use serde::Deserialize;
 use sqlx::PgPool;
-use crate::state::AppState;
 use uuid::Uuid;
 
 /// Routes for course CRUD operations, mounted under `/courses`.
@@ -75,7 +75,10 @@ async fn get_course_by_code(
 }
 
 /// Deletes a course by its id.
-async fn delete_course(State(state): State<AppState>, Path(id): Path<Uuid>) -> Result<(), AppError> {
+async fn delete_course(
+    State(state): State<AppState>,
+    Path(id): Path<Uuid>,
+) -> Result<(), AppError> {
     let pool = &state.pool;
     Ok(course_repo::delete_course(&pool, id).await?)
 }

@@ -1,11 +1,15 @@
 pub mod auth;
 pub mod courses;
-pub mod user;
 pub mod files;
+pub mod user;
 
-use axum::Router;
 use crate::state::AppState;
+use axum::Router;
 
-pub fn router() -> Router<AppState> {
-    Router::new().merge(user::router()).merge(courses::router()).merge(files::router())
+pub fn router(state: AppState) -> Router<AppState> {
+    Router::new()
+        .merge(user::router(state))
+        .merge(courses::router())
+        .merge(auth::router())
+        .merge(files::router())
 }

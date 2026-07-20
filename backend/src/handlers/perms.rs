@@ -1,6 +1,5 @@
-use crate::{middleware::perms, models::permissions::Permissions};
+use crate::models::{permissions::Permissions, user::UserRole};
 use bitflags::bitflags;
-
 
 pub fn has_permission(perms: Permissions, required: Permissions) -> bool {
     perms.contains(required)
@@ -18,7 +17,6 @@ pub fn remove_permission(perms: &mut Permissions, perm_to_remove: Permissions) {
     perms.remove(perm_to_remove);
 }
 
-
-pub fn is_super_user(role: &Role) -> bool {
-    matches!(role, Role::Root | Role::SuperUser)
+pub fn is_super_user(role: &UserRole) -> bool {
+    matches!(role, UserRole::Root | UserRole::Admin)
 }

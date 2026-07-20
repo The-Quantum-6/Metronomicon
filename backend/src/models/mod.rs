@@ -1,4 +1,4 @@
-pub mod course;
-pub mod user;
-pub mod permissions;
 pub mod claims;
+pub mod course;
+pub mod permissions;
+pub mod user;
