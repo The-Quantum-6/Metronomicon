@@ -1,8 +1,11 @@
 pub mod contribution;
 pub mod course;
 pub mod faq;
+pub mod files;
 pub mod link;
 pub mod project_idea;
+pub mod report;
+pub mod resources;
 pub mod user;
 
 use axum::Router;
@@ -17,4 +20,6 @@ pub fn router() -> Router<AppState> {
         .merge(project_idea::router())
         .merge(faq::router())
         .merge(contribution::router())
+        .merge(resources::router())
+        .merge(report::router())
 }

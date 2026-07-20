@@ -1,7 +1,5 @@
-use axum::Router;
-use axum::routing::get;
-
 use crate::state::AppState;
+use axum::{Router, routing::get};
 
 pub fn router() -> Router<AppState> {
     Router::new().route("/testuser", get(user_test))

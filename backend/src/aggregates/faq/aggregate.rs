@@ -4,7 +4,7 @@ use uuid::Uuid;
 
 use crate::aggregates::{
     course::service::CourseExistanceService,
-    faq::{command::FaqCommand, error::FaqError, event::FaqEvent},
+    faq::{command::FaqCommand, error::FaqError, event::FaqEvent, service::FaqAggregateServices},
     shared::{Officiality, Status},
 };
 
