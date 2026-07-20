@@ -1,6 +1,6 @@
 import Navbar from "../components/Navbar";
 import { useEffect, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { apiUrl } from "../config";
 
 type Course = { id: string; name: string; code: string };
@@ -8,7 +8,6 @@ type Course = { id: string; name: string; code: string };
 export default function Admin() {
   const [courses, setCourses] = useState<Course[] | null>(null);
   const [loading, setLoading] = useState(true);
-  const navigate = useNavigate();
 
   const fetchCourses = () => {
     setLoading(true);
@@ -40,10 +39,7 @@ export default function Admin() {
     <div className="min-h-screen bg-surface-dark text-text">
       <Navbar />
       <main className="container mx-auto p-6">
-        <div className="flex items-center justify-between mb-6">
-          <h1 className="text-2xl font-bold text-primary">Admin — Courses</h1>
-          <button onClick={() => navigate("/admin/create")} className="bg-accent hover:bg-accent-dark text-white px-4 py-2 rounded transition">Create New Course</button>
-        </div>
+        <h1 className="text-2xl font-bold text-primary mb-6">Admin — Courses</h1>
 
         {loading ? (
           <div className="text-text-muted">Loading...</div>
