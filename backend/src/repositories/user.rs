@@ -68,9 +68,9 @@ mod tests {
         let sub = "1234567654321".to_string();
         let email = None::<String>;
 
-        create_user(&pool, sub, name.clone(), email.clone()).await?;
-        create_user(&pool, sub, name.clone(), email.clone()).await?;
-        create_user(&pool, sub, name.clone(), email.clone()).await?;
+        create_user(&pool, sub.clone(), name.clone(), email.clone()).await?;
+        create_user(&pool, sub.clone(), name.clone(), email.clone()).await?;
+        create_user(&pool, sub.clone(), name.clone(), email.clone()).await?;
 
         let users = get_users(&pool).await?;
 
@@ -88,7 +88,7 @@ mod tests {
         let sub = "1234567654321".to_string();
         let email = None::<String>;
 
-        create_user(&pool, sub, name.clone(), email.clone()).await?;
+        create_user(&pool, sub.clone(), name.clone(), email.clone()).await?;
 
         let user = get_user_by_sub(&pool, sub).await?;
 
@@ -103,7 +103,7 @@ mod tests {
         let name = "Jane".to_string();
         let email = Some("jane@example.com".to_string());
 
-        create_user(&pool, sub, name.clone(), email.clone()).await?;
+        create_user(&pool, sub.clone(), name.clone(), email.clone()).await?;
 
         let user = get_user_by_sub(&pool, sub)
             .await?
@@ -111,7 +111,7 @@ mod tests {
         assert_eq!(user.sub, sub);
         assert_eq!(user.name, name);
         assert_eq!(user.email, email);
-        Ok(())
+        Ok()
     }
 
     #[sqlx::test]
@@ -119,7 +119,7 @@ mod tests {
         let sub = "1234675432".to_string();
         let name = "NoEmail".to_string();
 
-        create_user(&pool, sub, name.clone(), None).await?;
+        create_user(&pool, sub.clone(), name.clone(), None).await?;
 
         let user = get_user_by_sub(&pool, sub)
             .await?
@@ -132,7 +132,7 @@ mod tests {
     async fn get_user_by_id_returns_correct_user(pool: PgPool) -> sqlx::Result<()> {
         let sub = "1234567654321".to_string();
         let name = "Found".to_string();
-        create_user(&pool, sub, name.clone(), None).await?;
+        create_user(&pool, sub.clone(), name.clone(), None).await?;
 
         let created = get_user_by_sub(&pool, sub).await?.expect("should exist");
         let fetched = get_user_by_id(&pool, created.id)
@@ -161,7 +161,7 @@ mod tests {
     #[sqlx::test]
     async fn delete_user_removes_user(pool: PgPool) -> sqlx::Result<()> {
         let sub = "1234567654321".to_string();
-        create_user(&pool, sub, "ToDelete".to_string(), None).await?;
+        create_user(&pool, sub.clone(), "ToDelete".to_string(), None).await?;
 
         let user = get_user_by_sub(&pool, sub).await?.expect("should exist");
         delete_user(&pool, user.id).await?;
