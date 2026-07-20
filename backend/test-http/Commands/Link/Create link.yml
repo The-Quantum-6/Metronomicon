@@ -1,0 +1,25 @@
+info:
+  name: Create link
+  type: http
+  seq: 1
+
+http:
+  method: POST
+  url: http://localhost:3000/links
+  body:
+    type: json
+    data: |-
+      {
+        "Create": {
+          "course_id": "33369645-d2b4-45a3-9250-f78be2f6a222",
+          "label": "An awful link",
+          "url": "https://github.com/"
+        }
+      }
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

@@ -1,0 +1,38 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            SELECT aggregate_id, course_id, contribution, status\n            FROM contribution_list_view\n            ORDER BY aggregate_id\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "aggregate_id",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 1,
+        "name": "course_id",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 2,
+        "name": "contribution",
+        "type_info": "Jsonb"
+      },
+      {
+        "ordinal": 3,
+        "name": "status",
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "e1b11182a7f268b1e62c90fba8614c5d156ed57d7e6bb68681599d9d3ab5216a"
+}

@@ -1,0 +1,41 @@
+use cqrs_es::DomainEvent;
+use serde::{Deserialize, Serialize};
+use strum::Display;
+use uuid::Uuid;
+
+use crate::aggregates::shared::Officiality;
+
+#[derive(Debug, Serialize, Deserialize, PartialEq, Clone, Display)]
+pub enum ResourceEvent {
+    ResourceCreated {
+        resource_id: Uuid,
+        course_id: Uuid,
+        title: String,
+        key: String,
+    },
+    ResourceUpdated {
+        resource_id: Uuid,
+        course_id: Uuid,
+        title: Option<String>,
+        key: Option<String>,
+    },
+    ResourceDeleted {
+        resource_id: Uuid,
+        course_id: Uuid,
+    },
+    ResourceOfficialStatusChanged {
+        resource_id: Uuid,
+        course_id: Uuid,
+        officiality: Officiality,
+    },
+}
+
+impl DomainEvent for ResourceEvent {
+    fn event_type(&self) -> String {
+        self.to_string()
+    }
+
+    fn event_version(&self) -> String {
+        "1.0".to_string()
+    }
+}

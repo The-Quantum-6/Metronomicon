@@ -1,0 +1,19 @@
+CREATE TABLE events
+(
+    aggregate_type text                         NOT NULL,
+    aggregate_id   text                         NOT NULL,
+    sequence       bigint CHECK (sequence >= 0) NOT NULL,
+    event_type     text                         NOT NULL,
+    event_version  text                         NOT NULL,
+    payload        jsonb                         NOT NULL,
+    metadata       jsonb                         NOT NULL,
+    PRIMARY KEY (aggregate_type, aggregate_id, sequence)
+);
+
+CREATE TABLE course_detail_view
+(
+    view_id text                        NOT NULL,
+    version           bigint CHECK (version >= 0) NOT NULL,
+    payload           jsonb                        NOT NULL,
+    PRIMARY KEY (view_id)
+);
