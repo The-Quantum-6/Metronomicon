@@ -1,0 +1,33 @@
+info:
+  name: Contribute add project idea
+  type: http
+  seq: 1
+
+http:
+  method: POST
+  url: http://localhost:3000/contributions
+  body:
+    type: json
+    data: |-
+      {
+        "Propose": {
+          "course_id": "4168a724-7206-4540-a632-87170ce4f7d5",
+          "contribution": {
+            "Text": {
+              "AddProjectIdea": {
+                "title": "Build a CLI todo app",
+                "body": "A simple command-line todo list manager using Rust and serde for persistence.",
+                "difficulty": "Easy"
+              }
+            }
+          },
+          "comment": "Good beginner project"
+        }
+      }
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

@@ -1,0 +1,26 @@
+info:
+  name: Create site report
+  type: http
+  seq: 31
+
+http:
+  method: POST
+  url: http://localhost:3000/reports
+  body:
+    type: json
+    data: |-
+      {
+        "Create": {
+          "course_id": null,
+          "title": "Navigation issue",
+          "description": "The search page is difficult to navigate on mobile devices.",
+          "contact_email": "elghe0590@oslomet.no"
+        }
+      }
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

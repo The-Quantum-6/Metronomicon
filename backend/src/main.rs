@@ -1,45 +1,39 @@
-mod routes;
-
 use axum::{Router, routing::get};
-use sqlx::postgres::PgPoolOptions;
 use tower_http::cors::CorsLayer;
 
+pub mod aggregates;
+pub mod config;
 pub mod error;
+pub mod extractors;
 pub mod models;
+pub mod queries;
 mod repositories;
-mod state;
-mod storage;
+pub mod routes;
+pub mod state;
+pub mod storage;
+pub mod views;
 
 #[tokio::main]
 async fn main() {
-    dotenvy::dotenv().ok();
-    let database_url = std::env::var("DATABASE_URL").expect("DATABASE_URL must be set");
-    let db = PgPoolOptions::new()
-        .connect(&database_url)
-        .await
-        .expect("Should be able to connect to database");
+    let config = config::get();
 
-    sqlx::migrate!()
-        .run(&db)
-        .await
-        .expect("Migrations should succeed");
-
-    let environment = std::env::var("ENVIRONMENT").unwrap_or_default();
-
-    let storage = storage::Storage::from_env().await;
-    let state = state::AppState { db, storage };
+    // Builds the db pool (+ runs migrations), the Garage storage client and
+    // the CQRS framework — everything handlers need, bundled in one AppState.
+    let state = state::get(&config).await;
 
     let app = Router::new()
         .route("/", get(|| async { "Hello, World!" }))
         .merge(routes::router())
         .with_state(state);
 
-    let app = if environment == "dev" {
+    // CORS off in dev
+    let app = if config.cors_should_be_permissive {
         app.layer(CorsLayer::permissive())
     } else {
         app // no permissive layer outside dev
     };
 
+    // Serve
     let listener = tokio::net::TcpListener::bind("0.0.0.0:3000").await.unwrap();
     axum::serve(listener, app).await.unwrap();
 }

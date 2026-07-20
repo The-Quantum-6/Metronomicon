@@ -1,0 +1,14 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE course_list_view SET status = 'Deleted'\n                         WHERE aggregate_id = $1",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "621e4300cc04c456bd69409ed80ad8cf7dd34b8d40cfec9ab9fcd859b0b35905"
+}
