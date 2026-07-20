@@ -8,12 +8,11 @@ use sqlx::postgres::PgPoolOptions;
 use state::AppState;
 use tower_http::cors::CorsLayer;
 
-use tower_sessions::{SessionManagerLayer, cookie::SameSite};
+use tower_sessions::{Expiry, SessionManagerLayer, cookie::{SameSite, time::Duration}};
 use tower_sessions_sqlx_store::PostgresStore;
 pub mod error;
 pub mod middleware;
 pub mod models;
-
 mod repositories;
 mod storage;
 
@@ -36,7 +35,8 @@ async fn main() {
 
     let session_layer = SessionManagerLayer::new(session_store)
         .with_secure(false)
-        .with_same_site(SameSite::Lax);
+        .with_same_site(SameSite::Lax)
+        .with_expiry(tower_sessions::Expiry::OnInactivity(Duration::days(30)));
 
     let environment = std::env::var("ENVIRONMENT").unwrap_or_default();
 
@@ -46,6 +46,7 @@ async fn main() {
         .merge(routes::router(state.clone()))
         .layer(session_layer)
         .with_state(state);
+    
 
     let app = if environment == "dev" {
         app.layer(CorsLayer::permissive())

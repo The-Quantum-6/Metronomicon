@@ -14,6 +14,7 @@ use openidconnect::{
 };
 use serde::Deserialize;
 use tower_sessions::Session;
+use uuid::Uuid;
 
 use crate::auth::jwt::generate_access;
 
@@ -226,8 +227,12 @@ pub async fn login_callback(
         })?;
 
     let cookie = format!("access_token={}; HttpOnly; SameSite=Lax; Path=/", token);
+    
+    let new_refresh = Uuid::new_v4().to_string();
+    session.insert("refresh_token", new_refresh).await.ok();
+    session.insert("user_id", user.id).await.ok();
 
-    let mut response = Redirect::to("/user").into_response();
+    let mut response = Redirect::to("/me").into_response();
     response
         .headers_mut()
         .insert(header::SET_COOKIE, HeaderValue::from_str(&cookie).unwrap());
