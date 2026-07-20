@@ -11,8 +11,8 @@ use serde::Serialize;
 
 pub fn router() -> Router<AppState> {
     Router::new()
-       .route("/reports", get(list_reports))
-       .route("/reports", post(handle_command))
+        .route("/reports", get(list_reports))
+        .route("/reports", post(handle_command))
 }
 
 pub async fn handle_command(
@@ -63,9 +63,6 @@ pub async fn list_reports(State(state): State<AppState>) -> Response {
     }
 }
 
-pub async fn query_handler(
-    State(_state): State<AppState>,
-    Path(_id): Path<String>,
-) -> Response {
+pub async fn query_handler(State(_state): State<AppState>, Path(_id): Path<String>) -> Response {
     StatusCode::NOT_IMPLEMENTED.into_response()
 }

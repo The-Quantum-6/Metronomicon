@@ -3,7 +3,7 @@ use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
 use crate::aggregates::{
-    course::service::CourseServices,
+    course::service::CourseExistanceService,
     resource::{
         command::ResourceCommand, error::ResourceError, event::ResourceEvent,
         services::ResourceServices,
@@ -12,7 +12,7 @@ use crate::aggregates::{
 };
 
 pub struct ResourceAggregateServices {
-    pub course: CourseServices,
+    pub course: CourseExistanceService,
     pub resource: ResourceServices,
 }
 

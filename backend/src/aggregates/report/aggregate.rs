@@ -5,15 +5,18 @@ use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
 use crate::aggregates::{
-    course::service::CourseServices,
+    course::service::CourseExistanceService,
     report::{
-        command::ReportCommand, error::ReportError, event::ReportEvent, status::ReportStatus, // TODO: Add EmailService for validating email addresses
+        command::ReportCommand,
+        error::ReportError,
+        event::ReportEvent,
+        status::ReportStatus, // TODO: Add EmailService for validating email addresses
         target::ReportTarget,
     },
 };
 
 pub struct ReportAggregateServices {
-    pub course: CourseServices,
+    pub course: CourseExistanceService,
 }
 
 #[derive(Serialize, Default, Deserialize)]

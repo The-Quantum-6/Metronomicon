@@ -18,7 +18,8 @@ use crate::{
             services::{LinkExistanceService, LinkServices, LinkValidityService},
         },
         project_idea::{
-            services::ProjectIdeaExistanceService, aggregate::{ProjectIdea, ProjectIdeaAggregateServices},
+            aggregate::{ProjectIdea, ProjectIdeaAggregateServices},
+            services::ProjectIdeaExistanceService,
         },
         report::aggregate::{Report, ReportAggregateServices},
         resource::{
@@ -176,12 +177,13 @@ pub async fn get(config: &AppConfig) -> AppState {
         db.clone(),
         contribution_queries,
         contribution_aggregate_services,
+    ));
     let resource_queries: Vec<Box<dyn Query<Resource>>> = vec![
         Box::new(logging_query.clone()),
         Box::new(CourseResourceQuery::new(course_view_repo.clone())),
     ];
     let resource_aggregate_services = ResourceAggregateServices {
-        course: CourseServices(db.clone()),
+        course: CourseExistanceService(db.clone()),
         // The aggregate verifies upload keys against Garage before recording
         // events that reference them (Storage::exists via HeadObject).
         resource: ResourceServices(storage.clone()),
@@ -208,7 +210,7 @@ pub async fn get(config: &AppConfig) -> AppState {
         Box::new(report_list_query),
     ];
     let report_aggregate_services = ReportAggregateServices {
-        course: CourseServices(db.clone()),
+        course: CourseExistanceService(db.clone()),
     };
     let report_cqrs = Arc::new(postgres_es::postgres_cqrs(
         db.clone(),

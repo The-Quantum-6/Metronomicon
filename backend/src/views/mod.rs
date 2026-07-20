@@ -1,5 +1,5 @@
-pub mod contribution;
 pub mod admin;
+pub mod contribution;
 pub mod course;
 pub mod faq;
 pub mod link;
