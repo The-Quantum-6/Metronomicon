@@ -12,23 +12,21 @@ use tower_sessions::{Expiry, SessionManagerLayer, cookie::{SameSite, time::Durat
 use tower_sessions_sqlx_store::PostgresStore;
 pub mod error;
 pub mod middleware;
+pub mod aggregates;
+pub mod config;
+pub mod extractors;
 pub mod models;
+pub mod queries;
 mod repositories;
-mod storage;
+pub mod storage;
+pub mod views;
 
 #[tokio::main]
 async fn main() {
-    dotenvy::dotenv().ok();
-    let database_url = std::env::var("DATABASE_URL").expect("DATABASE_URL must be set");
-    let db = PgPoolOptions::new()
-        .connect(&database_url)
-        .await
-        .expect("Should be able to connect to database");
+    let config = config::get();
 
-    sqlx::migrate!()
-        .run(&db)
-        .await
-        .expect("Migrations should succeed");
+    let state = state::get(&config).await;
+    let db = state.pool.clone();
 
     let session_store = PostgresStore::new(db.clone());
     session_store.migrate().await.unwrap();
@@ -38,20 +36,16 @@ async fn main() {
         .with_same_site(SameSite::Lax)
         .with_expiry(tower_sessions::Expiry::OnInactivity(Duration::days(30)));
 
-    let environment = std::env::var("ENVIRONMENT").unwrap_or_default();
-
-    let state = AppState::new(db).await;
     let app = Router::new()
         .route("/", get(|| async { "Hello, World!" }))
-        .merge(routes::router(state.clone()))
+        .merge(routes::router())
         .layer(session_layer)
         .with_state(state);
     
-
-    let app = if environment == "dev" {
+    let app = if config.cors_should_be_permissive {
         app.layer(CorsLayer::permissive())
     } else {
-        app // no permissive layer outside dev
+        app
     };
 
     let listener = tokio::net::TcpListener::bind("0.0.0.0:3000").await.unwrap();

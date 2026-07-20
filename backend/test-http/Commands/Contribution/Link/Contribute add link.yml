@@ -1,0 +1,32 @@
+info:
+  name: Contribute add link
+  type: http
+  seq: 1
+
+http:
+  method: POST
+  url: http://localhost:3000/contributions
+  body:
+    type: json
+    data: |-
+      {
+        "Propose": {
+          "course_id": "4168a724-7206-4540-a632-87170ce4f7d5",
+          "contribution": {
+            "Text": {
+              "AddLink": {
+                "label": "Useful Tutorial",
+                "url": "https://oslomet.no"
+              }
+            }
+          },
+          "comment": "This would be useful"
+        }
+      }
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

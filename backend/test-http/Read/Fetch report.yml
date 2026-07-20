@@ -1,0 +1,15 @@
+info:
+  name: Fetch report
+  type: http
+  seq: 31
+
+http:
+  method: GET
+  url: http://localhost:3000/reports/63dddb6e-5a9e-43d4-96f0-6aa6d6f4ae9
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
