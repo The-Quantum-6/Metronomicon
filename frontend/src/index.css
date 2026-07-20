@@ -1,3 +1,4 @@
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Plus+Jakarta+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap');
 @import "tailwindcss";
 
 @theme {
@@ -15,6 +16,9 @@
   --color-primary-lighter: #404880;
   --color-accent: #1A1F3A;
   --color-accent-dark: #0D1128;
+  --font-display: 'Playfair Display', Georgia, serif;
+  --font-sans: 'Plus Jakarta Sans', sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
 }
 
 :root {
@@ -34,6 +38,11 @@
 /* Roomier course cards (overrides Aksel's default LinkCard padding) */
 .course-card.course-card {
   padding: 1.75rem 2rem !important;
+}
+
+body {
+  font-family: var(--font-sans);
+  background: #F4F2EB;
 }
 
 /* Ensure Quill-generated lists and headers render correctly */
