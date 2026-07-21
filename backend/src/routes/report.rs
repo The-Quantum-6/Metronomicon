@@ -1,41 +1,71 @@
+use crate::error::{AppError, RequestError};
 use crate::extractors::report::ReportCommandExtractor;
 use crate::state::AppState;
 use axum::{
-    Json, Router,
-    extract::{Path, State},
-    http::StatusCode,
-    response::{IntoResponse, Response},
+     Json, Router,
+     extract::{Path, State},
     routing::{get, post},
 };
 use serde::Serialize;
-
 pub fn router() -> Router<AppState> {
     Router::new()
         .route("/reports", get(list_reports))
         .route("/reports", post(handle_command))
+        .route("/reports/{id}", get(query_handler))
 }
 
 pub async fn handle_command(
     State(state): State<AppState>,
     ReportCommandExtractor(metadata, command): ReportCommandExtractor,
-) -> Response {
+) -> Result<(), AppError> {
     let issue_id = command.id();
 
-    match state
+    state
         .cqrs
         .report
         .execute_with_metadata(&issue_id.to_string(), command, metadata)
         .await
-    {
-        Ok(()) => StatusCode::NO_CONTENT.into_response(),
+        .map_err(|_e| AppError::BadRequest(RequestError::NonExsistant("Report")))?;
 
-        Err(e) => {
-            println!("Error: {e:#?}");
-            (StatusCode::BAD_REQUEST, e.to_string()).into_response()
-        }
-    }
+    Ok(())
 }
 
+pub async fn list_reports(
+    State(state): State<AppState>,
+) -> Result<Json<Vec<ReportListItem>>, AppError> {
+    let reports = sqlx::query_as::<_, ReportListItem>(
+        r#"
+        SELECT aggregate_id, target, description, contact_email, status
+        FROM report_detail_view
+        ORDER BY aggregate_id
+        "#,
+    )
+    .fetch_all(&state.pool)
+    .await?;
+
+    Ok(Json(reports))
+}
+
+pub async fn query_handler(
+    Path(id): Path<String>,
+    State(state): State<AppState>,
+) -> Result<Json<ReportListItem>, AppError> {
+    let report = sqlx::query_as::<_, ReportListItem>(
+        r#"
+        SELECT aggregate_id, target, description, contact_email, status
+        FROM report_detail_view
+        WHERE aggregate_id = $1
+        "#,
+    )
+    .bind(&id)
+    .fetch_optional(&state.pool)
+    .await?
+    .ok_or(AppError::BadRequest(
+        RequestError::NonExsistant("Report"),
+    ))?;
+
+    Ok(Json(report))
+}
 #[derive(Debug, Serialize, sqlx::FromRow)]
 pub struct ReportListItem {
     pub aggregate_id: String,
@@ -43,26 +73,4 @@ pub struct ReportListItem {
     pub description: Option<String>,
     pub contact_email: Option<String>,
     pub status: Option<String>,
-}
-
-pub async fn list_reports(State(state): State<AppState>) -> Response {
-    let result = sqlx::query_as::<_, ReportListItem>(
-        "SELECT aggregate_id, target, description, contact_email, status
-         FROM report_list_view
-         ORDER BY aggregate_id",
-    )
-    .fetch_all(&state.pool)
-    .await;
-
-    match result {
-        Ok(reports) => Json(reports).into_response(),
-        Err(e) => {
-            println!("list_reports error: {e:#?}");
-            (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()).into_response()
-        }
-    }
-}
-
-pub async fn query_handler(State(_state): State<AppState>, Path(_id): Path<String>) -> Response {
-    StatusCode::NOT_IMPLEMENTED.into_response()
 }
