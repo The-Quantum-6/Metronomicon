@@ -1,6 +1,5 @@
 use crate::{
-    models::permissions::Permissions, repositories::permissions::get_user_permissions,
-    state::AppState,
+    models::{claims::AccessClaim, permissions::Permissions}, repositories::permissions::get_user_permissions, state::AppState,
 };
 use axum::{
     body::{Body, to_bytes},
@@ -80,16 +79,12 @@ pub async fn perm_middleware(State(state): State<AppState>, req: Request, next: 
         .unwrap_or_default();
 
     let lookup_key = format!("{}{}", aggregate, command_key);
-    println!("lookup_key: {}", lookup_key);
 
     let required = match permission_map().get(lookup_key.as_str()) {
         Some(p) => *p,
         None => return StatusCode::FORBIDDEN.into_response(),
     };
 
-    // hent user_id — midlertidig hardkodet
-    let user_id = Uuid::parse_str("019f83c4-35ed-711a-9299-f6297653021b").unwrap();
-    /*
     let claims = match parts.extensions.get::<AccessClaim>().cloned() {
         Some(c) => c,
         None => return StatusCode::UNAUTHORIZED.into_response(),
@@ -98,7 +93,7 @@ pub async fn perm_middleware(State(state): State<AppState>, req: Request, next: 
         Ok(id) => id,
         Err(_) => return StatusCode::UNAUTHORIZED.into_response(),
     };
-    */
+    
     let course_id = json
         .as_object()
         .and_then(|o| o.values().next())
@@ -111,10 +106,6 @@ pub async fn perm_middleware(State(state): State<AppState>, req: Request, next: 
         Ok(p) => p,
         Err(_) => return StatusCode::INTERNAL_SERVER_ERROR.into_response(),
     };
-
-    println!("perms råverdi: {}", perms.bits());
-    println!("required råverdi: {}", required.bits());
-    println!("contains: {}", perms.contains(required));
 
     if !perms.contains(required) {
         return StatusCode::FORBIDDEN.into_response();
