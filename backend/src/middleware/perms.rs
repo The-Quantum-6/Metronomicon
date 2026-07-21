@@ -53,12 +53,17 @@ fn aggregate_from_path(path: &str) -> &str {
 }
 
 fn capitalize_singular(s: &str) -> String {
-    let singular = s.trim_end_matches('s');
-    let mut c = singular.chars();
-    match c.next() {
-        None => String::new(),
-        Some(f) => f.to_uppercase().to_string() + c.as_str(),
-    }
+    let base = s.trim_end_matches('s');
+    
+    base.split('_')
+        .map(|part| {
+            let mut c = part.chars();
+            match c.next() {
+                None => String::new(),
+                Some(f) => f.to_uppercase().to_string() + c.as_str(),
+            }
+        })
+        .collect()
 }
 
 pub async fn perm_middleware(State(state): State<AppState>, req: Request, next: Next) -> Response {

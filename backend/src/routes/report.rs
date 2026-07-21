@@ -1,18 +1,18 @@
 use crate::error::{AppError, RequestError};
-use crate::state::AppState;
+use crate::state::{self, AppState};
 use crate::{extractors::report::ReportCommandExtractor, middleware::perms::perm_middleware};
+use axum::middleware;
 use axum::{
      Json, Router,
      extract::{Path, State},
     routing::{get, post},
 };
 use serde::Serialize;
-pub fn router() -> Router<AppState> {
+pub fn router(state: AppState) -> Router<AppState> {
     Router::new()
         .route("/reports", get(list_reports))
         .route("/reports", post(handle_command))
         .route("/reports/{id}", get(query_handler))
-        .route_layer(middleware::from_fn_with_state(state, perm_middleware))
 }
 
 pub async fn handle_command(

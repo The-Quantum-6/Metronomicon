@@ -35,6 +35,7 @@ export default function ReportForm({ courseId, onCancel }: Props) {
       const response = await fetch(apiUrl("reports"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        credentials: "include",
         body: JSON.stringify({
           Create: {
             course_id: courseId ?? null,

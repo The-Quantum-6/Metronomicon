@@ -8,7 +8,7 @@ pub mod project_idea;
 pub mod report;
 pub mod resources;
 pub mod user;
-use crate::{middleware::perms::perm_middleware, state::AppState};
+use crate::{middleware::{jwt::jwt_middleware, perms::perm_middleware}, state::AppState};
 use axum::{Router, middleware};
 
 pub fn protected_router(state: AppState) -> Router<AppState> {
@@ -19,6 +19,8 @@ pub fn protected_router(state: AppState) -> Router<AppState> {
         .merge(link::router(state.clone()))
         .merge(project_idea::router(state.clone()))
         .merge(contribution::router(state.clone()))
+        .route_layer(middleware::from_fn_with_state(state.clone(), perm_middleware))
+        .route_layer(middleware::from_fn_with_state(state.clone(), jwt_middleware))
 }
 
 pub fn router() -> Router<AppState> {

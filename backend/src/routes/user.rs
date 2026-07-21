@@ -7,10 +7,6 @@ use axum::{Router, routing::get};
 pub fn router(state: AppState) -> Router<AppState> {
     Router::new()
         .route("/me", get(get_me))
-        .layer(middleware::from_fn_with_state(
-            state.clone(),
-            jwt_middleware,
-        ))
 }
 
 pub async fn get_me(AuthUser(claims): AuthUser) -> Json<AccessClaim> {

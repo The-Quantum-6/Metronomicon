@@ -20,6 +20,7 @@ export default function LinkForm({ courseId, onCancel }: Props) {
         headers: {
           "Content-Type": "application/json",
         },
+        credentials: "include",
         body: JSON.stringify({
           Create: {
             course_id: courseId,

@@ -17,7 +17,6 @@ pub fn router(state: AppState) -> Router<AppState> {
         "/contributions",
         get(list_contributions).post(handle_command),
     )
-    .route_layer(middleware::from_fn_with_state(state, perm_middleware))
 }
 
 pub async fn handle_command(

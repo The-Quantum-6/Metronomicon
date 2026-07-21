@@ -17,6 +17,7 @@ export default function FaqForm({ courseId, onCancel }: Props) {
       const response = await fetch(apiUrl("faqs"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        credentials: "include",
         body: JSON.stringify({ Create: { course_id: courseId, question, answer } }),
       });
 

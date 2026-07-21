@@ -3,7 +3,8 @@ mod handlers;
 mod routes;
 mod state;
 
-use axum::{Router, routing::get};
+use axum::{Router, http::HeaderValue, routing::get};
+use reqwest::{Method, header::CONTENT_TYPE};
 use sqlx::postgres::PgPoolOptions;
 use state::AppState;
 use tower_http::cors::CorsLayer;
@@ -47,7 +48,13 @@ async fn main() {
         .with_state(state);
 
     let app = if config.cors_should_be_permissive {
-        app.layer(CorsLayer::permissive())
+        let cors = CorsLayer::new()
+            .allow_origin(config.frontend_url.parse::<HeaderValue>().unwrap())
+            .allow_methods([Method::GET, Method::POST, Method::PUT, Method::DELETE, Method::PATCH])
+            .allow_headers([CONTENT_TYPE])
+            .allow_credentials(true); // PÅKREVD når fetch har credentials: "include"
+
+        app.layer(cors)
     } else {
         app
     };
