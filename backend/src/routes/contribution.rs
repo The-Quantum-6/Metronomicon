@@ -2,19 +2,22 @@ use axum::Json;
 use axum::Router;
 use axum::extract::State;
 use axum::http::StatusCode;
+use axum::middleware;
 use axum::response::IntoResponse;
 use axum::response::Response;
 use axum::routing::get;
 use serde::{Deserialize, Serialize};
 
 use crate::extractors::contribution::ContributionCommandExtractor;
+use crate::middleware::perms::perm_middleware;
 use crate::state::AppState;
 
-pub fn router() -> Router<AppState> {
+pub fn router(state: AppState) -> Router<AppState> {
     Router::new().route(
         "/contributions",
         get(list_contributions).post(handle_command),
     )
+    .route_layer(middleware::from_fn_with_state(state, perm_middleware))
 }
 
 pub async fn handle_command(

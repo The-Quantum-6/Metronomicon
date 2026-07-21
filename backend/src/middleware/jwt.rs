@@ -1,6 +1,12 @@
-use crate::{auth::jwt::generate_access, models::claims::AccessClaim, repositories::user::get_user_by_id, state::AppState};
+use crate::{
+    auth::jwt::generate_access, models::claims::AccessClaim, repositories::user::get_user_by_id,
+    state::AppState,
+};
 use axum::{
-    extract::{FromRequestParts, Request, State}, http::{HeaderMap, HeaderValue, StatusCode, request::Parts}, middleware::Next, response::{IntoResponse, Redirect, Response},
+    extract::{FromRequestParts, Request, State},
+    http::{HeaderMap, HeaderValue, StatusCode, request::Parts},
+    middleware::Next,
+    response::{IntoResponse, Redirect, Response},
 };
 use jsonwebtoken::{Validation, decode, errors::ErrorKind};
 use reqwest::header;
@@ -31,8 +37,7 @@ pub async fn jwt_middleware(
 
     let mut validation = Validation::default();
     validation.set_required_spec_claims(&["exp", "sub"]);
-    validation.leeway = 0; 
-    
+    validation.leeway = 0;
 
     match decode::<AccessClaim>(&token_str, &state.jwt_decode, &validation) {
         Ok(t) => {
@@ -40,24 +45,21 @@ pub async fn jwt_middleware(
             next.run(req).await
         }
         Err(e) => match e.kind() {
-            ErrorKind::ExpiredSignature => {
-                match try_refresh(&state, &session).await {
-                    Some((new_token, claims)) => {
-                        let cookie = format!(
-                            "access_token={}; HttpOnly; SameSite=Lax; Path=/; Max-Age=900",
-                            new_token
-                        );
-                        req.extensions_mut().insert(claims);
-                        let mut response = next.run(req).await;
-                        response.headers_mut().insert(
-                            header::SET_COOKIE,
-                            HeaderValue::from_str(&cookie).unwrap(),
-                        );
-                        response
-                    }
-                    None => Redirect::to("/login/google").into_response(),
+            ErrorKind::ExpiredSignature => match try_refresh(&state, &session).await {
+                Some((new_token, claims)) => {
+                    let cookie = format!(
+                        "access_token={}; HttpOnly; SameSite=Lax; Path=/; Max-Age=900",
+                        new_token
+                    );
+                    req.extensions_mut().insert(claims);
+                    let mut response = next.run(req).await;
+                    response
+                        .headers_mut()
+                        .insert(header::SET_COOKIE, HeaderValue::from_str(&cookie).unwrap());
+                    response
                 }
-            }
+                None => Redirect::to("/login/google").into_response(),
+            },
             _ => StatusCode::UNAUTHORIZED.into_response(),
         },
     }

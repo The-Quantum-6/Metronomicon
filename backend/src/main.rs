@@ -8,13 +8,16 @@ use sqlx::postgres::PgPoolOptions;
 use state::AppState;
 use tower_http::cors::CorsLayer;
 
-use tower_sessions::{Expiry, SessionManagerLayer, cookie::{SameSite, time::Duration}};
+use tower_sessions::{
+    Expiry, SessionManagerLayer,
+    cookie::{SameSite, time::Duration},
+};
 use tower_sessions_sqlx_store::PostgresStore;
-pub mod error;
-pub mod middleware;
 pub mod aggregates;
 pub mod config;
+pub mod error;
 pub mod extractors;
+pub mod middleware;
 pub mod models;
 pub mod queries;
 mod repositories;
@@ -42,7 +45,7 @@ async fn main() {
         .merge(routes::protected_router(state.clone()))
         .layer(session_layer)
         .with_state(state);
-    
+
     let app = if config.cors_should_be_permissive {
         app.layer(CorsLayer::permissive())
     } else {

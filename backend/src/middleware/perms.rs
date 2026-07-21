@@ -1,47 +1,125 @@
+use crate::{
+    models::permissions::Permissions, repositories::permissions::get_user_permissions,
+    state::AppState,
+};
 use axum::{
-    body::Body,
-    http::{Request, StatusCode},
+    body::{Body, to_bytes},
+    extract::{Request, State},
+    http::StatusCode,
     middleware::Next,
     response::{IntoResponse, Response},
-    extract::State,
 };
+use std::collections::HashMap;
+use std::sync::OnceLock;
 use uuid::Uuid;
-use crate::{repositories::permissions::get_user_permissions, state::AppState};
-use crate::models::claims::AccessClaim;
-use crate::models::permissions::Permissions;
 
-pub async fn check_perm(
-    State(state): State<AppState>,
-    req: Request<Body>,
-    next: Next,
-) -> Result<Response, StatusCode> {
-    // Siden vi bruker Axum sin state-uttrekking, må vi hente rettigheten 
-    // som kreves fra forespørselens extensions (vi legger den inn i routeren)
-    let required_perm = req.extensions()
-        .get::<Permissions>()
-        .cloned()
-        .ok_or(StatusCode::INTERNAL_SERVER_ERROR)?;
+const PERMISSION_ENTRIES: &[(&str, Permissions)] = &[
+    // Faq
+    ("FaqCreate", Permissions::WRITE_TEXT),
+    ("FaqUpdate", Permissions::WRITE_TEXT),
+    ("FaqDelete", Permissions::WRITE_TEXT),
+    ("FaqSetOfficial", Permissions::PAGE_ADMIN),
+    // Link
+    ("LinkCreate", Permissions::WRITE_TEXT),
+    ("LinkUpdate", Permissions::WRITE_TEXT),
+    ("LinkDelete", Permissions::WRITE_TEXT),
+    ("LinkSetOfficial", Permissions::PAGE_ADMIN),
+    // ProjectIdea
+    ("ProjectIdeaCreate", Permissions::WRITE_TEXT),
+    ("ProjectIdeaUpdate", Permissions::WRITE_TEXT),
+    ("ProjectIdeaDelete", Permissions::WRITE_TEXT),
+    // Resource
+    ("ResourceCreate", Permissions::WRITE_FILE),
+    ("ResourceUpdate", Permissions::WRITE_FILE),
+    ("ResourceDelete", Permissions::WRITE_FILE),
+    ("ResourceSetOfficial", Permissions::PAGE_ADMIN),
+    // Report
+    ("ReportCreate", Permissions::SUGGEST_TEXT),
+    ("ReportResolveReport", Permissions::PAGE_ADMIN),
+    ("ReportReopenReport", Permissions::PAGE_ADMIN),
+    // Contribution
+    ("ContributionPropose_Text", Permissions::SUGGEST_TEXT),
+    ("ContributionPropose_File", Permissions::SUGGEST_FILE),
+    ("ContributionModerate_Text", Permissions::MODERATE_TEXT),
+    ("ContributionModerate_File", Permissions::MODERATE_FILE),
+];
 
-    let _auth_user = req.extensions()
-        .get::<AccessClaim>()
-        .ok_or(StatusCode::UNAUTHORIZED)?;
+fn permission_map() -> &'static HashMap<&'static str, Permissions> {
+    static MAP: OnceLock<HashMap<&'static str, Permissions>> = OnceLock::new();
+    MAP.get_or_init(|| PERMISSION_ENTRIES.iter().cloned().collect())
+}
 
-    //let user_id = Uuid::parse_str(&auth_user.sub)
-      //  .map_err(|_| StatusCode::BAD_REQUEST)?;
-    // I stedet for å hente fra sesjonen, bare hardcoder du UUID-en din midlertidig:
-    let user_id: Uuid = Uuid::parse_str("019f802f-0e14-70be-97ac-9f64be7dda66").unwrap();
-    let resource_id = req.extensions()
-        .get::<String>()
-        .cloned()
+fn aggregate_from_path(path: &str) -> &str {
+    path.trim_start_matches('/').split('/').next().unwrap_or("")
+}
+
+fn capitalize_singular(s: &str) -> String {
+    let singular = s.trim_end_matches('s');
+    let mut c = singular.chars();
+    match c.next() {
+        None => String::new(),
+        Some(f) => f.to_uppercase().to_string() + c.as_str(),
+    }
+}
+
+pub async fn perm_middleware(State(state): State<AppState>, req: Request, next: Next) -> Response {
+    let path = req.uri().path().to_string();
+    let aggregate = capitalize_singular(aggregate_from_path(&path));
+
+    let (parts, body) = req.into_parts();
+    let bytes = match to_bytes(body, usize::MAX).await {
+        Ok(b) => b,
+        Err(_) => return StatusCode::BAD_REQUEST.into_response(),
+    };
+
+    let json: serde_json::Value = serde_json::from_slice(&bytes).unwrap_or_default();
+
+    let command_key = json
+        .as_object()
+        .and_then(|o| o.keys().next().cloned())
         .unwrap_or_default();
 
-    let user_perms = get_user_permissions(&state.pool, user_id, &resource_id)
-        .await
-        .unwrap_or(Permissions::empty());
+    let lookup_key = format!("{}{}", aggregate, command_key);
+    println!("lookup_key: {}", lookup_key);
 
-    if !user_perms.contains(required_perm) { 
-        return Err(StatusCode::FORBIDDEN);
+    let required = match permission_map().get(lookup_key.as_str()) {
+        Some(p) => *p,
+        None => return StatusCode::FORBIDDEN.into_response(),
+    };
+
+    // hent user_id — midlertidig hardkodet
+    let user_id = Uuid::parse_str("019f83c4-35ed-711a-9299-f6297653021b").unwrap();
+    /*
+    let claims = match parts.extensions.get::<AccessClaim>().cloned() {
+        Some(c) => c,
+        None => return StatusCode::UNAUTHORIZED.into_response(),
+    };
+    let user_id = match Uuid::parse_str(&claims.sub) {
+        Ok(id) => id,
+        Err(_) => return StatusCode::UNAUTHORIZED.into_response(),
+    };
+    */
+    let course_id = json
+        .as_object()
+        .and_then(|o| o.values().next())
+        .and_then(|v| v.get("course_id"))
+        .and_then(|v| v.as_str())
+        .unwrap_or_default()
+        .to_string();
+
+    let perms = match get_user_permissions(&state.pool, user_id, &course_id).await {
+        Ok(p) => p,
+        Err(_) => return StatusCode::INTERNAL_SERVER_ERROR.into_response(),
+    };
+
+    println!("perms råverdi: {}", perms.bits());
+    println!("required råverdi: {}", required.bits());
+    println!("contains: {}", perms.contains(required));
+
+    if !perms.contains(required) {
+        return StatusCode::FORBIDDEN.into_response();
     }
 
-    Ok(next.run(req).await)
+    let req = Request::from_parts(parts, Body::from(bytes));
+    next.run(req).await
 }

@@ -227,7 +227,7 @@ pub async fn login_callback(
         })?;
 
     let cookie = format!("access_token={}; HttpOnly; SameSite=Lax; Path=/", token);
-    
+
     let new_refresh = Uuid::new_v4().to_string();
     session.insert("refresh_token", new_refresh).await.ok();
     session.insert("user_id", user.id).await.ok();

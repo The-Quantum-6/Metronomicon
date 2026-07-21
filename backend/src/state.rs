@@ -40,12 +40,12 @@ use axum::extract::FromRef;
 use cqrs_es::Query;
 use jsonwebtoken::{DecodingKey, EncodingKey};
 use openidconnect::{
-    core::{CoreClient, CoreProviderMetadata},
     ClientId, ClientSecret, EndpointMaybeSet, EndpointNotSet, EndpointSet, IssuerUrl, RedirectUrl,
+    core::{CoreClient, CoreProviderMetadata},
 };
 use postgres_es::{PostgresCqrs, PostgresViewRepository};
 use reqwest::Client;
-use sqlx::{postgres::PgPoolOptions, Pool, Postgres};
+use sqlx::{Pool, Postgres, postgres::PgPoolOptions};
 use std::sync::Arc;
 
 pub type OidcClient = CoreClient<
@@ -95,7 +95,8 @@ pub async fn get(config: &AppConfig) -> AppState {
 
     let client_id = std::env::var("GOOGLE_CLIENT_ID").expect("GOOGLE_CLIENT_ID must be set");
     let client_secret = std::env::var("GOOGLE_SECRET").expect("GOOGLE_SECRET must be set");
-    let redirect_uri = std::env::var("GOOGLE_REDIRECT_URI").expect("GOOGLE_REDIRECT_URI must be set");
+    let redirect_uri =
+        std::env::var("GOOGLE_REDIRECT_URI").expect("GOOGLE_REDIRECT_URI must be set");
     let jsonwebtoken_secret = std::env::var("JWT_SECRET").expect("JWT_SECRET must be set");
 
     let storage = Storage::from_env().await;
