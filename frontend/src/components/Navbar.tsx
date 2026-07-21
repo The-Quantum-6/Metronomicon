@@ -21,13 +21,9 @@ function Navbar() {
 
         <Spacer />
 
-        <Link
-          to="/profile"
-          aria-label="Profil"
-          className="inline-flex items-center justify-center w-10 h-10 rounded-full shrink-0 bg-surface-light text-text border border-border no-underline transition-colors hover:bg-surface"
-        >
+        <a href="http://localhost:3000/login/google" className="inline-flex items-center justify-center w-10 h-10 rounded-full shrink-0 bg-surface-light text-text border border-border no-underline transition-colors hover:bg-surface">
           <PersonIcon aria-hidden fontSize="1.375rem" />
-        </Link>
+        </a>
       </HStack>
     </nav>
   );
