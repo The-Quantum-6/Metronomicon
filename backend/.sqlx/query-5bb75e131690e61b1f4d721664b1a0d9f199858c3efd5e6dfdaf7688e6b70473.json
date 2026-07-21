@@ -11,7 +11,7 @@
       {
         "ordinal": 1,
         "name": "sub",
-        "type_info": "Uuid"
+        "type_info": "Varchar"
       },
       {
         "ordinal": 2,

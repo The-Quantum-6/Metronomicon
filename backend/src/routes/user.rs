@@ -1,10 +1,18 @@
-use crate::state::AppState;
+use crate::middleware::jwt::{AuthUser, jwt_middleware};
+use crate::models::claims::AccessClaim;
+use crate::state::{self, AppState};
+use axum::{Json, middleware};
 use axum::{Router, routing::get};
 
-pub fn router() -> Router<AppState> {
-    Router::new().route("/testuser", get(user_test))
+pub fn router(state: AppState) -> Router<AppState> {
+    Router::new()
+        .route("/me", get(get_me))
+        .layer(middleware::from_fn_with_state(
+            state.clone(),
+            jwt_middleware,
+        ))
 }
 
-async fn user_test() -> String {
-    "User test endpoint".to_string()
+pub async fn get_me(AuthUser(claims): AuthUser) -> Json<AccessClaim> {
+    Json(claims)
 }

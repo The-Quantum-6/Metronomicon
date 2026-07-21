@@ -1,7 +1,7 @@
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
-#[derive(Serialize, Deserialize, sqlx::Type)]
+#[derive(Serialize, Deserialize, sqlx::Type, Debug, Clone)]
 #[sqlx(type_name = "user_role", rename_all = "lowercase")]
 pub enum UserRole {
     User,
@@ -12,7 +12,7 @@ pub enum UserRole {
 #[derive(Serialize, Deserialize, sqlx::Type)]
 pub struct User {
     pub id: Uuid,
-    pub sub: Uuid,
+    pub sub: String,
     pub name: String,
     pub role: UserRole,
     pub email: Option<String>,
