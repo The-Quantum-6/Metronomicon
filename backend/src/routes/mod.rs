@@ -14,6 +14,7 @@ use axum::Router;
 pub fn protected_router(state: AppState) -> Router<AppState> {
     Router::new()
         .merge(user::router(state.clone()))
+        .merge(faq::router(state.clone()))
 }
 
 pub fn router() -> Router<AppState> {
@@ -21,7 +22,6 @@ pub fn router() -> Router<AppState> {
         .merge(course::router())
         .merge(link::router())
         .merge(project_idea::router())
-        .merge(faq::router())
         .merge(contribution::router())
         .merge(resources::router())
         .merge(report::router())

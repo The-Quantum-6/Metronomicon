@@ -1,13 +1,17 @@
 use crate::extractors::faq::FaqCommandExtractor;
+use crate::middleware::perms::check_perm;
+use crate::models::permissions::Permissions;
 use crate::state::AppState;
+use axum::Extension;
 use axum::Router;
 use axum::extract::State;
 use axum::http::StatusCode;
+use axum::middleware::from_fn_with_state;
 use axum::response::IntoResponse;
 use axum::response::Response;
 use axum::routing::post;
 
-pub fn router() -> Router<AppState> {
+pub fn router(state: AppState) -> Router<AppState> {
     Router::new().route("/faqs", post(handle_command))
 }
 
