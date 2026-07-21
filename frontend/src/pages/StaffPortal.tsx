@@ -44,22 +44,24 @@ export default function StaffPortal() {
 function CreateCoursePanel() {
   const [name, setName] = useState("");
   const [code, setCode] = useState("");
-  const [intro, setIntro] = useState("");
+  const [field, setField] = useState("");
+  const [description, setDescription] = useState("");
   const [creating, setCreating] = useState(false);
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setCreating(true);
     try {
-      const res = await fetch(apiUrl("courses/create"), {
+      const res = await fetch(apiUrl("courses"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, code, content: intro }),
+        body: JSON.stringify({ Create: { name, code, field, description } }),
       });
       if (!res.ok) throw new Error("create failed");
       setName("");
       setCode("");
-      setIntro("");
+      setField("");
+      setDescription("");
     } catch {
       alert("Create failed");
     } finally {
@@ -94,14 +96,25 @@ function CreateCoursePanel() {
         </div>
 
         <div>
+          <label className="block text-sm font-medium text-text-secondary mb-1">Course field</label>
+          <input
+            className={inputStyle}
+            placeholder="Computer Science e.g. "
+            value={field}
+            onChange={(e) => setField(e.target.value)}
+            required
+          />
+        </div>
+
+        <div>
           <label className="block text-sm font-medium text-text-secondary mb-1">
-            Student introduction
+            Description
           </label>
           <textarea
             className={`${inputStyle} min-h-28`}
-            placeholder="Write a student-facing overview — what it covers, difficulty, why it's valuable…"
-            value={intro}
-            onChange={(e) => setIntro(e.target.value)}
+            placeholder="Write a little intro to the course"
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
           />
         </div>
 

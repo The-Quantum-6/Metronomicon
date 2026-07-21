@@ -17,7 +17,7 @@ import {
 import { apiUrl } from "../config";
 
 type Course = {
-  id: string;
+  aggregate_id: string;
   name: string;
   code: string;
 };
@@ -57,7 +57,7 @@ function Home() {
               ) : (
                 <HGrid gap="space-24" columns={{ xs: 1, sm: 2, lg: 3 }}>
                   {courses.map((c) => (
-                    <LinkCard key={c.id} data-color="neutral" className="course-card">
+                    <LinkCard key={c.aggregate_id} data-color="neutral" className="course-card">
                       <LinkCard.Title as="h3">
                         <Detail
                           as="div"
@@ -66,7 +66,7 @@ function Home() {
                           {c.code}
                         </Detail>
                         <LinkCard.Anchor asChild>
-                          <Link to={`/courses/${c.id}`}>{c.name}</Link>
+                          <Link to={`/courses/${c.aggregate_id}`}>{c.name}</Link>
                         </LinkCard.Anchor>
                       </LinkCard.Title>
                     </LinkCard>
