@@ -55,6 +55,7 @@ function CreateCoursePanel() {
       const res = await fetch(apiUrl("courses"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        credentials: "include",
         body: JSON.stringify({ Create: { name, code, field, description } }),
       });
       if (!res.ok) throw new Error("create failed");

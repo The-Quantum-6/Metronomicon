@@ -19,14 +19,15 @@ pub fn protected_router(state: AppState) -> Router<AppState> {
         .merge(link::router(state.clone()))
         .merge(project_idea::router(state.clone()))
         .merge(contribution::router(state.clone()))
+        .merge(course::protected_router(state.clone()))
         .route_layer(middleware::from_fn_with_state(state.clone(), perm_middleware))
         .route_layer(middleware::from_fn_with_state(state.clone(), jwt_middleware))
 }
 
 pub fn router() -> Router<AppState> {
     Router::new()
-        .merge(course::router())
         .merge(resources::router())
         .merge(auth::router())
         .merge(files::router())
+        .merge(course::router())
 }

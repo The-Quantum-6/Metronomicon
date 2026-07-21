@@ -1,5 +1,5 @@
 use crate::{
-    models::{claims::AccessClaim, permissions::Permissions}, repositories::permissions::{default_permissions, get_user_permissions}, state::AppState,
+    models::{claims::AccessClaim, permissions::Permissions, user::UserRole}, repositories::permissions::{default_permissions, get_user_permissions}, state::AppState,
 };
 use axum::{
     body::{Body, to_bytes},
@@ -85,15 +85,22 @@ pub async fn perm_middleware(State(state): State<AppState>, req: Request, next: 
 
     let lookup_key = format!("{}{}", aggregate, command_key);
 
+    let claims = match parts.extensions.get::<AccessClaim>().cloned() {
+        Some(c) => c,
+        None => return StatusCode::UNAUTHORIZED.into_response(),
+    };
+
+    if lookup_key == "CourseCreate"{
+        if claims.role == UserRole::Admin {
+            let req = Request::from_parts(parts, Body::from(bytes));
+        return next.run(req).await;
+        }
+    }
     let required = match permission_map().get(lookup_key.as_str()) {
         Some(p) => *p,
         None => return StatusCode::FORBIDDEN.into_response(),
     };
 
-    let claims = match parts.extensions.get::<AccessClaim>().cloned() {
-        Some(c) => c,
-        None => return StatusCode::UNAUTHORIZED.into_response(),
-    };
     let user_id = match Uuid::parse_str(&claims.sub) {
         Ok(id) => id,
         Err(_) => return StatusCode::UNAUTHORIZED.into_response(),

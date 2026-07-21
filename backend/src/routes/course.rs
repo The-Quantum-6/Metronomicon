@@ -2,7 +2,7 @@ use axum::Router;
 use axum::http::StatusCode;
 use axum::response::IntoResponse;
 use axum::response::Response;
-use axum::routing::get;
+use axum::routing::{get, post};
 use axum::{
     Json,
     extract::{Path, State},
@@ -10,12 +10,18 @@ use axum::{
 use serde::Deserialize;
 use serde::Serialize;
 
+use crate::state;
 use crate::{extractors::course::CourseCommandExtractor, state::AppState};
 
 pub fn router() -> Router<AppState> {
     Router::new()
-        .route("/courses", get(list_active_courses).post(handle_command))
+        .route("/courses", get(list_active_courses))
         .route("/courses/{id}", get(query_handler))
+}
+
+pub fn protected_router(state: AppState) -> Router<AppState> {
+    Router::new()
+        .route("/courses", post(handle_command))
 }
 
 pub async fn handle_command(
