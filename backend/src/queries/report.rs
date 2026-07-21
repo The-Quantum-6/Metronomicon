@@ -34,7 +34,7 @@ impl Query<Report> for ReportListQuery {
                         ..
                     } => {
                         sqlx::query(
-                            "INSERT INTO report_list_view
+                            "INSERT INTO report_detail_view
                          (aggregate_id, target, description, contact_email, status)
                          VALUES ($1, $2, $3, $4, 'Open')
                          ON CONFLICT (aggregate_id) DO UPDATE
@@ -48,14 +48,14 @@ impl Query<Report> for ReportListQuery {
                         .await
                     }
                     ReportEvent::ReportResolved { .. } => sqlx::query(
-                        "UPDATE report_list_view SET status = 'Resolved' WHERE aggregate_id = $1",
+                        "UPDATE report_detail_view SET status = 'Resolved' WHERE aggregate_id = $1",
                     )
                     .bind(aggregate_id)
                     .execute(&self.pool)
                     .await,
                     ReportEvent::ReportReopened { .. } => {
                         sqlx::query(
-                            "UPDATE report_list_view SET status = 'Open' WHERE aggregate_id = $1",
+                            "UPDATE report_detail_view SET status = 'Open' WHERE aggregate_id = $1",
                         )
                         .bind(aggregate_id)
                         .execute(&self.pool)
