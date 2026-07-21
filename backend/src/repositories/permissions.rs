@@ -27,15 +27,24 @@ pub async fn default_permissions(
     user_id: Uuid,
     resource_id: &str,
 ) -> Result<(), sqlx::Error> {
+    let default_perms = (Permissions::READ 
+        | Permissions::SUGGEST_TEXT 
+        | Permissions::SUGGEST_FILE).bits();
+
     sqlx::query!(
-        "INSERT INTO permissions(user_id, perms, resource_id) VALUES ($1, $2, $3)",
+        r#"
+        INSERT INTO permissions (user_id, perms, resource_id) 
+        VALUES ($1, $2, $3)
+        ON CONFLICT (user_id, resource_id) DO NOTHING
+        "#,
         user_id,
-        Permissions::READ.bits() as i32,
+        default_perms,
         resource_id,
     )
     .execute(pool)
-    .await
-    .map(|_| ())
+    .await?;
+
+    Ok(())
 }
 
 pub async fn update_permissions(

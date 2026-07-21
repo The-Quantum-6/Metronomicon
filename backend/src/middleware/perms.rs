@@ -1,5 +1,5 @@
 use crate::{
-    models::{claims::AccessClaim, permissions::Permissions}, repositories::permissions::get_user_permissions, state::AppState,
+    models::{claims::AccessClaim, permissions::Permissions}, repositories::permissions::{default_permissions, get_user_permissions}, state::AppState,
 };
 use axum::{
     body::{Body, to_bytes},
@@ -106,6 +106,11 @@ pub async fn perm_middleware(State(state): State<AppState>, req: Request, next: 
         .and_then(|v| v.as_str())
         .unwrap_or_default()
         .to_string();
+
+
+    if let Err(_) = default_permissions(&state.pool, user_id, &course_id).await {
+            return StatusCode::INTERNAL_SERVER_ERROR.into_response();
+    }
 
     let perms = match get_user_permissions(&state.pool, user_id, &course_id).await {
         Ok(p) => p,

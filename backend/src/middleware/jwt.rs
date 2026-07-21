@@ -26,8 +26,6 @@ pub async fn jwt_middleware(
         None => return Redirect::to("/login/google").into_response(),
     };
 
-    println!("Cookie header: {:?}", cookie_header);
-
     let token_str = match cookie_header
         .to_str()
         .ok()
@@ -36,7 +34,6 @@ pub async fn jwt_middleware(
         Some(t) => t.trim().trim_start_matches("access_token=").to_string(),
         None => return Redirect::to("/login/google").into_response(),
     };
-    print!("Token string: {:?}", token_str);
 
     let mut validation = Validation::default();
     validation.set_required_spec_claims(&["exp", "sub"]);
