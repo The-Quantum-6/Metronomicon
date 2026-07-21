@@ -1,10 +1,3 @@
-use std::sync::Arc;
-
-use axum::extract::FromRef;
-use cqrs_es::Query;
-use postgres_es::{PostgresCqrs, PostgresViewRepository};
-use sqlx::{Pool, Postgres, postgres::PgPoolOptions};
-
 use crate::{
     aggregates::{
         contribution::aggregate::{Contribution, ContributionAggregateServices},
@@ -43,29 +36,28 @@ use crate::{
     views::course::active_detailed::{ActiveCourseViewRepo, CourseDetailViewRepo},
 };
 
+use axum::extract::FromRef;
+use cqrs_es::Query;
+use jsonwebtoken::{DecodingKey, EncodingKey};
+use openidconnect::{
+    ClientId, ClientSecret, EndpointMaybeSet, EndpointNotSet, EndpointSet, IssuerUrl, RedirectUrl,
+    core::{CoreClient, CoreProviderMetadata},
+};
+use postgres_es::{PostgresCqrs, PostgresViewRepository};
+use reqwest::Client;
+use sqlx::{Pool, Postgres, postgres::PgPoolOptions};
+use std::sync::Arc;
+
+pub type OidcClient = CoreClient<
+    EndpointSet,
+    EndpointNotSet,
+    EndpointNotSet,
+    EndpointNotSet,
+    EndpointMaybeSet,
+    EndpointMaybeSet,
+>;
+
 type ReportDetailViewRepo = PostgresViewRepository<ReportDetailView, Report>;
-
-#[derive(Clone)]
-pub struct AppState {
-    pub cqrs: Arc<Cqrs>,
-    pub course_view_repo: ActiveCourseViewRepo,
-    pub pool: Pool<Postgres>,
-    pub storage: Storage,
-}
-
-// Let handlers extract just the piece of state they need: the file routes ask
-// for `State<Storage>`, repository-based handlers can ask for the pool.
-impl FromRef<AppState> for Storage {
-    fn from_ref(state: &AppState) -> Storage {
-        state.storage.clone()
-    }
-}
-
-impl FromRef<AppState> for Pool<Postgres> {
-    fn from_ref(state: &AppState) -> Pool<Postgres> {
-        state.pool.clone()
-    }
-}
 
 #[derive(Clone)]
 pub struct Cqrs {
@@ -78,24 +70,56 @@ pub struct Cqrs {
     pub report: Arc<PostgresCqrs<Report>>,
 }
 
+#[derive(Clone)]
+pub struct AppState {
+    pub oidc_client: OidcClient,
+    pub http_client: Client,
+    pub cqrs: Arc<Cqrs>,
+    pub course_view_repo: ActiveCourseViewRepo,
+    pub pool: Pool<Postgres>,
+    pub storage: Storage,
+    pub jwt_encode: Arc<EncodingKey>,
+    pub jwt_decode: Arc<DecodingKey>,
+}
+
 pub async fn get(config: &AppConfig) -> AppState {
-    // Set up database connection
     let db = PgPoolOptions::new()
         .connect(&config.database_url)
         .await
         .expect("Should be able to connect to database");
 
-    // Migrate database
     sqlx::migrate!()
         .run(&db)
         .await
         .expect("Migrations should succeed");
 
-    // Object storage (Garage). Constructing the client makes no network
-    // calls, so this is safe at startup even if Garage is not up yet.
+    let client_id = std::env::var("GOOGLE_CLIENT_ID").expect("GOOGLE_CLIENT_ID must be set");
+    let client_secret = std::env::var("GOOGLE_SECRET").expect("GOOGLE_SECRET must be set");
+    let redirect_uri =
+        std::env::var("GOOGLE_REDIRECT_URI").expect("GOOGLE_REDIRECT_URI must be set");
+    let jsonwebtoken_secret = std::env::var("JWT_SECRET").expect("JWT_SECRET must be set");
+
     let storage = Storage::from_env().await;
 
-    // Queries setup
+    let http_client: Client = reqwest::ClientBuilder::new()
+        .redirect(reqwest::redirect::Policy::none())
+        .build()
+        .expect("Client should build");
+
+    let provider_metadata = CoreProviderMetadata::discover_async(
+        IssuerUrl::new("https://accounts.google.com".to_string()).unwrap(),
+        &http_client,
+    )
+    .await
+    .expect("Provider metadata should be discoverable");
+
+    let oidc_client = CoreClient::from_provider_metadata(
+        provider_metadata,
+        ClientId::new(client_id),
+        Some(ClientSecret::new(client_secret)),
+    )
+    .set_redirect_uri(RedirectUrl::new(redirect_uri).unwrap());
+
     let logging_query = test_logging_query::SimpleLoggingQuery {};
 
     let course_view_repo: Arc<CourseDetailViewRepo> = Arc::new(PostgresViewRepository::new(
@@ -184,8 +208,6 @@ pub async fn get(config: &AppConfig) -> AppState {
     ];
     let resource_aggregate_services = ResourceAggregateServices {
         course: CourseExistanceService(db.clone()),
-        // The aggregate verifies upload keys against Garage before recording
-        // events that reference them (Storage::exists via HeadObject).
         resource: ResourceServices(storage.clone()),
     };
     let resource_cqrs = Arc::new(postgres_es::postgres_cqrs(
@@ -194,10 +216,6 @@ pub async fn get(config: &AppConfig) -> AppState {
         resource_aggregate_services,
     ));
 
-    // Report has its own view — it does NOT update CourseDetailView.
-    // Two views, same split as Course: a detail view (report_detail_view)
-    // for single-report lookups, and a flat list view (report_list_view)
-    // for the admin listing.
     let report_detail_view_repo: Arc<ReportDetailViewRepo> = Arc::new(PostgresViewRepository::new(
         "report_detail_view",
         db.clone(),
@@ -219,6 +237,8 @@ pub async fn get(config: &AppConfig) -> AppState {
     ));
 
     AppState {
+        oidc_client,
+        http_client,
         cqrs: Arc::new(Cqrs {
             course: course_cqrs,
             link: link_cqrs,
@@ -231,5 +251,19 @@ pub async fn get(config: &AppConfig) -> AppState {
         course_view_repo: ActiveCourseViewRepo(course_view_repo),
         pool: db,
         storage,
+        jwt_encode: Arc::new(EncodingKey::from_secret(jsonwebtoken_secret.as_ref())),
+        jwt_decode: Arc::new(DecodingKey::from_secret(jsonwebtoken_secret.as_ref())),
+    }
+}
+
+impl FromRef<AppState> for Pool<Postgres> {
+    fn from_ref(state: &AppState) -> Self {
+        state.pool.clone()
+    }
+}
+
+impl FromRef<AppState> for Storage {
+    fn from_ref(state: &AppState) -> Storage {
+        state.storage.clone()
     }
 }

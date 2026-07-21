@@ -7,7 +7,7 @@ CREATE TABLE IF NOT EXISTS course (
 
 CREATE TABLE IF NOT EXISTS users (
     id UUID PRIMARY KEY DEFAULT uuidv7(),
-    sub UUID NOT NULL,
+    sub VARCHAR(255) NOT NULL,
     name TEXT NOT NULL,
     email TEXT
 );
