@@ -1,12 +1,14 @@
 import { useState } from "react";
 import { apiUrl } from "../../config";
+import type { ContributeMode } from "../Contribute";
 
 interface Props {
   courseId: string;
+  mode: ContributeMode;
   onCancel: () => void;
 }
 
-export default function LinkForm({ courseId, onCancel }: Props) {
+export default function LinkForm({ courseId, mode, onCancel }: Props) {
   const [label, setLabel] = useState("");
   const [url, setUrl] = useState("");
   const [submitted, setSubmitted] = useState(false);
@@ -14,20 +16,26 @@ export default function LinkForm({ courseId, onCancel }: Props) {
   async function handleSubmit(e: React.SubmitEvent) {
     e.preventDefault();
 
+    const endpoint = mode === "direct" ? "links" : "contributions";
+    const payload =
+      mode === "direct"
+        ? { Create: { course_id: courseId, label, url } }
+        : {
+            Propose: {
+              course_id: courseId,
+              contribution: { Text: { AddLink: { label, url } } },
+              comment: "",
+            },
+          };
+
     try {
-      const response = await fetch(apiUrl("links"), {
+      const response = await fetch(apiUrl(endpoint), {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         credentials: "include",
-        body: JSON.stringify({
-          Create: {
-            course_id: courseId,
-            label,
-            url,
-          },
-        }),
+        body: JSON.stringify(payload),
       });
 
       if (response.ok) {
@@ -49,7 +57,11 @@ export default function LinkForm({ courseId, onCancel }: Props) {
     return (
       <div className="text-center py-6 bg-[#F4F2EB] rounded-lg">
         <h3 className="text-xl font-semibold text-[#1A1F3A] mb-2">Thank you for your contribution!</h3>
-        <p className="text-[#6B6B5A] mb-6">Your link has been submitted and is waiting for review.</p>
+        <p className="text-[#6B6B5A] mb-6">
+          {mode === "direct"
+            ? "Your link has been published."
+            : "Your link has been submitted and is waiting for review."}
+        </p>
         <button onClick={onCancel} className="px-4 py-2 bg-[#1A1F3A] text-lg text-white rounded-lg hover:opacity-90 transition-colors">Back to course
         </button>
       </div>
@@ -74,7 +86,7 @@ export default function LinkForm({ courseId, onCancel }: Props) {
       <div className="flex justify-end gap-3 pt-2ß">
         <button type="button" onClick={onCancel} className="px-4 py-2 text-lg text-[#6B6B5A] border border-[#6B6B5A] rounded-lg hover:bg-gray-100 transition-colors">Cancel
         </button>
-        <button type="submit" className="px-4 py-2 text-lg bg-[#02061b] text-white rounded-lg hover:opacity-90 transition-colors disabled:opacity-50">Send for review
+        <button type="submit" className="px-4 py-2 text-lg bg-[#02061b] text-white rounded-lg hover:opacity-90 transition-colors disabled:opacity-50">{mode === "direct" ? "Publish" : "Send for review"}
         </button>
       </div>
     </form>

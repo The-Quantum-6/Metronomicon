@@ -1,11 +1,14 @@
 import { useState } from "react";
+import type { ContributeMode } from "../Contribute";
 
 interface Props {
   courseId: string;
+  mode: ContributeMode;
   onCancel: () => void;
 }
 
-// TODO: use courseId when file upload is ready
+// TODO: use courseId and mode when file upload is ready
+// (direct: POST /files then /resources Create; propose: /contributions with File::AddResource)
 export default function ResourceForm({onCancel }: Props) {
   const [title, setTitle] = useState("");
   const [file, setFile] = useState<File | null>(null);

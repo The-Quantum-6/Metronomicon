@@ -6,10 +6,15 @@ import FaqForm from "./forms/FaqForm";
 
 export type ContributionType = "resource" | "link" | "project_idea" | "faq"
 
+// "propose" sends contributions to the moderation queue (/contributions),
+// "direct" publishes straight to the aggregate endpoints (staff only)
+export type ContributeMode = "propose" | "direct"
+
 interface ContributeModalProps {
   onCancel: () => void
   preselected?: ContributionType | null
   courseId: string
+  mode: ContributeMode
 }
 
 const options: { id: ContributionType; label: string; description: string}[] = [
@@ -19,7 +24,7 @@ const options: { id: ContributionType; label: string; description: string}[] = [
   { id: "faq",      label: "FAQ",           description: "Add a question and answer"},
 ]
 
-export default function ContributeModal({ onCancel, courseId, preselected = null }: ContributeModalProps) {
+export default function ContributeModal({ onCancel, courseId, mode, preselected = null }: ContributeModalProps) {
   const [selected, setSelected] = useState<ContributionType | null>(preselected)
   const selectedOption = selected ? options.find((o) => o.id === selected) : null
 
@@ -66,24 +71,28 @@ export default function ContributeModal({ onCancel, courseId, preselected = null
               {selected === "resource" && (
                   <ResourceForm
                   courseId={courseId}
+                  mode={mode}
                   onCancel={onCancel}/>
                   )}
 
               {selected === "link" && (
                 <LinkForm
                 courseId={courseId}
+                mode={mode}
                 onCancel={onCancel}/>
                 )}
-                
+
                 {selected === "project_idea" && (
                   <ProjectIdeaForm
                   courseId={courseId}
+                  mode={mode}
                   onCancel={onCancel}/>
                   )}
-                  
+
                   {selected === "faq" && (
                   <FaqForm
                   courseId={courseId}
+                  mode={mode}
                   onCancel={onCancel}/>
                   )}
             </div>

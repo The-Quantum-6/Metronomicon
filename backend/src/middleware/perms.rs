@@ -4,7 +4,7 @@ use crate::{
 use axum::{
     body::{Body, to_bytes},
     extract::{Request, State},
-    http::StatusCode,
+    http::{Method, StatusCode},
     middleware::Next,
     response::{IntoResponse, Response},
 };
@@ -67,6 +67,12 @@ fn capitalize_singular(s: &str) -> String {
 }
 
 pub async fn perm_middleware(State(state): State<AppState>, req: Request, next: Next) -> Response {
+    // The permission map is keyed on command bodies, which only exist on POSTs.
+    // GET routes under this layer (/me, /contributions) are still guarded by jwt_middleware.
+    if req.method() == Method::GET {
+        return next.run(req).await;
+    }
+
     let path = req.uri().path().to_string();
     let aggregate = capitalize_singular(aggregate_from_path(&path));
 
@@ -83,7 +89,19 @@ pub async fn perm_middleware(State(state): State<AppState>, req: Request, next: 
         .and_then(|o| o.keys().next().cloned())
         .unwrap_or_default();
 
-    let lookup_key = format!("{}{}", aggregate, command_key);
+    // Contribution permissions are split by kind (Text/File), taken from the payload:
+    // {"Propose": {"contribution": {"Text": {...}}}} -> "ContributionPropose_Text"
+    let lookup_key = if aggregate == "Contribution" && command_key == "Propose" {
+        let kind = json
+            .get(command_key.as_str())
+            .and_then(|v| v.get("contribution"))
+            .and_then(|v| v.as_object())
+            .and_then(|o| o.keys().next().cloned())
+            .unwrap_or_default();
+        format!("{}{}_{}", aggregate, command_key, kind)
+    } else {
+        format!("{}{}", aggregate, command_key)
+    };
 
     let claims = match parts.extensions.get::<AccessClaim>().cloned() {
         Some(c) => c,

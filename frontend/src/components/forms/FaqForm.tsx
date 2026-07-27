@@ -1,24 +1,37 @@
 import { useState } from "react";
 import { apiUrl } from "../../config";
+import type { ContributeMode } from "../Contribute";
 
 interface Props {
   courseId: string;
+  mode: ContributeMode;
   onCancel: () => void;
 }
 
-export default function FaqForm({ courseId, onCancel }: Props) {
+export default function FaqForm({ courseId, mode, onCancel }: Props) {
   const [question, setQuestion] = useState("");
   const [answer, setAnswer] = useState("");
   const [submitted, setSubmitted] = useState(false);
 
   async function handleSubmit(e: React.SubmitEvent) {
     e.preventDefault();
+    const endpoint = mode === "direct" ? "faqs" : "contributions";
+    const payload =
+      mode === "direct"
+        ? { Create: { course_id: courseId, question, answer } }
+        : {
+            Propose: {
+              course_id: courseId,
+              contribution: { Text: { AddFaqEntry: { question, answer } } },
+              comment: "",
+            },
+          };
     try {
-      const response = await fetch(apiUrl("faqs"), {
+      const response = await fetch(apiUrl(endpoint), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
-        body: JSON.stringify({ Create: { course_id: courseId, question, answer } }),
+        body: JSON.stringify(payload),
       });
 
       if (response.ok) {
@@ -41,7 +54,11 @@ export default function FaqForm({ courseId, onCancel }: Props) {
     return (
       <div className="text-center py-6 bg-[#F4F2EB] rounded-lg">
         <h3 className="text-xl font-semibold text-[#1A1F3A] mb-2">Thank you for your contribution!</h3>
-        <p className="text-[#6B6B5A] mb-6">Your FAQ has been submitted and is waiting for review.</p>
+        <p className="text-[#6B6B5A] mb-6">
+          {mode === "direct"
+            ? "Your FAQ has been published."
+            : "Your FAQ has been submitted and is waiting for review."}
+        </p>
         <button type="button" onClick={onCancel} className="px-4 py-2 bg-[#1A1F3A] text-lg text-white rounded-lg hover:opacity-90">
           Back to course
         </button>
@@ -68,7 +85,7 @@ export default function FaqForm({ courseId, onCancel }: Props) {
           Cancel
         </button>
         <button type="submit" className="px-4 py-2 text-lg bg-[#1A1F3A] text-white rounded-lg hover:opacity-90 disabled:opacity-50">
-          Send for review
+          {mode === "direct" ? "Publish" : "Send for review"}
         </button>
       </div>
     </form>

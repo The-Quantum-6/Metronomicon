@@ -2,9 +2,10 @@ import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import Navbar from "../components/Navbar";
 import ContributeAlert from "../components/ContributeAlert";
-import Contribute, {type ContributionType} from "../components/Contribute";
+import Contribute, {type ContributionType, type ContributeMode} from "../components/Contribute";
 import ReportForm from "../components/forms/RaportForm";
 import { apiUrl } from "../config";
+import { useCurrentUser } from "../hooks/useCurrentUser";
 
 const DISCLAIMER_SEEN = "metronomicon_policy_acknowledged"
 
@@ -69,7 +70,9 @@ export default function Course() {
   const [tab, setTab] = useState<CourseTab>("overview");
   const [showAlert, setShowAlert] = useState(false);
   const [showContribute, setShowContribute] = useState(false);
+  const [contributeMode, setContributeMode] = useState<ContributeMode>("propose");
   const [preselecteType, setPreselectedType] = useState<ContributionType | null>(null);
+  const { isStaff } = useCurrentUser();
   const [openFaqId, setOpenFaqId] = useState<string | null>(null);
    const [showReport, setShowReport] = useState(false);
 
@@ -80,7 +83,8 @@ export default function Course() {
     .catch(console.error);
 }, [id]);
 
-  const handleContribute = () => {
+  const handleContribute = (mode: ContributeMode = "propose") => {
+    setContributeMode(mode);
     if (localStorage.getItem(DISCLAIMER_SEEN)){
       setShowContribute(true);
     }
@@ -111,9 +115,14 @@ return (
             {course.name}
           </h1>
           <div className="flex gap-2">
-            <button onClick={ handleContribute }className="flex items-center px-4 py-2 rounded-lg bg-[#1A1F3A] text-white font-medium hover:opacity-90 transition-colors">
+            <button onClick={() => handleContribute("propose")} className="flex items-center px-4 py-2 rounded-lg bg-[#1A1F3A] text-white font-medium hover:opacity-90 transition-colors">
               + Contribute
             </button>
+            {isStaff && (
+              <button onClick={() => handleContribute("direct")} className="flex items-center px-4 py-2 rounded-lg bg-transparent text-[#1A1F3A] font-medium border border-[#1A1F3A] hover:bg-gray-100 transition-colors">
+                + Staff Contribute
+              </button>
+            )}
             <button onClick={() => setShowReport(true)}
             className="flex items-center gap-1.5 px-4 py-2 text-[#6B6B5A] rounded-lg bg-transparent border border-[#6B6B5A] hover:bg-gray-100 transition-colors">
               Report
@@ -258,8 +267,9 @@ return (
     )}
 
     {showContribute && (
-          <Contribute 
+          <Contribute
           courseId={id ?? ""}
+          mode={contributeMode}
           preselected={preselecteType}
       onCancel={() => {setShowContribute(false); setPreselectedType(null)}}
         />
