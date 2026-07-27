@@ -1,5 +1,7 @@
 import Navbar from "../components/Navbar";
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import { apiUrl } from "../config";
 import {
   CheckmarkIcon,
   XMarkIcon,
@@ -9,13 +11,62 @@ import {
   ShieldIcon
 } from "@navikt/aksel-icons";
 import {
-  mockSuggestions,
   mockReportedContent,
-  formatSuggestion,
   reportCategoryLabels,
 } from "../data/mockData";
 
+type Contribution = {
+  id: string;
+  title?: string;
+  comment?: string;
+  authorName?: string;
+  courseName?: string;
+  [key: string]: unknown;
+};
+
 export default function Profile() {
+  const [contributions, setContributions] = useState<Contribution[] | null>(null);
+  const [actionLoading, setActionLoading] = useState<string | null>(null);
+
+  useEffect(() => {
+    fetchContributions();
+  }, []);
+
+  const fetchContributions = () => {
+    fetch(apiUrl("contributions"), { credentials: "include" })
+      .then((r) => {
+        if (!r.ok) throw new Error(`Failed to load contributions (${r.status})`);
+        return r.json() as Promise<Contribution[]>;
+      })
+      .then((data) => setContributions(data))
+      .catch(() => setContributions([]));
+  };
+
+  const handleModerate = async (contributionId: string, verdict: "Approve" | "Reject") => {
+    setActionLoading(contributionId);
+    try {
+      const res = await fetch(apiUrl("contributions"), {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({
+          Moderate: {
+            contribution_id: contributionId,
+            verdict: verdict,
+          },
+        }),
+      });
+
+      if (!res.ok) throw new Error("Moderation failed");
+
+      setContributions((prev) => (prev ? prev.filter((c) => c.id !== contributionId) : []));
+    } catch {
+      alert("Failed to process contribution");
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-surface-dark text-text">
       <Navbar />
@@ -36,33 +87,51 @@ export default function Profile() {
         <section className="mb-12">
           <h2 className="text-xl font-bold text-primary mb-4">Pending contributions</h2>
 
-          <div className="flex flex-col gap-3">
-            {mockSuggestions.map((suggestion) => {
-              const { title, detail } = formatSuggestion(suggestion.kind);
-              return (
-                <div
-                  key={suggestion.id}
-                  className="flex items-center gap-4 bg-bg border border-border rounded-lg px-5 py-4"
-                >
-                  <div className="min-w-0 flex-1">
-                    <p className="text-sm font-semibold text-text truncate">{title}</p>
-                    <p className="text-sm text-text-secondary truncate">{detail}</p>
-                    <p className="text-xs text-text-muted mt-1">
-                      {suggestion.authorName} · {suggestion.courseName}
-                    </p>
+          {contributions === null ? (
+            <p className="text-sm text-text-secondary">Loading contributions...</p>
+          ) : contributions.length === 0 ? (
+            <p className="text-sm text-text-secondary">No pending contributions.</p>
+          ) : (
+            <div className="flex flex-col gap-3">
+              {contributions.map((suggestion) => {
+                const isLoading = actionLoading === suggestion.id;
+                return (
+                  <div
+                    key={suggestion.id}
+                    className="flex items-center gap-4 bg-bg border border-border rounded-lg px-5 py-4"
+                  >
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm font-semibold text-text truncate">
+                        {suggestion.title || "Untitled contribution"}
+                      </p>
+                      <p className="text-sm text-text-secondary truncate">
+                        {suggestion.comment || ""}
+                      </p>
+                      <p className="text-xs text-text-muted mt-1">
+                        {suggestion.authorName || "Unknown"} · {suggestion.courseName || "General"}
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-2 shrink-0">
+                      <button
+                        disabled={isLoading}
+                        onClick={() => handleModerate(suggestion.id, "Approve")}
+                        className="inline-flex items-center gap-1.5 border border-green-600 text-green-700 hover:bg-green-50 px-3 py-1.5 rounded text-sm font-medium transition-colors disabled:opacity-50"
+                      >
+                        <CheckmarkIcon aria-hidden /> Approve
+                      </button>
+                      <button
+                        disabled={isLoading}
+                        onClick={() => handleModerate(suggestion.id, "Reject")}
+                        className="inline-flex items-center gap-1.5 border border-red-500 text-red-600 hover:bg-red-50 px-3 py-1.5 rounded text-sm font-medium transition-colors disabled:opacity-50"
+                      >
+                        <XMarkIcon aria-hidden /> Reject
+                      </button>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-2 shrink-0">
-                    <button className="inline-flex items-center gap-1.5 border border-green-600 text-green-700 hover:bg-green-50 px-3 py-1.5 rounded text-sm font-medium transition-colors">
-                      <CheckmarkIcon aria-hidden /> Approve
-                    </button>
-                    <button className="inline-flex items-center gap-1.5 border border-red-500 text-red-600 hover:bg-red-50 px-3 py-1.5 rounded text-sm font-medium transition-colors">
-                      <XMarkIcon aria-hidden /> Reject
-                    </button>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
+                );
+              })}
+            </div>
+          )}
         </section>
 
         <section>
