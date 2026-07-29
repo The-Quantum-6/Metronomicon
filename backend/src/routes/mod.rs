@@ -17,15 +17,17 @@ pub fn protected_router(state: AppState) -> Router<AppState> {
         .merge(report::router(state.clone()))
         .merge(link::router(state.clone()))
         .merge(project_idea::router(state.clone()))
-        .merge(contribution::router(state.clone()))
         .merge(course::protected_router(state.clone()))
+        .merge(contribution::post_router(state.clone()))
         .route_layer(middleware::from_fn_with_state(state.clone(), perm_middleware))
         .route_layer(middleware::from_fn_with_state(state.clone(), jwt_middleware))
+        
 }
 
 pub fn authed_router(state: AppState) -> Router<AppState> {
     Router::new()
         .merge(user::router(state.clone()))
+        .merge(contribution::get_router(state.clone()))
         .route_layer(middleware::from_fn_with_state(state.clone(), jwt_middleware))
 }
 
@@ -35,4 +37,5 @@ pub fn router() -> Router<AppState> {
         .merge(auth::router())
         .merge(files::router())
         .merge(course::router())
+    
 }

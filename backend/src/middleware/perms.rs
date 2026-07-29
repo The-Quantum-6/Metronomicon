@@ -11,6 +11,10 @@ use axum::{
 use std::collections::HashMap;
 use std::sync::OnceLock;
 use uuid::Uuid;
+use axum::{
+    extract::{Query},
+};
+use serde::Deserialize;
 
 const PERMISSION_ENTRIES: &[(&str, Permissions)] = &[
     // Faq
@@ -41,6 +45,7 @@ const PERMISSION_ENTRIES: &[(&str, Permissions)] = &[
     ("ContributionPropose_File", Permissions::SUGGEST_FILE),
     ("ContributionModerate_Text", Permissions::MODERATE_TEXT),
     ("ContributionModerate_File", Permissions::MODERATE_FILE),
+    ("ContributionModerate", Permissions::MODERATE_TEXT),
 ];
 
 fn permission_map() -> &'static HashMap<&'static str, Permissions> {
@@ -64,6 +69,43 @@ fn capitalize_singular(s: &str) -> String {
             }
         })
         .collect()
+}
+
+#[derive(Deserialize)]
+pub struct ContributionsQuery {
+    pub course_id: String,
+}
+
+pub async fn get_contributions_perm_middleware(
+    State(state): State<AppState>,
+    Query(query): Query<ContributionsQuery>,
+    req: Request,
+    next: Next,
+) -> Response {
+
+    let claims = match req.extensions().get::<AccessClaim>() {
+        Some(c) => c,
+        None => return StatusCode::UNAUTHORIZED.into_response(),
+    };
+
+    let user_id = match Uuid::parse_str(&claims.sub) {
+        Ok(id) => id,
+        Err(_) => return StatusCode::UNAUTHORIZED.into_response(),
+    };
+
+    let perms = match get_user_permissions(&state.pool, user_id, &query.course_id).await {
+        Ok(p) => p,
+        Err(_) => return StatusCode::INTERNAL_SERVER_ERROR.into_response(),
+    };
+
+    let is_moderator = perms.contains(Permissions::MODERATE_TEXT) 
+        || perms.contains(Permissions::MODERATE_FILE);
+
+    if !is_moderator {
+        return StatusCode::FORBIDDEN.into_response();
+    }
+
+    next.run(req).await
 }
 
 pub async fn perm_middleware(State(state): State<AppState>, req: Request, next: Next) -> Response {
