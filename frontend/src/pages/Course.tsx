@@ -4,7 +4,7 @@ import { apiUrl } from "../config";
 
 import Navbar from "../components/Navbar";
 import type { Course, CourseTab } from "../types/courseTypes";
-import ContributeAlert from "../components/modals/ContributeAlert";
+import ContributeAlert from "../components/ContributeAlert";
 import Contribute, {type ContributionType} from "../components/Contribute";
 import ReportForm from "../components/forms/RaportForm";
 import AdminView from "../components/AdminView";
