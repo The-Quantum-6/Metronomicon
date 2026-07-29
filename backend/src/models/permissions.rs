@@ -1,7 +1,7 @@
 use bitflags::bitflags;
 
 bitflags! {
-    // Sleng på disse standard-derivene her
+
     #[derive(Clone, Copy, Debug, PartialEq, Eq)]
     pub struct Permissions: i32 {
         // reading
