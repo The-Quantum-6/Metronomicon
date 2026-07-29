@@ -52,15 +52,7 @@ type Faq = {
   status: string
 }
 
-type CourseTab = "overview" | "resources" | "links" | "projects" | "faqs";
-
-const tabs = [
-  { id: "overview"  as CourseTab, label: "Overview" },
-  { id: "resources" as CourseTab, label: "Resources" },
-  { id: "links"     as CourseTab, label: "Links" },
-  { id: "projects"  as CourseTab, label: "Projects" },
-  { id: "faqs"       as CourseTab, label: "FAQs" },
-];
+type CourseTab = "overview" | "resources" | "links" | "project_ideas" | "faqs";
 
 export default function Course() {
   const navigate = useNavigate();
@@ -88,6 +80,16 @@ export default function Course() {
       setShowAlert(true)
     }
   }
+
+   const tabs = [
+    { id: "overview" as CourseTab, label: "Overview" },
+    { id: "resources" as CourseTab, label: "Resources" },
+    { id: "links" as CourseTab, label: "Links" },
+    ...(course?.project_ideas.length
+      ? [{ id: "project_ideas" as CourseTab, label: "Project Ideas" }]
+      : []),
+    { id: "faqs" as CourseTab, label: "FAQs" },
+  ];
 
   if (!course) return null;
 
@@ -145,34 +147,42 @@ return (
       
       {tab === "resources" && (
         <div>
-          {course.resources.map((resource) => (
-            <a key={resource.resource_id}
-            href={resource.key}
-            target="_blank"
-            className="block border border-[#DAD8D6] rounded-xl p-3 mb-3 hover:bg-gray-200 transition-colors">
-              <div className="flex justify-between items-start">
-                <div>
-                  <h3 className="font-semibold text-lg text-[#1A1F3A]">{resource.title}</h3>
-                  <p className="text-base italic text-[#6B6B5A]">{resource.key}</p>
-                  </div>
+          {course.resources.length === 0 ? (
+            <p className="text-[#6B6B5A] text-lg py-4">No resources yet. Be the first to contribute! </p>
+          ) : (
+            <>
+              {course.resources.map((resource) => (
+                <a key={resource.resource_id}
+                   href={resource.key}
+                   target="_blank"
+                   className="block border border-[#DAD8D6] rounded-xl p-3 mb-3 hover:bg-gray-200 transition-colors">
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <h3 className="font-semibold text-lg text-[#1A1F3A]">{resource.title}</h3>
+                      <p className="text-base italic text-[#6B6B5A]">{resource.key}</p>
+                    </div>
 
-                  {resource.officiality == "Official" && (
-                    <p className="text-sm px-2 py-1 border border-[#1A1F3A] rounded-full text-[#1A1F3A]">Official</p>
+                    {resource.officiality == "Official" && (
+                      <p className="text-sm px-2 py-1 border border-[#1A1F3A] rounded-full text-[#1A1F3A]">Official</p>
                     )}
-                    </div>
-                    </a>
-                  ))}
-                  <button onClick={() => { setPreselectedType("resource"); handleContribute();
-                  }}
-                  className="border border-dashed border-[#6B6B5A] rounded-lg px-4 py-2 text-lg text-[#6B6B5A] w-full hover:bg-gray-200">
-                    + Add resource
-                    </button>
-                    </div>
-                  )}
+                  </div>
+                </a>
+              ))}
+            </>
+          )}
+          <button
+            onClick={() => { setPreselectedType("resource"); handleContribute(); }}
+            className="border border-dashed border-[#6B6B5A] rounded-lg px-4 py-2 text-lg text-[#6B6B5A] w-full hover:bg-gray-200">
+            + Add resource
+          </button>
+        </div>
+      )}
 
       {tab === "links" && (
         <div>
-          {course.links.map((link) => (
+          {course.links.length === 0 ? ( <p className="text-[#6B6B5A] text-lg py-4">No links yet. Be the first to contribute!</p>) 
+          : (
+            course.links.map((link) => (
             <a key={link.link_id} href={link.url} target="_blank"
             className="block border border-[#DAD8D6] rounded-xl p-3 mb-3 hover:bg-gray-200 transition-colors">
               <div className="flex justify-between items-start">
@@ -185,7 +195,8 @@ return (
                     )}
                     </div>
                     </a>
-                  ))}
+                  ))
+                )}
                   <button
                   onClick={() => {
                     setPreselectedType("link");
@@ -197,7 +208,7 @@ return (
                     </div>
                   )}
       
-      {tab === "projects" && (
+      {tab === "project_ideas" && (
         <div>
           {course.project_ideas.map((idea) => (
             <div key={idea.idea_id}
@@ -211,7 +222,6 @@ return (
                   </div>
                   </div>
                 ))}
-                
                 <button onClick={() => {
                   setPreselectedType("project_idea");
                   handleContribute();
@@ -219,37 +229,60 @@ return (
                 className="border border-dashed border-[#6B6B5A] rounded-lg px-4 py-2 text-lg text-[#6B6B5A] w-full hover:bg-gray-200">+ Add project idea</button>
                 </div>
               )}
+
       {tab === "faqs" && (
         <div>
-          {course.faqs.map((faq) => {
-            const isOpen = openFaqId === faq.faq_id;
-            
-            return (
-            <div key={faq.faq_id} className="border border-[#DAD8D6] rounded-xl mb-2 overflow-hidden">
-              <button onClick={() => setOpenFaqId(isOpen ? null : faq.faq_id)}
-              className={`relative flex justify-between items-center w-full text-left px-4 py-3 hover:bg-[#F4F2EB] transition-colors ${isOpen ? "after:absolute after:bottom-0 after:left-4 after:right-4 after:border-b after:border-[#DAD8D6]" : ""}`}>
-                <h3 className="font-medium text-lg text-[#1A1F3A]">{faq.question}</h3>
-                <div className="flex items-center gap-2">{faq.officiality === "Official" && (
-                  <p className="text-sm px-2 py-1 border border-[#1A1F3A] rounded-full text-[#1A1F3A]">Official</p>)}
-                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"
-                  className={`w-5 h-5 text-[#6B6B5A] transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7"/>
-                    </svg>
+          {course.faqs.length === 0 ? (
+            <p className="text-[#6B6B5A] text-lg py-4">No faqs yet. Be the first to contribute!</p>
+          ) : (
+            course.faqs.map((faq) => {
+              const isOpen = openFaqId === faq.faq_id;
+
+              return (
+                <div key={faq.faq_id} className="border border-[#DAD8D6] rounded-xl mb-2 overflow-hidden">
+                  <button
+                    onClick={() => setOpenFaqId(isOpen ? null : faq.faq_id)}
+                    className={`relative flex justify-between items-center w-full text-left px-4 py-3 hover:bg-[#F4F2EB] transition-colors ${
+                      isOpen
+                        ? "after:absolute after:bottom-0 after:left-4 after:right-4 after:border-b after:border-[#DAD8D6]"
+                        : ""
+                    }`}
+                  >
+                    <h3 className="font-medium text-lg text-[#1A1F3A]">{faq.question}</h3>
+                    <div className="flex items-center gap-2">
+                      {faq.officiality === "Official" && (
+                        <p className="text-sm px-2 py-1 border border-[#1A1F3A] rounded-full text-[#1A1F3A]">Official</p>
+                      )}
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        className={`w-5 h-5 text-[#6B6B5A] transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`}
+                      >
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+                      </svg>
                     </div>
-                    </button>
-            {isOpen && (
-              <div className="px-4 pb-4 pt-1 border-t border-[#F4F2EB]">
-                <p className="text-base text-[#6B6B5A]">{faq.answer}</p>
+                  </button>
+                  {isOpen && (
+                    <div className="px-4 pb-4 pt-1 border-t border-[#F4F2EB]">
+                      <p className="text-base text-[#6B6B5A]">{faq.answer}</p>
+                    </div>
+                  )}
                 </div>
-              )}
-              </div>
               );
-              })}
-              <button onClick={() => { setPreselectedType("faq"); handleContribute(); }}
-              className="border border-dashed border-[#6B6B5A] rounded-lg px-4 py-2 mt-2 text-lg text-[#6B6B5A] w-full hover:bg-gray-200">+ Add FAQ
-              </button>
-              </div>
-            )}
+            })
+          )}
+          <button
+            onClick={() => {
+              setPreselectedType("faq");
+              handleContribute();
+            }}
+            className="border border-dashed border-[#6B6B5A] rounded-lg px-4 py-2 text-lg text-[#6B6B5A] w-full hover:bg-gray-200">+ Add FAQ
+          </button>
+        </div>
+      )}
     </main>
 
     {showAlert && (
