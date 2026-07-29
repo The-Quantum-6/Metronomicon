@@ -1,58 +1,15 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import { apiUrl } from "../config";
+
 import Navbar from "../components/Navbar";
-import ContributeAlert from "../components/ContributeAlert";
+import type { Course, CourseTab } from "../types/courseTypes";
+import ContributeAlert from "../components/modals/ContributeAlert";
 import Contribute, {type ContributionType} from "../components/Contribute";
 import ReportForm from "../components/forms/RaportForm";
-import { apiUrl } from "../config";
 
 const DISCLAIMER_SEEN = "metronomicon_policy_acknowledged"
 
-type Course = {
-  name: string
-  code: string
-  field: string
-  description?: string | null
-  tags: string[]
-  resources: Resource[]
-  links: Link[]
-  project_ideas: ProjectIdea[]
-  faqs: Faq[]
-}
-
-type Resource = {
-  resource_id: string
-  title: string
-  key: string
-  status: string
-  officiality: string
-}
-
-type Link = {
-  link_id: string
-  status: string
-  label: string
-  url: string
-  official: boolean
-}
-
-type ProjectIdea = {
-  idea_id: string
-  title: string
-  body: string
-  difficulty: "Easy" | "Medium" | "Hard"
-  status: string
-}
-
-type Faq = {
-  faq_id: string
-  question: string
-  answer: string
-  officiality: string
-  status: string
-}
-
-type CourseTab = "overview" | "resources" | "links" | "project_ideas" | "faqs";
 
 export default function Course() {
   const navigate = useNavigate();
@@ -63,7 +20,7 @@ export default function Course() {
   const [showContribute, setShowContribute] = useState(false);
   const [preselecteType, setPreselectedType] = useState<ContributionType | null>(null);
   const [openFaqId, setOpenFaqId] = useState<string | null>(null);
-   const [showReport, setShowReport] = useState(false);
+  const [showReport, setShowReport] = useState(false);
 
   useEffect(() => {
   fetch(apiUrl(`courses/${id}`))
@@ -165,6 +122,18 @@ return (
                     {resource.officiality == "Official" && (
                       <p className="text-sm px-2 py-1 border border-[#1A1F3A] rounded-full text-[#1A1F3A]">Official</p>
                     )}
+                    <div className="flex gap-3">
+                      <button onClick={() => alert("edit")} 
+                      className="text-[#6B6B5A] hover:text-green-600 transition-colors">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 20h9" /><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4Z" />
+                        </svg>
+                        </button>
+                        <button onClick={() => alert("delete")}
+                        className="text-[#6B6B5A] hover:text-red-600 transition-colors">
+                          <svg xmlns="http://www.w3.org/2000/svg" width="18"height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6" /><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                          </svg>
+                          </button>
+                          </div>
                   </div>
                 </a>
               ))}
@@ -183,18 +152,32 @@ return (
           {course.links.length === 0 ? ( <p className="text-[#6B6B5A] text-lg py-4">No links yet. Be the first to contribute!</p>) 
           : (
             course.links.map((link) => (
-            <a key={link.link_id} href={link.url} target="_blank"
+            <div key={link.link_id}
             className="block border border-[#DAD8D6] rounded-xl p-3 mb-3 hover:bg-gray-200 transition-colors">
               <div className="flex justify-between items-start">
                 <div>
+                  <a href={link.url} target="_blank" className="flex-1">
                   <h3 className="font-semibold text-lg text-[#1A1F3A]">{link.label}</h3>
                   <p className="text-base italic text-[#6B6B5A] hover:underline">{link.url}</p>
+                  </a>
                   </div>
                   {link.official && (
                     <p className="text-sm px-2 py-1 border border-[#1A1F3A] rounded-full text-[#1A1F3A]">Official</p>
                     )}
+                    <div className="flex gap-3">
+                      <button onClick={() => alert("edit")} 
+                      className="text-[#6B6B5A] hover:text-green-600 transition-colors">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 20h9" /><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4Z" />
+                        </svg>
+                        </button>
+                        <button onClick={() => alert("delete")}
+                        className="text-[#6B6B5A] hover:text-red-600 transition-colors">
+                          <svg xmlns="http://www.w3.org/2000/svg" width="18"height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6" /><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                          </svg>
+                          </button>
+                            </div>
                     </div>
-                    </a>
+                    </div>
                   ))
                 )}
                   <button
@@ -212,14 +195,23 @@ return (
         <div>
           {course.project_ideas.map((idea) => (
             <div key={idea.idea_id}
-            className="border border-[#DAD8D6] rounded-xl p-4 mb-3">
-              <div className="flex justify-between items-start">
-                <div>
-                  <h3 className="font-semibold text-lg text-[#1A1F3A]">{idea.title}</h3>
-                  <p className="text-base text-[#6B6B5A] mt-2">{idea.body}</p>
-                  </div>
-                  <p className="text-sm px-3 py-1 rounded-full border border-[#DAD8D6] text-[#6B6B5A]">{idea.difficulty}</p>
-                  </div>
+            className="border border-[#DAD8D6] rounded-xl p-4 mb-3 flex justify-between items-start">
+              <div className="flex items-center gap-2">
+                <h3 className="font-semibold text-lg text-[#1A1F3A]">{idea.title}</h3>
+                <p className="text-sm px-3 py-1 rounded-full border border-[#DAD8D6] text-[#6B6B5A]">{idea.difficulty}</p>
+                </div>
+                  <div className="flex gap-3">
+                      <button onClick={() => alert("edit")} 
+                      className="text-[#6B6B5A] hover:text-green-600 transition-colors">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 20h9" /><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4Z" />
+                        </svg>
+                        </button>
+                        <button onClick={() => alert("delete")}
+                        className="text-[#6B6B5A] hover:text-red-600 transition-colors">
+                          <svg xmlns="http://www.w3.org/2000/svg" width="18"height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6" /><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                          </svg>
+                          </button>
+                          </div>
                   </div>
                 ))}
                 <button onClick={() => {
@@ -240,7 +232,7 @@ return (
 
               return (
                 <div key={faq.faq_id} className="border border-[#DAD8D6] rounded-xl mb-2 overflow-hidden">
-                  <button
+                  <div
                     onClick={() => setOpenFaqId(isOpen ? null : faq.faq_id)}
                     className={`relative flex justify-between items-center w-full text-left px-4 py-3 hover:bg-[#F4F2EB] transition-colors ${
                       isOpen
@@ -253,6 +245,18 @@ return (
                       {faq.officiality === "Official" && (
                         <p className="text-sm px-2 py-1 border border-[#1A1F3A] rounded-full text-[#1A1F3A]">Official</p>
                       )}
+                      <div className="flex gap-3">
+                      <button onClick={() => alert("edit")} 
+                      className="text-[#6B6B5A] hover:text-green-600 transition-colors">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 20h9" /><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4Z" />
+                        </svg>
+                        </button>
+                        <button onClick={() => alert("delete")}
+                        className="text-[#6B6B5A] hover:text-red-600 transition-colors">
+                          <svg xmlns="http://www.w3.org/2000/svg" width="18"height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6" /><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                          </svg>
+                          </button>
+                          </div>
                       <svg
                         xmlns="http://www.w3.org/2000/svg"
                         viewBox="0 0 24 24"
@@ -264,7 +268,7 @@ return (
                         <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
                       </svg>
                     </div>
-                  </button>
+                  </div>
                   {isOpen && (
                     <div className="px-4 pb-4 pt-1 border-t border-[#F4F2EB]">
                       <p className="text-base text-[#6B6B5A]">{faq.answer}</p>
@@ -303,9 +307,9 @@ return (
         <div className="bg-white rounded-2xl p-7 max-w-lg w-full mx-4 shadow-md text-[#1A1F3A]">
           <h2 className="text-2xl font-semibold font-display mb-6">Report an issue</h2>
           <ReportForm courseId={id} onCancel={() => setShowReport(false)} />
-          </div>
-          </div>
-        )}
-  </>
+                </div>
+                </div>
+                )}
+                </>
 );
 }
