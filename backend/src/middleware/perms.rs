@@ -83,19 +83,37 @@ pub async fn perm_middleware(State(state): State<AppState>, req: Request, next: 
         .and_then(|o| o.keys().next().cloned())
         .unwrap_or_default();
 
-    let lookup_key = format!("{}{}", aggregate, command_key);
+    let lookup_key = if aggregate == "Contribution" {
+        let command_payload = json.as_object().and_then(|o| o.values().next());
+        
+        let cont_type = command_payload
+            .and_then(|v| v.get("contribution"))
+            .and_then(|c| c.as_object())
+            .and_then(|o| o.keys().next().cloned())
+            .unwrap_or_default();
+
+        if !cont_type.is_empty() {
+            format!("{}{}_{}", aggregate, command_key, cont_type)
+        } else {
+            format!("{}{}", aggregate, command_key)
+        }
+    } else {
+        format!("{}{}", aggregate, command_key)
+    };
+
 
     let claims = match parts.extensions.get::<AccessClaim>().cloned() {
         Some(c) => c,
         None => return StatusCode::UNAUTHORIZED.into_response(),
     };
 
-    if lookup_key == "CourseCreate"{
+    if lookup_key == "CourseCreate" {
         if claims.role == UserRole::Admin {
             let req = Request::from_parts(parts, Body::from(bytes));
-        return next.run(req).await;
+            return next.run(req).await;
         }
     }
+
     let required = match permission_map().get(lookup_key.as_str()) {
         Some(p) => *p,
         None => return StatusCode::FORBIDDEN.into_response(),
@@ -105,8 +123,8 @@ pub async fn perm_middleware(State(state): State<AppState>, req: Request, next: 
         Ok(id) => id,
         Err(_) => return StatusCode::UNAUTHORIZED.into_response(),
     };
-    
-    let course_id = json
+
+    let mut course_id = json
         .as_object()
         .and_then(|o| o.values().next())
         .and_then(|v| v.get("course_id"))
@@ -114,15 +132,50 @@ pub async fn perm_middleware(State(state): State<AppState>, req: Request, next: 
         .unwrap_or_default()
         .to_string();
 
+    if course_id.is_empty() {
+        let command_payload = json.as_object().and_then(|o| o.values().next());
+        
+        let aggregate_id_str = command_payload
+            .and_then(|v| {
+                v.get("aggregate_id")
+                    .or_else(|| v.get("contribution_id"))
+            })
+            .and_then(|v| v.as_str());
+
+        if let Some(id_str) = aggregate_id_str {
+            let db_result = sqlx::query_scalar!(
+                r#"SELECT course_id FROM contribution_list_view WHERE aggregate_id = $1"#,
+                id_str
+            )
+            .fetch_optional(&state.pool)
+            .await;
+
+            match db_result {
+                Ok(Some(fetched_course_id)) => {
+                    course_id = fetched_course_id.to_string();
+                }
+                Ok(None) => return StatusCode::NOT_FOUND.into_response(),
+                Err(_) => return StatusCode::INTERNAL_SERVER_ERROR.into_response(),
+            }
+        }
+    }
+
+    if course_id.is_empty() {
+        return StatusCode::BAD_REQUEST.into_response();
+    }
+
 
     if let Err(_) = default_permissions(&state.pool, user_id, &course_id).await {
-            return StatusCode::INTERNAL_SERVER_ERROR.into_response();
+        return StatusCode::INTERNAL_SERVER_ERROR.into_response();
     }
 
     let perms = match get_user_permissions(&state.pool, user_id, &course_id).await {
         Ok(p) => p,
         Err(_) => return StatusCode::INTERNAL_SERVER_ERROR.into_response(),
     };
+
+    println!("User permissions: {:?}", perms);
+    println!("Required permissions: {:?}", required);
 
     if !perms.contains(required) {
         return StatusCode::FORBIDDEN.into_response();
