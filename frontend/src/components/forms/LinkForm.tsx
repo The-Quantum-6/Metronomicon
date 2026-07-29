@@ -9,25 +9,45 @@ interface Props {
 export default function LinkForm({ courseId, onCancel }: Props) {
   const [label, setLabel] = useState("");
   const [url, setUrl] = useState("");
+  const [comment, setComment] = useState("");
   const [submitted, setSubmitted] = useState(false);
+  const [instantContribute, setInstantContribute] = useState(false);
+    // TODO: replace with actual auth check
+  const isAdmin = true;
 
-  async function handleSubmit(e: React.SubmitEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
 
-    try {
-      const response = await fetch(apiUrl("links"), {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        credentials: "include",
-        body: JSON.stringify({
+    const endpoint = instantContribute ? "links" : "contributions";
+    const body = instantContribute ? {
           Create: {
             course_id: courseId,
             label,
             url,
           },
-        }),
+        } : {
+          Propose: {
+            course_id: courseId,
+            contribution: {
+              Text: {
+                AddLink: {
+                  label,
+                  url,
+                },
+              },
+            },
+            comment,
+          },
+        };
+
+    try {
+      const response = await fetch(apiUrl(endpoint), {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include",
+        body: JSON.stringify(body),
       });
 
       if (response.ok) {
@@ -49,8 +69,11 @@ export default function LinkForm({ courseId, onCancel }: Props) {
     return (
       <div className="text-center py-6 bg-[#F4F2EB] rounded-lg">
         <h3 className="text-xl font-semibold text-[#1A1F3A] mb-2">Thank you for your contribution!</h3>
-        <p className="text-[#6B6B5A] mb-6">Your link has been submitted and is waiting for review.</p>
-        <button onClick={onCancel} className="px-4 py-2 bg-[#1A1F3A] text-lg text-white rounded-lg hover:opacity-90 transition-colors">Back to course
+        <p className="text-[#6B6B5A] mb-6">{instantContribute ? "The link has been published." : "Your link has been submitted and is waiting for review."}</p>
+        <button
+          onClick={onCancel}
+          className="px-4 py-2 bg-[#1A1F3A] text-lg text-white rounded-lg hover:opacity-90 transition-colors">
+          Back to course
         </button>
       </div>
     );
@@ -67,15 +90,35 @@ export default function LinkForm({ courseId, onCancel }: Props) {
       <div>
         <label className="block text-lg mb-2 text-[#6B6B5A]">URL</label>
         <input type="url" placeholder="https://..." value={url}
-        onChange={(e) => setUrl(e.target.value)}
-        required
-        className="w-full border border-[#6B6B5A] rounded-lg px-4 py-3 focus:outline-none"/>
+          onChange={(e) => setUrl(e.target.value)} required
+          className="w-full border border-[#6B6B5A] rounded-lg px-4 py-3 focus:outline-none"
+        />
       </div>
-      <div className="flex justify-end gap-3 pt-2ß">
-        <button type="button" onClick={onCancel} className="px-4 py-2 text-lg text-[#6B6B5A] border border-[#6B6B5A] rounded-lg hover:bg-gray-100 transition-colors">Cancel
-        </button>
-        <button type="submit" className="px-4 py-2 text-lg bg-[#02061b] text-white rounded-lg hover:opacity-90 transition-colors disabled:opacity-50">Send for review
-        </button>
+      <div>
+        <label className="block text-lg mb-2 text-[#6B6B5A]">Comment</label>
+        <textarea value={comment}  placeholder="Anything reviewers should know..."
+          onChange={(e) => setComment(e.target.value)} required rows={3}
+          className="w-full border border-[#6B6B5A] rounded-lg px-4 py-3 resize-none focus:outline-none"/>
+      </div>
+      <div className="flex items-center justify-between pt-2">
+        <div>
+          {isAdmin && (
+            <label className="flex items-center gap-2 text-[#6B6B5A]">
+              <input type="checkbox" checked={instantContribute}
+                onChange={(e) => setInstantContribute(e.target.checked)}/>
+                Instant contribute</label>
+          )}
+        </div>
+        <div className="flex gap-3">
+          <button onClick={onCancel} className="px-4 py-2 text-lg text-[#6B6B5A] border border-[#6B6B5A] rounded-lg hover:bg-gray-100 transition-colors">
+            Cancel
+          </button>
+
+          <button
+          type="submit" className="px-4 py-2 text-lg bg-[#1A1F3A] text-white rounded-lg hover:opacity-90 transition-colors disabled:opacity-50">
+            {instantContribute ? "Publish" : "Send for review"}
+          </button>
+        </div>
       </div>
     </form>
   );
