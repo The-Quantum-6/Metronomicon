@@ -7,6 +7,7 @@ import type { Course, CourseTab } from "../types/courseTypes";
 import ContributeAlert from "../components/modals/ContributeAlert";
 import Contribute, {type ContributionType} from "../components/Contribute";
 import ReportForm from "../components/forms/RaportForm";
+import AdminView from "../components/AdminView";
 
 const DISCLAIMER_SEEN = "metronomicon_policy_acknowledged"
 
@@ -21,6 +22,10 @@ export default function Course() {
   const [preselecteType, setPreselectedType] = useState<ContributionType | null>(null);
   const [openFaqId, setOpenFaqId] = useState<string | null>(null);
   const [showReport, setShowReport] = useState(false);
+  const [adminMode, setAdminMode] = useState(false);
+
+  // TODO: replace with actual auth check
+    const isAdmin = true;
 
   useEffect(() => {
   fetch(apiUrl(`courses/${id}`))
@@ -62,9 +67,17 @@ return (
         </svg>Back to courses</button>
         </div>
       <div className="border-b border-[#F4F2EB]">
-        <p className="font-mono text-m text-[#6B6B5A]">
-          {course.code}
-        </p>
+        <div className="flex justify-between items-center">
+          <p className="font-mono text-m text-[#6B6B5A]">
+            {course.code}
+            </p>
+            {isAdmin && (
+              <button onClick={() => setAdminMode(!adminMode)} 
+              className={`px-4 py-2 mb-1 rounded-lg transition ${adminMode ? "bg-[#1A1F3A] text-white" : "border border-[#6B6B5A] text-[#6B6B5A]"}`}>
+                {adminMode ? "Admin mode ON" : "Admin mode OFF"}
+                </button>
+              )}
+              </div>
         <div className="flex items-start justify-between gap-4 flex-wrap pb-4 border-b border-[#DAD8D6]">
           <h1 className="text-4xl font-semibold font-display text-[#1A1F3A]">
             {course.name}
@@ -79,9 +92,11 @@ return (
             </button>
           </div>
         </div>
+        {adminMode && <AdminView />}
       </div>
-
-      <div className="flex overflow-x-auto pt-3 pb-3">
+      {!adminMode && (
+        <>
+        <div className="flex overflow-x-auto pt-3 pb-3">
         {tabs.map((t) => (
           <button
             key={t.id}
@@ -286,6 +301,8 @@ return (
             className="border border-dashed border-[#6B6B5A] rounded-lg px-4 py-2 text-lg text-[#6B6B5A] w-full hover:bg-gray-200">+ Add FAQ
           </button>
         </div>
+      )}
+      </>
       )}
     </main>
 
