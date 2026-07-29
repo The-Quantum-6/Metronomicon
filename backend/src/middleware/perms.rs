@@ -123,7 +123,8 @@ pub async fn perm_middleware(State(state): State<AppState>, req: Request, next: 
         Ok(p) => p,
         Err(_) => return StatusCode::INTERNAL_SERVER_ERROR.into_response(),
     };
-
+    print!("User permissions: {:?}", perms);
+    print!("Required permissions: {:?}", required);
     if !perms.contains(required) {
         return StatusCode::FORBIDDEN.into_response();
     }
