@@ -13,7 +13,6 @@ use axum::{Router, middleware};
 
 pub fn protected_router(state: AppState) -> Router<AppState> {
     Router::new()
-        .merge(user::router(state.clone()))
         .merge(faq::router(state.clone()))
         .merge(report::router(state.clone()))
         .merge(link::router(state.clone()))
@@ -21,6 +20,12 @@ pub fn protected_router(state: AppState) -> Router<AppState> {
         .merge(contribution::router(state.clone()))
         .merge(course::protected_router(state.clone()))
         .route_layer(middleware::from_fn_with_state(state.clone(), perm_middleware))
+        .route_layer(middleware::from_fn_with_state(state.clone(), jwt_middleware))
+}
+
+pub fn authed_router(state: AppState) -> Router<AppState> {
+    Router::new()
+        .merge(user::router(state.clone()))
         .route_layer(middleware::from_fn_with_state(state.clone(), jwt_middleware))
 }
 

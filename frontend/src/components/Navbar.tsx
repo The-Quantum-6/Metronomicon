@@ -1,8 +1,100 @@
+import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { HStack, Spacer, Button } from "@navikt/ds-react";
 import { HouseIcon, PersonIcon } from "@navikt/aksel-icons";
+import { apiUrl, apiBaseUrl } from "../config";
+
+type User = {
+  id: string;
+  sub: string;
+  name: string;
+  role: "user" | "admin" | "root";
+  email: string | null;
+};
 
 function Navbar() {
+  const [user, setUser] = useState<User | null>(null);
+  const [checked, setChecked] = useState(false);
+  const [open, setOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    fetch(apiUrl("me"), { credentials: "include", redirect: "manual" })
+      .then((r) => (r.ok ? (r.json() as Promise<User>) : null))
+      .then((data) => setUser(data))
+      .catch(() => setUser(null))
+      .finally(() => setChecked(true));
+  }, []);
+
+  useEffect(() => {
+    if (!open) return;
+    const onClick = (e: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setOpen(false);
+      }
+    };
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && setOpen(false);
+    document.addEventListener("mousedown", onClick);
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("mousedown", onClick);
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [open]);
+
+  const handleLogout = () => {
+    fetch(apiUrl("logout"), { method: "POST", credentials: "include" }).catch(() => {});
+    setUser(null);
+    setOpen(false);
+  };
+
+  const identity = user?.email ?? user?.name ?? "";
+
+  const loginButton = (
+    <a
+      href={`${apiBaseUrl}/login/google`}
+      className="inline-flex items-center justify-center px-4 py-2 rounded shrink-0 bg-accent hover:bg-accent-dark text-white font-medium no-underline transition-colors"
+    >
+      Log in
+    </a>
+  );
+
+  const accountMenu = (
+    <div ref={menuRef} className="relative shrink-0">
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        aria-haspopup="menu"
+        aria-expanded={open}
+        aria-label="Account menu"
+        className="inline-flex items-center justify-center w-10 h-10 rounded-full bg-surface-light text-text border border-border transition-colors hover:bg-surface"
+      >
+        <PersonIcon aria-hidden fontSize="1.375rem" />
+      </button>
+
+      {open && (
+        <div
+          role="menu"
+          className="absolute right-0 mt-2 w-56 rounded-lg bg-bg border border-border shadow-lg overflow-hidden z-50"
+        >
+          <div className="px-4 py-3 border-b border-border">
+            <p className="text-sm font-semibold text-text truncate" title={identity}>
+              {identity}
+            </p>
+          </div>
+          <button
+            type="button"
+            role="menuitem"
+            onClick={handleLogout}
+            className="w-full text-left px-4 py-2.5 text-sm font-medium text-text hover:bg-surface transition-colors"
+          >
+            Log out
+          </button>
+        </div>
+      )}
+    </div>
+  );
+
   return (
     <nav
       className="bg-surface-dark border-b border-border px-6 py-2"
@@ -21,9 +113,7 @@ function Navbar() {
 
         <Spacer />
 
-        <a href="http://localhost:3000/login/google" className="inline-flex items-center justify-center w-10 h-10 rounded-full shrink-0 bg-surface-light text-text border border-border no-underline transition-colors hover:bg-surface">
-          <PersonIcon aria-hidden fontSize="1.375rem" />
-        </a>
+        {checked && (user ? accountMenu : loginButton)}
       </HStack>
     </nav>
   );

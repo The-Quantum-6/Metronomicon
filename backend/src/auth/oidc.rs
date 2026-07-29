@@ -2,7 +2,7 @@ use crate::{
     repositories::user::{create_user, get_user_by_sub},
     state::AppState,
 };
-use axum::http::{HeaderValue, header};
+use axum::http::{HeaderValue, StatusCode, header};
 use axum::{
     extract::{Query, State},
     response::{IntoResponse, Redirect},
@@ -22,6 +22,17 @@ use crate::auth::jwt::generate_access;
 pub struct CallbackParams {
     code: String,
     state: String,
+}
+
+pub async fn logout(session: Session) -> impl IntoResponse {
+    session.flush().await.ok();
+
+    let cookie = "access_token=; HttpOnly; SameSite=Lax; Path=/; Max-Age=0";
+    let mut response = StatusCode::NO_CONTENT.into_response();
+    response
+        .headers_mut()
+        .insert(header::SET_COOKIE, HeaderValue::from_str(cookie).unwrap());
+    response
 }
 
 pub async fn login_send(

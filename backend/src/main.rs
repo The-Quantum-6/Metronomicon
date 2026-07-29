@@ -44,6 +44,7 @@ async fn main() {
         .route("/", get(|| async { "Hello, World!" }))
         .merge(routes::router())
         .merge(routes::protected_router(state.clone()))
+        .merge(routes::authed_router(state.clone()))
         .layer(session_layer)
         .with_state(state);
 
