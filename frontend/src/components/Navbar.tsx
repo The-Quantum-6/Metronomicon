@@ -82,11 +82,19 @@ function Navbar() {
               {identity}
             </p>
           </div>
+          <Link
+            to="/profile"
+            role="menuitem"
+            onClick={() => setOpen(false)}
+            className="flex items-center gap-2 w-full text-left px-4 py-2.5 text-sm font-medium text-text no-underline hover:bg-surface transition-colors"
+          >
+            <PersonIcon aria-hidden /> Staff Profile
+          </Link>
           <button
             type="button"
             role="menuitem"
             onClick={handleLogout}
-            className="w-full text-left px-4 py-2.5 text-sm font-medium text-text hover:bg-surface transition-colors"
+            className="w-full text-left px-4 py-2.5 text-sm font-medium text-text hover:bg-surface transition-colors border-t border-border"
           >
             Log out
           </button>
