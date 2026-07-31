@@ -74,6 +74,7 @@ pub struct Cqrs {
 pub struct AppState {
     pub oidc_client: OidcClient,
     pub http_client: Client,
+    pub karakterweb_api_key: String,
     pub cqrs: Arc<Cqrs>,
     pub course_view_repo: ActiveCourseViewRepo,
     pub pool: Pool<Postgres>,
@@ -239,6 +240,7 @@ pub async fn get(config: &AppConfig) -> AppState {
     AppState {
         oidc_client,
         http_client,
+        karakterweb_api_key: config.karakterweb_api_key.clone(),
         cqrs: Arc::new(Cqrs {
             course: course_cqrs,
             link: link_cqrs,
