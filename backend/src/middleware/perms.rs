@@ -1,6 +1,9 @@
 use crate::{
-    models::{claims::AccessClaim, permissions::Permissions, user::UserRole}, repositories::permissions::{default_permissions, get_user_permissions}, state::AppState,
+    models::{claims::AccessClaim, permissions::Permissions, user::UserRole},
+    repositories::permissions::{default_permissions, get_user_permissions},
+    state::AppState,
 };
+use axum::extract::Query;
 use axum::{
     body::{Body, to_bytes},
     extract::{Request, State},
@@ -8,13 +11,10 @@ use axum::{
     middleware::Next,
     response::{IntoResponse, Response},
 };
+use serde::Deserialize;
 use std::collections::HashMap;
 use std::sync::OnceLock;
 use uuid::Uuid;
-use axum::{
-    extract::{Query},
-};
-use serde::Deserialize;
 
 const PERMISSION_ENTRIES: &[(&str, Permissions)] = &[
     // Faq
@@ -59,7 +59,7 @@ fn aggregate_from_path(path: &str) -> &str {
 
 fn capitalize_singular(s: &str) -> String {
     let base = s.trim_end_matches('s');
-    
+
     base.split('_')
         .map(|part| {
             let mut c = part.chars();
@@ -82,7 +82,6 @@ pub async fn get_contributions_perm_middleware(
     req: Request,
     next: Next,
 ) -> Response {
-
     let claims = match req.extensions().get::<AccessClaim>() {
         Some(c) => c,
         None => return StatusCode::UNAUTHORIZED.into_response(),
@@ -98,8 +97,8 @@ pub async fn get_contributions_perm_middleware(
         Err(_) => return StatusCode::INTERNAL_SERVER_ERROR.into_response(),
     };
 
-    let is_moderator = perms.contains(Permissions::MODERATE_TEXT) 
-        || perms.contains(Permissions::MODERATE_FILE);
+    let is_moderator =
+        perms.contains(Permissions::MODERATE_TEXT) || perms.contains(Permissions::MODERATE_FILE);
 
     if !is_moderator {
         return StatusCode::FORBIDDEN.into_response();
@@ -127,7 +126,7 @@ pub async fn perm_middleware(State(state): State<AppState>, req: Request, next: 
 
     let lookup_key = if aggregate == "Contribution" {
         let command_payload = json.as_object().and_then(|o| o.values().next());
-        
+
         let cont_type = command_payload
             .and_then(|v| v.get("contribution"))
             .and_then(|c| c.as_object())
@@ -142,7 +141,6 @@ pub async fn perm_middleware(State(state): State<AppState>, req: Request, next: 
     } else {
         format!("{}{}", aggregate, command_key)
     };
-
 
     let claims = match parts.extensions.get::<AccessClaim>().cloned() {
         Some(c) => c,
@@ -176,12 +174,9 @@ pub async fn perm_middleware(State(state): State<AppState>, req: Request, next: 
 
     if course_id.is_empty() {
         let command_payload = json.as_object().and_then(|o| o.values().next());
-        
+
         let aggregate_id_str = command_payload
-            .and_then(|v| {
-                v.get("aggregate_id")
-                    .or_else(|| v.get("contribution_id"))
-            })
+            .and_then(|v| v.get("aggregate_id").or_else(|| v.get("contribution_id")))
             .and_then(|v| v.as_str());
 
         if let Some(id_str) = aggregate_id_str {
@@ -205,7 +200,6 @@ pub async fn perm_middleware(State(state): State<AppState>, req: Request, next: 
     if course_id.is_empty() {
         return StatusCode::BAD_REQUEST.into_response();
     }
-
 
     if let Err(_) = default_permissions(&state.pool, user_id, &course_id).await {
         return StatusCode::INTERNAL_SERVER_ERROR.into_response();

@@ -1,16 +1,15 @@
 use axum::{
+    Router,
     extract::{Path, State},
     response::Json,
     routing::get,
-    Router,
 };
 use serde_json::Value;
 
 use crate::state::AppState;
 
 pub fn router() -> Router<AppState> {
-    Router::new()
-        .route("/grades/{course}", get(get_grades))
+    Router::new().route("/grades/{course}", get(get_grades))
 }
 
 pub async fn get_grades(
@@ -30,10 +29,7 @@ pub async fn get_grades(
         .await
         .map_err(|e| e.to_string())?;
 
-    let json = response
-        .json::<Value>()
-        .await
-        .map_err(|e| e.to_string())?;
+    let json = response.json::<Value>().await.map_err(|e| e.to_string())?;
 
     Ok(Json(json))
 }

@@ -3,8 +3,8 @@ use crate::state::{self, AppState};
 use crate::{extractors::report::ReportCommandExtractor, middleware::perms::perm_middleware};
 use axum::middleware;
 use axum::{
-     Json, Router,
-     extract::{Path, State},
+    Json, Router,
+    extract::{Path, State},
     routing::{get, post},
 };
 use serde::Serialize;
@@ -61,9 +61,7 @@ pub async fn query_handler(
     .bind(&id)
     .fetch_optional(&state.pool)
     .await?
-    .ok_or(AppError::BadRequest(
-        RequestError::NonExsistant("Report"),
-    ))?;
+    .ok_or(AppError::BadRequest(RequestError::NonExsistant("Report")))?;
 
     Ok(Json(report))
 }

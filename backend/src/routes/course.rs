@@ -20,8 +20,7 @@ pub fn router() -> Router<AppState> {
 }
 
 pub fn protected_router(state: AppState) -> Router<AppState> {
-    Router::new()
-        .route("/courses", post(handle_command))
+    Router::new().route("/courses", post(handle_command))
 }
 
 pub async fn handle_command(

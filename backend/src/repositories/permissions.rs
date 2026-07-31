@@ -27,9 +27,8 @@ pub async fn default_permissions(
     user_id: Uuid,
     resource_id: &str,
 ) -> Result<(), sqlx::Error> {
-    let default_perms = (Permissions::READ 
-        | Permissions::SUGGEST_TEXT 
-        | Permissions::SUGGEST_FILE).bits();
+    let default_perms =
+        (Permissions::READ | Permissions::SUGGEST_TEXT | Permissions::SUGGEST_FILE).bits();
 
     sqlx::query!(
         r#"
