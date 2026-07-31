@@ -15,7 +15,7 @@ export type Resource = {
   title: string
   key: string
   status: string
-  officiality: string
+  official: boolean
 }
 
 export type Link = {
@@ -32,13 +32,14 @@ export type ProjectIdea = {
   body: string
   difficulty: "Easy" | "Medium" | "Hard"
   status: string
+  official: boolean,
 }
 
 export type Faq = {
   faq_id: string
   question: string
   answer: string
-  officiality: string
+  official: boolean
   status: string
 }
 
