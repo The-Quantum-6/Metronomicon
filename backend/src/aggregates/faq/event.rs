@@ -3,8 +3,6 @@ use serde::{Deserialize, Serialize};
 use strum::Display;
 use uuid::Uuid;
 
-use crate::aggregates::shared::Officiality;
-
 #[derive(Debug, Serialize, Deserialize, PartialEq, Clone, Display)]
 pub enum FaqEvent {
     FaqCreated {
@@ -25,7 +23,7 @@ pub enum FaqEvent {
     },
     FaqOfficialStatusChanged {
         course_id: Uuid,
-        officiality: Officiality,
+        official: bool,
     },
 }
 

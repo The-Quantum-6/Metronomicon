@@ -15,8 +15,7 @@ use axum::response::Response;
 use axum::routing::post;
 
 pub fn router(state: AppState) -> Router<AppState> {
-    Router::new()
-        .route("/faqs", post(handle_command))
+    Router::new().route("/faqs", post(handle_command))
 }
 
 pub async fn handle_command(

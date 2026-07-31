@@ -1,8 +1,6 @@
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
-use crate::aggregates::shared::Officiality;
-
 #[derive(Debug, Serialize, Deserialize)]
 pub enum ResourceCommand {
     /// Create resource
@@ -23,7 +21,7 @@ pub enum ResourceCommand {
         title: Option<String>,
         key: Option<String>,
     },
-    /// Delete resource
+    ///Delete resource
     ///
     /// Requires `write_file`
     Delete { resource_id: Uuid, course_id: Uuid },
@@ -33,7 +31,7 @@ pub enum ResourceCommand {
     SetOfficial {
         resource_id: Uuid,
         course_id: Uuid,
-        officiality: Officiality,
+        official: bool,
     },
 }
 

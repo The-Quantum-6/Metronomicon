@@ -4,7 +4,7 @@ use cqrs_es::{EventEnvelope, Query};
 use std::sync::Arc;
 use uuid::Uuid;
 
-use crate::aggregates::shared::{Officiality, Status};
+use crate::aggregates::shared::Status;
 use crate::views::resource::ResourceDetailView;
 use crate::{
     aggregates::resource::{aggregate::Resource, event::ResourceEvent},
@@ -58,7 +58,7 @@ impl Query<Resource> for CourseResourceQuery {
                     view.resources.push(ResourceDetailView {
                         resource_id,
                         status: Status::Active,
-                        officiality: Officiality::Unofficial,
+                        official: false,
                         course_id: *course_id,
                         title: title.clone(),
                         key: key.clone(),
@@ -80,13 +80,13 @@ impl Query<Resource> for CourseResourceQuery {
                 ResourceEvent::ResourceDeleted { .. } => {
                     view.resources.retain(|r| r.resource_id != resource_id);
                 }
-                ResourceEvent::ResourceOfficialStatusChanged { officiality, .. } => {
+                ResourceEvent::ResourceOfficialStatusChanged { official, .. } => {
                     let r = view
                         .resources
                         .iter_mut()
                         .find(|r| r.resource_id == resource_id)
                         .unwrap();
-                    r.officiality = officiality.clone();
+                    r.official = official.clone();
                 }
             }
 
