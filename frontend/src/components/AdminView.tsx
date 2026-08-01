@@ -10,6 +10,24 @@ type Contribution = {
   status: string;
 };
 
+type UserPerm = {
+  user_id: string;
+  name?: string;
+  perms: number;
+};
+
+const PERMISSION_FLAGS: Record<string, number> = {
+  READ: 1 << 1,           // 2
+  WRITE_TEXT: 1 << 2,     // 4
+  WRITE_FILE: 1 << 3,     // 8
+  SUGGEST_TEXT: 1 << 4,   // 16
+  SUGGEST_FILE: 1 << 5,   // 32
+  MODERATE_TEXT: 1 << 6,  // 64
+  MODERATE_FILE: 1 << 7,  // 128
+  PAGE_ADMIN: 1 << 8,     // 256
+  TRANSFER_PERMS: 1 << 9, // 512
+};
+
 function parseContribution(contribution: any) {
   if (!contribution) return { type: "Unknown", title: "Empty contribution", details: null };
 
@@ -49,112 +67,95 @@ export default function AdminView() {
   const [contributions, setContributions] = useState<Contribution[] | null>(null);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
 
-  const permissions = [
-    "WRITE_TEXT",
-    "WRITE_FILE",
-    "SUGGEST_TEXT",
-    "SUGGEST_FILE",
-    "MODERATE_TEXT",
-    "MODERATE_FILE",
-    "PAGE_ADMIN",
-    "TRANSFER_PERMS",
-  ];
-
-  type User = {
-    id: string;
-    name: string;
-    permissions: string[];
-  };
-
-  const [users, setUsers] = useState<User[]>([
-    { id: "1", name: "Hay", permissions: ["WRITE_TEXT", "SUGGEST_TEXT"] },
-    { id: "2", name: "Jo", permissions: ["WRITE_FILE", "SUGGEST_FILE"] },
-    { id: "3", name: "Kris", permissions: ["MODERATE_TEXT"] },
-    { id: "4", name: "Lim", permissions: ["PAGE_ADMIN", "TRANSFER_PERMS"] },
-    { id: "5", name: "Jørg", permissions: ["WRITE_TEXT", "MODERATE_FILE"] },
-  ]);
-
-  const togglePermission = (id: string, permission: string) => {
-    setUsers((prev) =>
-      prev.map((user) => {
-        if (user.id !== id) return user;
-
-        const hasPermission = user.permissions.includes(permission);
-        return {
-          ...user,
-          permissions: hasPermission
-            ? user.permissions.filter((item) => item !== permission)
-            : [...user.permissions, permission],
-        };
-      })
-    );
-  };
+  const [users, setUsers] = useState<UserPerm[] | null>(null);
+  const [updatingPerm, setUpdatingPerm] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!courseId) {
-      console.warn("Fant ingen courseId i URL-en!");
-      return;
-    }
+    if (!courseId) return;
+    fetch(`${apiUrl("contributions")}?course_id=${encodeURIComponent(courseId)}`, { credentials: "include" })
+      .then((r) => (r.ok ? r.json() : []))
+      .then((data) => setContributions(data))
+      .catch(() => setContributions([]));
 
-    const endpoint = `${apiUrl("contributions")}?course_id=${encodeURIComponent(courseId)}`;
-
-    fetch(endpoint, {
-      credentials: "include",
-    })
+    fetch(`${apiUrl("permissions")}/all?course_id=${encodeURIComponent(courseId)}`, { credentials: "include" })
       .then((r) => {
-        if (!r.ok) throw new Error(`Failed to load contributions (${r.status})`);
-        return r.json() as Promise<Contribution[]>;
+        if (!r.ok) throw new Error("Kunne ikke hente rettigheter");
+        return r.json() as Promise<UserPerm[]>;
       })
-      .then((data) => {
-        setContributions(data);
-      })
+      .then((data) => setUsers(data))
       .catch((err) => {
-        console.error("Feil ved henting:", err);
-        setContributions([]);
+        console.error("Feil ved henting av permissions:", err);
+        setUsers([]);
       });
   }, [courseId]);
 
-    const handleModerate = async (
-  contributionId: string,
-  action: string
-) => {
-  setActionLoading(contributionId);
+  const togglePermission = async (userId: string, flagBit: number) => {
+    if (!courseId) return;
 
+    const user = users?.find((u) => u.user_id === userId);
+    if (!user) return;
 
-  const payload = {
-    Moderate: {
-      contribution_id: contributionId,
-      verdict: action, 
-    },
+    const newPerms = user.perms ^ flagBit;
+
+    setUpdatingPerm(`${userId}-${flagBit}`);
+
+    setUsers((prev) =>
+      prev ? prev.map((u) => (u.user_id === userId ? { ...u, perms: newPerms } : u)) : []
+    );
+
+    try {
+      const res = await fetch(`${apiUrl("permissions")}?course_id=${encodeURIComponent(courseId)}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({
+          user_id: userId,
+          course_id: courseId,
+          permissions: newPerms,
+        }),
+      });
+
+      if (!res.ok) throw new Error("Serverfeil ved oppdatering av rettighet");
+    } catch (err) {
+      console.error("Feil ved lagring:", err);
+      setUsers((prev) =>
+        prev ? prev.map((u) => (u.user_id === userId ? { ...u, perms: user.perms } : u)) : []
+      );
+    } finally {
+      setUpdatingPerm(null);
+    }
   };
 
-  console.log("Sender moderering til backend:", payload);
+  const handleModerate = async (contributionId: string, action: string) => {
+    setActionLoading(contributionId);
 
-  try {
-    const res = await fetch(apiUrl("contributions"), {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
+    const payload = {
+      Moderate: {
+        contribution_id: contributionId,
+        verdict: action,
       },
-      credentials: "include",
-      body: JSON.stringify(payload),
-    });
+    };
 
-    if (!res.ok) {
-      const errorText = await res.text();
-      console.error(`Feil fra backend (${res.status}):`, errorText);
-      throw new Error(`Klarte ikke å behandle forslaget (${res.status}): ${errorText}`);
+    try {
+      const res = await fetch(apiUrl("contributions"), {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify(payload),
+      });
+
+      if (!res.ok) throw new Error("Feil under moderering");
+
+      setContributions((prev) =>
+        prev ? prev.filter((c) => c.aggregate_id !== contributionId) : []
+      );
+    } catch (err) {
+      console.error(err);
+      alert("Kunne ikke behandle forslaget.");
+    } finally {
+      setActionLoading(null);
     }
-    setContributions((prev) =>
-      prev ? prev.filter((c) => c.aggregate_id !== contributionId) : []
-    );
-  } catch (err) {
-    console.error("Feil i handleModerate:", err);
-    alert(`Feil ved moderering! Sjekk konsollen (F12) for mer detaljer.`);
-  } finally {
-    setActionLoading(null);
-  }
-};
+  };
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-8">
@@ -208,16 +209,10 @@ export default function AdminView() {
                     </div>
                   )}
 
-                  <p className="text-xs text-[#6B6B5A] mt-3">
-                    ID: {suggestion.aggregate_id}
-                  </p>
-
                   <div className="flex gap-2 mt-4">
                     <button
                       disabled={isLoading}
-                      onClick={() =>
-                        handleModerate(suggestion.aggregate_id, "Approve")
-                      }
+                      onClick={() => handleModerate(suggestion.aggregate_id, "Approve")}
                       className="inline-flex items-center gap-1.5 border border-green-600 text-green-700 hover:bg-green-50 px-3 py-1.5 text-sm font-medium rounded-lg transition-colors disabled:opacity-50"
                     >
                       <CheckmarkIcon aria-hidden />
@@ -226,9 +221,7 @@ export default function AdminView() {
 
                     <button
                       disabled={isLoading}
-                      onClick={() =>
-                        handleModerate(suggestion.aggregate_id, "Reject")
-                      }
+                      onClick={() => handleModerate(suggestion.aggregate_id, "Reject")}
                       className="inline-flex items-center gap-1.5 border border-red-500 text-red-600 hover:bg-red-50 px-3 py-1.5 text-sm font-medium rounded-lg transition-colors disabled:opacity-50"
                     >
                       <XMarkIcon aria-hidden />
@@ -249,54 +242,61 @@ export default function AdminView() {
         </h2>
 
         <div className="flex-1 overflow-y-auto space-y-3 pr-1">
-          {users.length === 0 ? (
-            <p className="text-sm text-[#6B6B5A]">No users found.</p>
+          {users === null ? (
+            <p className="text-sm text-[#6B6B5A]">Loading users...</p>
+          ) : users.length === 0 ? (
+            <p className="text-sm text-[#6B6B5A]">No users found for this course.</p>
           ) : (
             users.map((user) => {
-              const isOpen = openUserId === user.id;
+              const isOpen = openUserId === user.user_id;
 
               return (
-                <div
-                  key={user.id}
-                  className="border border-[#DAD8D6] rounded-xl p-4"
-                >
-                  <button
-                    onClick={() => setOpenUserId(isOpen ? null : user.id)}
-                    className="relative flex w-full items-center justify-between text-left"
-                  >
-                    <span className="font-semibold text-[#1A1F3A]">
-                      {user.name}
-                    </span>
-                    <span className="text-sm text-[#6B6B5A]">
-                      {isOpen ? "Hide" : "View"} perms
-                    </span>
-                  </button>
+                <div key={user.user_id} className="border border-[#DAD8D6] rounded-xl p-4 bg-white flex flex-col justify-between">
+                  <div>
+                    <button
+                      onClick={() => setOpenUserId(isOpen ? null : user.user_id)}
+                      className="relative flex w-full items-center justify-between text-left"
+                    >
+                      {/* Viser brukernavn her */}
+                      <span className="font-semibold text-[#1A1F3A]">
+                        {user.name || "bruker"}
+                      </span>
+                      <span className="text-sm text-[#6B6B5A]">
+                        {isOpen ? "Hide" : "View"} perms
+                      </span>
+                    </button>
 
-                  {isOpen && (
-                    <div className="mt-3 border-t border-[#DAD8D6] pt-3">
-                      <div className="flex flex-wrap gap-2">
-                        {permissions.map((permission) => {
-                          const hasPermission =
-                            user.permissions.includes(permission);
-                          return (
-                            <button
-                              key={`${user.id}-${permission}`}
-                              onClick={() =>
-                                togglePermission(user.id, permission)
-                              }
-                              className={`border rounded-lg px-3 py-2 text-sm transition-colors ${
-                                hasPermission
-                                  ? "border-green-600 bg-green-50 text-green-700"
-                                  : "border-[#DAD8D6] text-[#1A1F3A] hover:bg-gray-100"
-                              }`}
-                            >
-                              {permission}
-                            </button>
-                          );
-                        })}
+                    {isOpen && (
+                      <div className="mt-3 border-t border-[#DAD8D6] pt-3">
+                        <div className="flex flex-wrap gap-2">
+                          {Object.entries(PERMISSION_FLAGS).map(([permName, flagBit]) => {
+                            const hasPermission = (user.perms & flagBit) !== 0;
+                            const isBtnLoading = updatingPerm === `${user.user_id}-${flagBit}`;
+
+                            return (
+                              <button
+                                key={`${user.user_id}-${permName}`}
+                                disabled={isBtnLoading}
+                                onClick={() => togglePermission(user.user_id, flagBit)}
+                                className={`border rounded-lg px-3 py-2 text-sm transition-colors disabled:opacity-50 ${
+                                  hasPermission
+                                    ? "border-green-600 bg-green-50 text-green-700 font-medium"
+                                    : "border-[#DAD8D6] text-[#1A1F3A] hover:bg-gray-100"
+                                }`}
+                              >
+                                {permName}
+                              </button>
+                            );
+                          })}
+                        </div>
+
+                        {/* ID */}
+                        <div className="mt-4 pt-2 border-t border-[#EAE8E6] text-xs font-mono text-[#6B6B5A] select-all">
+                          ID: {user.user_id}
+                        </div>
                       </div>
-                    </div>
-                  )}
+                    )}
+                  </div>
                 </div>
               );
             })
