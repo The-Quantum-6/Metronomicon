@@ -107,6 +107,43 @@ pub async fn get_contributions_perm_middleware(
     next.run(req).await
 }
 
+#[derive(Deserialize)]
+pub struct CourseQuery {
+    pub course_id: String,
+}
+
+pub async fn transfer_perm_middleware(
+    State(state): State<AppState>,
+    Query(query): Query<CourseQuery>,
+    req: Request,
+    next: Next,
+) -> Response {
+    let claims = match req.extensions().get::<AccessClaim>() {
+        Some(c) => c,
+        None => return StatusCode::UNAUTHORIZED.into_response(),
+    };
+
+    if claims.role == UserRole::Admin {
+        return next.run(req).await;
+    }
+
+    let user_id = match Uuid::parse_str(&claims.sub) {
+        Ok(id) => id,
+        Err(_) => return StatusCode::UNAUTHORIZED.into_response(),
+    };
+
+    let perms = match get_user_permissions(&state.pool, user_id, &query.course_id).await {
+        Ok(p) => p,
+        Err(_) => return StatusCode::INTERNAL_SERVER_ERROR.into_response(),
+    };
+
+    if !perms.contains(Permissions::TRANSFER_PERMS) {
+        return StatusCode::FORBIDDEN.into_response();
+    }
+
+    next.run(req).await
+}
+
 pub async fn perm_middleware(State(state): State<AppState>, req: Request, next: Next) -> Response {
     let path = req.uri().path().to_string();
     let aggregate = capitalize_singular(aggregate_from_path(&path));

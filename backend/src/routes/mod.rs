@@ -6,6 +6,7 @@ pub mod files;
 pub mod grades;
 pub mod link;
 pub mod project_idea;
+pub mod permissions;
 pub mod report;
 pub mod resources;
 pub mod user;
@@ -13,6 +14,7 @@ use crate::{
     middleware::{jwt::jwt_middleware, perms::perm_middleware},
     state::AppState,
 };
+use aws_sdk_s3::types::Permission;
 use axum::{Router, middleware};
 
 pub fn protected_router(state: AppState) -> Router<AppState> {
@@ -36,6 +38,7 @@ pub fn protected_router(state: AppState) -> Router<AppState> {
 pub fn authed_router(state: AppState) -> Router<AppState> {
     Router::new()
         .merge(user::router(state.clone()))
+        .merge(permissions::router(state.clone()))
         .merge(contribution::get_router(state.clone()))
         .route_layer(middleware::from_fn_with_state(
             state.clone(),
