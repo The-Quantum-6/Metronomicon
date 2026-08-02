@@ -221,6 +221,9 @@ return (
                 <h3 className="font-semibold text-lg text-[#1A1F3A]">{idea.title}</h3>
                 <p className="text-sm px-3 py-1 rounded-full border border-[#DAD8D6] text-[#6B6B5A]">{idea.difficulty}</p>
                 </div>
+                {idea.official  && (
+                  <p className="text-sm px-2 py-1 border border-[#1A1F3A] rounded-full text-[#1A1F3A]">Official</p>
+                  )}
                   <div className="flex gap-3">
                       <button onClick={() => alert("edit")} 
                       className="text-[#6B6B5A] hover:text-green-600 transition-colors">
@@ -259,11 +262,10 @@ return (
                       isOpen
                         ? "after:absolute after:bottom-0 after:left-4 after:right-4 after:border-b after:border-[#DAD8D6]"
                         : ""
-                    }`}
-                  >
+                    }`}>
                     <h3 className="font-medium text-lg text-[#1A1F3A]">{faq.question}</h3>
                     <div className="flex items-center gap-2">
-                      {faq.officiality === "Official" && (
+                      {faq.official  && (
                         <p className="text-sm px-2 py-1 border border-[#1A1F3A] rounded-full text-[#1A1F3A]">Official</p>
                       )}
                       <div className="flex gap-3">
