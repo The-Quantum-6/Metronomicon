@@ -6,6 +6,7 @@ import Navbar from "../components/Navbar";
 import type { Course, CourseTab } from "../types/courseTypes";
 import ContributeAlert from "../components/ContributeAlert";
 import Contribute, {type ContributionType} from "../components/Contribute";
+import GradeDistribution from "../components/GradeDistribution";
 import ReportForm from "../components/forms/RaportForm";
 import AdminView from "../components/AdminView";
 
@@ -110,9 +111,14 @@ return (
       </div>
 
       {tab === "overview"  && 
-      <div className="bg-white border border-[#DAD8D6] rounded-2xl p-5 max-w-4xl w-full">
-        <h2 className="font-bold font-display text-xl pb-2">About this course</h2>
-        <p className="text-[#6B6B5A]">{course.description}</p>
+      <div className="flex gap-5 items-start">
+        <div className="bg-white border border-[#DAD8D6] rounded-2xl p-5 max-w-4xl w-full">
+          <h2 className="font-bold font-display text-xl pb-2">About this course</h2>
+          <p className="text-[#6B6B5A]">{course.description}</p>
+        </div>
+        <div className="w-full max-w-md">
+          <GradeDistribution courseCode={course.code} />
+        </div>
       </div>
       }
       
@@ -134,7 +140,7 @@ return (
                       <p className="text-base italic text-[#6B6B5A]">{resource.key}</p>
                     </div>
 
-                    {resource.officiality == "Official" && (
+                    {resource.official && (
                       <p className="text-sm px-2 py-1 border border-[#1A1F3A] rounded-full text-[#1A1F3A]">Official</p>
                     )}
                     <div className="flex gap-3">
