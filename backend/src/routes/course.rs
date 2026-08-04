@@ -5,7 +5,7 @@ use axum::response::Response;
 use axum::routing::{get, post};
 use axum::{
     Json,
-    extract::{Path, State},
+    extract::{Path, State, Query},
 };
 use serde::Deserialize;
 use serde::Serialize;
@@ -17,7 +17,7 @@ use crate::{
 
 pub fn router() -> Router<AppState> {
     Router::new()
-        .route("/courses", get(list_active_courses))
+        .route("/courses", get(list_courses))
         .route("/courses/{id}", get(query_handler))
 }
 
@@ -102,26 +102,42 @@ pub async fn query_handler(
     }
 }
 
-pub async fn list_active_courses(
-    State(state): State<AppState>,
-) -> Result<Json<Vec<CourseDTO>>, StatusCode> {
-    Ok::<axum::Json<Vec<CourseDTO>>, StatusCode>(Json(
-        sqlx::query_as!(
-            CourseDTO,
-            r#"
-        SELECT aggregate_id, name, code, field
-        FROM course_list_view
-        WHERE status = 'Active'
-        ORDER BY name
-        "#
-        )
-        .fetch_all(&state.pool)
-        .await
-        .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?,
-    ))
+#[derive(Deserialize)]
+pub struct CourseListQuery {
+    status: Option<String>,
 }
 
-#[derive(Serialize, Deserialize)]
+pub async fn list_courses(
+    Query(query): Query<CourseListQuery>,
+    State(state): State<AppState>,
+) -> Result<Json<Vec<CourseDTO>>, StatusCode> {
+    let status = query.status.as_deref().unwrap_or("all");
+
+    let query_str = match status {
+        "active" => r#"
+            SELECT aggregate_id, name, code, field
+            FROM course_list_view
+            WHERE status = 'Active'
+            ORDER BY name
+        "#,
+        "unactive" => r#"
+            SELECT aggregate_id, name, code, field
+            FROM course_list_view
+            WHERE status = 'Unactive'
+            ORDER BY name
+        "#,
+        _ => return Err(StatusCode::BAD_REQUEST),
+    };
+
+    let courses = sqlx::query_as::<_, CourseDTO>(query_str)
+        .fetch_all(&state.pool)
+        .await
+        .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+
+    Ok(Json(courses))
+}
+
+#[derive(Serialize, Deserialize, sqlx::FromRow)]
 pub struct CourseDTO {
     aggregate_id: String,
     name: String,
