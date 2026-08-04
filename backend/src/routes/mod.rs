@@ -23,7 +23,7 @@ pub fn protected_router(state: AppState) -> Router<AppState> {
         .merge(report::router(state.clone()))
         .merge(link::router(state.clone()))
         .merge(project_idea::router(state.clone()))
-        .merge(course::protected_router(state.clone()))
+        .merge(course::protected_router())
         .merge(contribution::post_router(state.clone()))
         .route_layer(middleware::from_fn_with_state(
             state.clone(),
