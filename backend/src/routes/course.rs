@@ -10,8 +10,10 @@ use axum::{
 use serde::Deserialize;
 use serde::Serialize;
 
-use crate::state;
-use crate::{extractors::course::CourseCommandExtractor, state::AppState};
+use crate::{
+    extractors::course::CourseCommandExtractor,
+    state::AppState,
+};
 
 pub fn router() -> Router<AppState> {
     Router::new()
@@ -19,11 +21,54 @@ pub fn router() -> Router<AppState> {
         .route("/courses/{id}", get(query_handler))
 }
 
-pub fn protected_router(state: AppState) -> Router<AppState> {
-    Router::new().route("/courses", post(handle_command))
+pub fn protected_router() -> Router<AppState> {
+    Router::new()
+        .route("/courses", post(handle_command))
+        .route("/courses/{id}/activate", post(activate_course))
+        .route("/courses/{id}/unactivate", post(unactivate_course))
 }
 
 pub async fn handle_command(
+    State(state): State<AppState>,
+    CourseCommandExtractor(metadata, command): CourseCommandExtractor,
+) -> Response {
+    let course_id = command.id();
+
+    match state
+        .cqrs
+        .course
+        .execute_with_metadata(&course_id.to_string(), command, metadata)
+        .await
+    {
+        Ok(()) => StatusCode::NO_CONTENT.into_response(),
+        Err(e) => {
+            println!("Error: {e:#?}\n");
+            (StatusCode::BAD_REQUEST, e.to_string()).into_response()
+        }
+    }
+}
+
+pub async fn activate_course(
+    State(state): State<AppState>,
+    CourseCommandExtractor(metadata, command): CourseCommandExtractor,
+) -> Response {
+    let course_id = command.id();
+
+    match state
+        .cqrs
+        .course
+        .execute_with_metadata(&course_id.to_string(), command, metadata)
+        .await
+    {
+        Ok(()) => StatusCode::NO_CONTENT.into_response(),
+        Err(e) => {
+            println!("Error: {e:#?}\n");
+            (StatusCode::BAD_REQUEST, e.to_string()).into_response()
+        }
+    }
+}
+
+pub async fn unactivate_course(
     State(state): State<AppState>,
     CourseCommandExtractor(metadata, command): CourseCommandExtractor,
 ) -> Response {
