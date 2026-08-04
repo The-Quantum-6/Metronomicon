@@ -83,6 +83,7 @@ export default function ContributeModal({ onCancel, courseId, preselected = null
                   
                   {selected === "faq" && (
                   <FaqForm
+                  mode="create"
                   courseId={courseId}
                   onCancel={onCancel}/>
                   )}

@@ -3,12 +3,13 @@ import { useNavigate, useParams } from "react-router-dom";
 import { apiUrl } from "../config";
 
 import Navbar from "../components/Navbar";
-import type { Course, CourseTab } from "../types/courseTypes";
+import type { Course, CourseTab, Faq } from "../types/courseTypes";
 import ContributeAlert from "../components/ContributeAlert";
 import Contribute, {type ContributionType} from "../components/Contribute";
 import GradeDistribution from "../components/GradeDistribution";
 import ReportForm from "../components/forms/RaportForm";
 import AdminView from "../components/AdminView";
+import FaqForm from "../components/forms/FaqForm";
 
 const DISCLAIMER_SEEN = "metronomicon_policy_acknowledged"
 
@@ -23,6 +24,10 @@ export default function Course() {
   const [preselecteType, setPreselectedType] = useState<ContributionType | null>(null);
   const [openFaqId, setOpenFaqId] = useState<string | null>(null);
   const [showReport, setShowReport] = useState(false);
+
+  const [mode, setMode] = useState<"create"|"edit"|"delete"|null>(null);
+  const [selectedFaq, setSelectedFaq] = useState<Faq | null>(null);
+
   const [adminMode, setAdminMode] = useState(false);
 
   // TODO: replace with actual auth check
@@ -269,12 +274,12 @@ return (
                         <p className="text-sm px-2 py-1 border border-[#1A1F3A] rounded-full text-[#1A1F3A]">Official</p>
                       )}
                       <div className="flex gap-3">
-                      <button onClick={() => alert("edit")} 
+                      <button onClick={() => {setSelectedFaq(faq); setMode("edit")}} 
                       className="text-[#6B6B5A] hover:text-green-600 transition-colors">
                         <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 20h9" /><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4Z" />
                         </svg>
                         </button>
-                        <button onClick={() => alert("delete")}
+                        <button onClick={() => {setSelectedFaq(faq); setMode("delete")}}
                         className="text-[#6B6B5A] hover:text-red-600 transition-colors">
                           <svg xmlns="http://www.w3.org/2000/svg" width="18"height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6" /><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
                           </svg>
@@ -303,8 +308,7 @@ return (
           )}
           <button
             onClick={() => {
-              setPreselectedType("faq");
-              handleContribute();
+              setSelectedFaq(null); setMode("create");
             }}
             className="border border-dashed border-[#6B6B5A] rounded-lg px-4 py-2 text-lg text-[#6B6B5A] w-full hover:bg-gray-200">+ Add FAQ
           </button>
@@ -335,6 +339,17 @@ return (
                 </div>
                 </div>
                 )}
+    {mode && (
+      <div className="fixed inset-0 z-50 flex items-center justify-center backdrop-blur-sm bg-black/40">
+        <div className="bg-white rounded-2xl p-7 max-w-lg w-full mx-4 shadow-md text-[#1A1F3A]">
+          <FaqForm
+            mode={mode}
+            faq={selectedFaq ?? undefined}
+            courseId={id ?? ""}
+            onCancel={() => { setMode(null); setSelectedFaq(null);}}/>
+            </div>
+            </div>
+          )}
                 </>
 );
 }
