@@ -10,6 +10,8 @@ import GradeDistribution from "../components/GradeDistribution";
 import ReportForm from "../components/forms/RaportForm";
 import AdminView from "../components/AdminView";
 import FaqForm from "../components/forms/FaqForm";
+import { GetRoleFromCookie } from "../components/Perms";
+import { useCoursePerms, PERMISSIONS } from "../components/Perms";
 
 const DISCLAIMER_SEEN = "metronomicon_policy_acknowledged"
 
@@ -27,11 +29,12 @@ export default function Course() {
 
   const [mode, setMode] = useState<"create"|"edit"|"delete"|null>(null);
   const [selectedFaq, setSelectedFaq] = useState<Faq | null>(null);
-
+  const role = GetRoleFromCookie(id ?? "");
   const [adminMode, setAdminMode] = useState(false);
-
+  const { perms, hasPerm } = useCoursePerms(id);
   // TODO: replace with actual auth check
-    const isAdmin = true;
+  const isAdmin = (hasPerm(PERMISSIONS.MODERATE_TEXT) || hasPerm(PERMISSIONS.MODERATE_FILE) || hasPerm(PERMISSIONS.PAGE_ADMIN) || hasPerm(PERMISSIONS.TRANSFER_PERMS) || role === "admin");
+
 
   useEffect(() => {
   fetch(apiUrl(`courses/${id}`))

@@ -140,11 +140,13 @@ pub async fn perm_token(
         query.course_id.clone(),
         perms.bits() as i32,
         claims.sub,
+        claims.role
     )
     .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
 
     let cookie_val = format!(
-        "perms_token={}; Path=/courses/{}; HttpOnly; SameSite=Lax; Max-Age=180",
+        "{}={}; Path=/courses/{}; SameSite=Lax; Max-Age=3600",
+        query.course_id,
         new_token,
         query.course_id
     );

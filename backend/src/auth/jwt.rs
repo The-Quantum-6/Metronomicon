@@ -27,12 +27,14 @@ pub fn generate_perms(
     resource_id: String,
     perms: i32,
     sub: String,
+    role: UserRole
 ) -> Result<String, jsonwebtoken::errors::Error> {
     let now = get_current_timestamp();
 
     let claims = PermsClaim {
         sub,
         resource_id,
+        role,
         perms,
         iat: now,
         exp: now + 180,
