@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "\n            SELECT aggregate_id, course_id, contribution, status\n            FROM contribution_list_view\n            ORDER BY aggregate_id\n            ",
+  "query": "\n            SELECT aggregate_id, course_id, contribution, status\n            FROM contribution_list_view\n            WHERE ($1::text IS NULL OR course_id = $1)\n            ORDER BY \n                CASE WHEN status = 'Proposed' THEN 0 ELSE 1 END,\n                aggregate_id\n            ",
   "describe": {
     "columns": [
       {
@@ -25,7 +25,9 @@
       }
     ],
     "parameters": {
-      "Left": []
+      "Left": [
+        "Text"
+      ]
     },
     "nullable": [
       false,
@@ -34,5 +36,5 @@
       false
     ]
   },
-  "hash": "e1b11182a7f268b1e62c90fba8614c5d156ed57d7e6bb68681599d9d3ab5216a"
+  "hash": "80bcd9606358605e953261cb46dfce8249cd8e714d1a9d65fe942c6b55a734e3"
 }

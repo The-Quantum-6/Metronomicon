@@ -14,7 +14,7 @@ import {
   //ChartData
 } from 'chart.js';
 import { Bar } from 'react-chartjs-2';
-import { Label } from "@navikt/ds-react";
+//import { Label } from "@navikt/ds-react";
 
 ChartJS.register(
   CategoryScale,
