@@ -1,16 +1,16 @@
 info:
-  name: Delete course
+  name: Activate course
   type: http
-  seq: 3
+  seq: 5
 
 http:
   method: POST
-  url: http://localhost:3000/courses
+  url: http://localhost:3000/courses/1b353b1f-ffe5-4dea-b0ef-2d4f9f6bd68e/activate
   body:
     type: json
     data: |-
       {
-        "Delete": {
+        "Activate": {
           "course_id": "1b353b1f-ffe5-4dea-b0ef-2d4f9f6bd68e"
         }
       }
