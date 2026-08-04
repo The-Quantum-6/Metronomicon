@@ -39,6 +39,7 @@ pub fn authed_router(state: AppState) -> Router<AppState> {
     Router::new()
         .merge(user::router(state.clone()))
         .merge(permissions::router(state.clone()))
+        .merge(permissions::protected_router(state.clone()))
         .merge(contribution::get_router(state.clone()))
         .route_layer(middleware::from_fn_with_state(
             state.clone(),

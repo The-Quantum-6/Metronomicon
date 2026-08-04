@@ -1,14 +1,20 @@
 use crate::{
-    middleware::{jwt::AuthUser, perms::transfer_perm_middleware}, models::{permissions::Permissions, user::UserRole}, repositories::permissions::{
+    auth::jwt::generate_perms, middleware::{jwt::AuthUser, perms::transfer_perm_middleware}, models::{claims::PermsClaim, permissions::Permissions, user::{self, UserRole}}, repositories::{permissions::{
         get_all_users_permissions, get_user_permissions, update_permissions,
-    }, state::AppState,
+    }, user::get_user_by_sub}, state::AppState,
 };
+use aws_config::default_provider::token;
 use axum::{
-    Json, Router, extract::{Query, State}, http::StatusCode, middleware::from_fn_with_state, routing::{get, post},
+    Json, Router, extract::{Query, State}, http::{HeaderValue, StatusCode}, middleware::from_fn_with_state, response::{IntoResponse, Response}, routing::{get, post},
 };
+use reqwest::header;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
+pub fn protected_router(state: AppState) -> Router<AppState> {
+    Router::new()
+        .route("/permissions/token", post(perm_token))
+}
 
 pub fn router(state: AppState) -> Router<AppState> {
     Router::new()
@@ -23,6 +29,11 @@ pub fn router(state: AppState) -> Router<AppState> {
 #[derive(Deserialize)]
 pub struct GetPermsQuery {
     pub user_id: Uuid,
+    pub course_id: String,
+}
+
+#[derive(Deserialize)]
+pub struct PermTokenQuery {
     pub course_id: String,
 }
 
@@ -109,4 +120,40 @@ pub async fn update_perms(
     .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
 
     Ok(StatusCode::OK)
+}
+
+
+
+pub async fn perm_token(
+    State(state): State<AppState>,
+    AuthUser(claims): AuthUser, 
+    Query(query): Query<PermTokenQuery>,
+) -> Result<Response, StatusCode> {
+
+    let userid = Uuid::parse_str(&claims.sub).map_err(|_| StatusCode::UNAUTHORIZED)?;
+    let perms = get_user_permissions(&state.pool, userid, &query.course_id)
+        .await
+        .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+
+    let new_token = generate_perms(
+        &state.jwt_encode,
+        query.course_id.clone(),
+        perms.bits() as i32,
+        claims.sub,
+    )
+    .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+
+    let cookie_val = format!(
+        "perms_token={}; Path=/courses/{}; HttpOnly; SameSite=Lax; Max-Age=180",
+        new_token,
+        query.course_id
+    );
+
+    let mut response = Json(new_token).into_response();
+    response.headers_mut().insert(
+        header::SET_COOKIE,
+        HeaderValue::from_str(&cookie_val).map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?,
+    );
+
+    Ok(response)
 }

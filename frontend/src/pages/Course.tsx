@@ -38,7 +38,15 @@ export default function Course() {
     .then((r) => r.json())
     .then((data) => setCourse(data))
     .catch(console.error);
-}, [id]);
+
+  fetch(apiUrl(`permissions/token?course_id=${id}`), {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    credentials: "include",
+  }).catch(console.error);
+  }, [id]);
 
   const handleContribute = () => {
     if (localStorage.getItem(DISCLAIMER_SEEN)){
