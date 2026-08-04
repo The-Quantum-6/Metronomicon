@@ -32,7 +32,7 @@ impl Query<Course> for CourseListQuery {
                     sqlx::query!(
                         "INSERT INTO course_list_view 
                          (aggregate_id, name, code, field, status)
-                         VALUES ($1, $2, $3, $4, 'Active')
+                         VALUES ($1, $2, $3, $4, 'Unactive')
                          ON CONFLICT (aggregate_id) DO UPDATE
                          SET name = $2, code = $3, field = $4",
                         aggregate_id,
@@ -43,9 +43,18 @@ impl Query<Course> for CourseListQuery {
                     .execute(&self.pool)
                     .await
                 }
-                CourseEvent::CourseDeleted => {
+                CourseEvent::CourseUnactivated => {
                     sqlx::query!(
-                        "UPDATE course_list_view SET status = 'Deleted'
+                        "UPDATE course_list_view SET status = 'Unactive'
+                         WHERE aggregate_id = $1",
+                        aggregate_id
+                    )
+                    .execute(&self.pool)
+                    .await
+                }
+                CourseEvent::CourseActivated => {
+                    sqlx::query!(
+                        "UPDATE course_list_view SET status = 'Active'
                          WHERE aggregate_id = $1",
                         aggregate_id
                     )

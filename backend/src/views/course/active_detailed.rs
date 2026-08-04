@@ -1,3 +1,4 @@
+use crate::aggregates::course::aggregate::CourseStatus;
 use std::sync::Arc;
 
 use cqrs_es::{
@@ -24,7 +25,7 @@ pub type CourseDetailViewRepo = PostgresViewRepository<CourseDetailView, Course>
 
 #[derive(Serialize, Debug, Deserialize, Default)]
 pub struct CourseDetailView {
-    pub status: Status,
+    pub status: CourseStatus,
     pub name: String,
     pub code: String,
     pub field: String,
@@ -45,14 +46,17 @@ impl View<Course> for CourseDetailView {
                 field,
                 description,
             } => {
-                self.status = Status::Active;
+                self.status = CourseStatus::Active;
                 self.name = name.clone();
                 self.code = code.clone();
                 self.field = field.clone();
                 self.description = description.clone();
             }
-            CourseEvent::CourseDeleted => {
-                self.status = Status::Deleted;
+            CourseEvent::CourseUnactivated => {
+                self.status = CourseStatus::Unactive;
+            }
+            CourseEvent::CourseActivated => {
+                self.status = CourseStatus::Active;
             }
             CourseEvent::CourseMetadataUpdated {
                 name,
@@ -133,7 +137,7 @@ impl ActiveCourseViewRepo {
         id: &str,
     ) -> Result<Option<CourseDetailView>, PersistenceError> {
         match self.0.load(id).await? {
-            Some(view) if view.status == Status::Active => Ok(Some(view)),
+            Some(view) if view.status == CourseStatus::Active => Ok(Some(view)),
             Some(_) => Ok(None), // deleted = not found, from caller's perspective
             None => Ok(None),
         }

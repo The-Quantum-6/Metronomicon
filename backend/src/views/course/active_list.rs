@@ -1,19 +1,17 @@
+use crate::aggregates::course::aggregate::CourseStatus;
 use cqrs_es::View;
 use postgres_es::PostgresViewRepository;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
-use crate::aggregates::{
-    course::{aggregate::Course, event::CourseEvent},
-    shared::Status,
-};
+use crate::aggregates::course::{aggregate::Course, event::CourseEvent};
 
 pub type CourseListViewRepo = PostgresViewRepository<CourseListView, Course>;
 
 #[derive(Serialize, Debug, Deserialize, Default)]
 pub struct CourseListView {
     pub id: Uuid,
-    pub status: Status,
+    pub status: CourseStatus,
     pub name: String,
     pub code: String,
     pub field: String,
@@ -30,14 +28,17 @@ impl View<Course> for CourseListView {
                 field,
                 description,
             } => {
-                self.status = Status::Active;
+                self.status = CourseStatus::Active;
                 self.name = name.clone();
                 self.code = code.clone();
                 self.field = field.clone();
                 self.description = description.clone();
             }
-            CourseEvent::CourseDeleted => {
-                self.status = Status::Deleted;
+            CourseEvent::CourseUnactivated => {
+                self.status = CourseStatus::Unactive;
+            }
+            CourseEvent::CourseActivated => {
+                self.status = CourseStatus::Active;
             }
             CourseEvent::CourseMetadataUpdated {
                 name,

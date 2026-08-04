@@ -10,7 +10,8 @@ pub enum CourseEvent {
         field: String,
         description: String,
     },
-    CourseDeleted,
+    CourseUnactivated,
+    CourseActivated,
     CourseMetadataUpdated {
         name: Option<String>,
         code: Option<String>,
