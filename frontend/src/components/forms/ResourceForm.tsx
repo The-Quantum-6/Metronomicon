@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { toast } from "../Toast";
 
 interface Props {
   courseId: string;
@@ -16,6 +17,7 @@ export default function ResourceForm({onCancel }: Props) {
     // TODO: implement file upload when ready
     console.log("submit resource", title, file);
     setSubmitted(true);
+    toast("Resource submitted for review");
   }
 
   if (submitted) {

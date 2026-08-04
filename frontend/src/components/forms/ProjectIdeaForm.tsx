@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { apiUrl } from "../../config";
+import { toast } from "../Toast";
 
 interface Props {
   courseId: string;
@@ -58,16 +59,16 @@ export default function ProjectIdeaForm({ courseId, onCancel }: Props) {
 
       if (response.ok) {
         setSubmitted(true);
+        toast(instantContribute ? "Project idea published" : "Project idea submitted for review");
       } else {
-        // TODO: Replace this with a better error handling
         const error = await response.text();
         console.error(error);
-        alert("Something went wrong.");
+        toast("Something went wrong", false);
       }
 
     } catch (error) {
       console.error(error);
-      alert("Could not connect to server.");
+      toast("Could not connect to server", false);
 
     }
   }
