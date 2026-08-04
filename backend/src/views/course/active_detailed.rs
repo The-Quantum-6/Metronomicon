@@ -131,15 +131,4 @@ impl View<Link> for CourseDetailView {
 #[derive(Clone)]
 pub struct ActiveCourseViewRepo(pub Arc<CourseDetailViewRepo>);
 
-impl ActiveCourseViewRepo {
-    pub async fn load_active(
-        &self,
-        id: &str,
-    ) -> Result<Option<CourseDetailView>, PersistenceError> {
-        match self.0.load(id).await? {
-            Some(view) if view.status == CourseStatus::Active => Ok(Some(view)),
-            Some(_) => Ok(None), // deleted = not found, from caller's perspective
-            None => Ok(None),
-        }
-    }
-}
+ 

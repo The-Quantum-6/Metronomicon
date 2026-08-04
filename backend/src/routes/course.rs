@@ -1,3 +1,4 @@
+use cqrs_es::persist::ViewRepository;
 use axum::Router;
 use axum::http::StatusCode;
 use axum::response::IntoResponse;
@@ -5,15 +6,12 @@ use axum::response::Response;
 use axum::routing::{get, post};
 use axum::{
     Json,
-    extract::{Path, State, Query},
+    extract::{Path, Query, State},
 };
 use serde::Deserialize;
 use serde::Serialize;
 
-use crate::{
-    extractors::course::CourseCommandExtractor,
-    state::AppState,
-};
+use crate::{extractors::course::CourseCommandExtractor, state::AppState};
 
 pub fn router() -> Router<AppState> {
     Router::new()
@@ -87,12 +85,11 @@ pub async fn unactivate_course(
         }
     }
 }
-
 pub async fn query_handler(
     Path(course_id): Path<String>,
     State(state): State<AppState>,
 ) -> Response {
-    match state.course_view_repo.load_active(&course_id).await {
+    match state.course_view_repo.load(&course_id).await {
         Ok(Some(course_view)) => (StatusCode::OK, Json(course_view)).into_response(),
         Ok(None) => StatusCode::NOT_FOUND.into_response(),
         Err(err) => {
@@ -101,7 +98,6 @@ pub async fn query_handler(
         }
     }
 }
-
 #[derive(Deserialize)]
 pub struct CourseListQuery {
     status: Option<String>,
@@ -114,18 +110,29 @@ pub async fn list_courses(
     let status = query.status.as_deref().unwrap_or("all");
 
     let query_str = match status {
-        "active" => r#"
+        "active" => {
+            r#"
             SELECT aggregate_id, name, code, field
             FROM course_list_view
             WHERE status = 'Active'
             ORDER BY name
-        "#,
-        "unactive" => r#"
+        "#
+        }
+        "unactive" => {
+            r#"
             SELECT aggregate_id, name, code, field
             FROM course_list_view
             WHERE status = 'Unactive'
             ORDER BY name
-        "#,
+        "#
+        }
+        "all" => {
+            r#"
+        SELECT aggregate_id, name, code, field
+        FROM course_list_view
+        ORDER BY name
+        "#
+        }
         _ => return Err(StatusCode::BAD_REQUEST),
     };
 
