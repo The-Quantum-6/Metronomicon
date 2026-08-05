@@ -36,8 +36,8 @@ pub async fn list_reports(
 ) -> Result<Json<Vec<ReportListItem>>, AppError> {
     let reports = sqlx::query_as::<_, ReportListItem>(
         r#"
-        SELECT aggregate_id, target, description, contact_email, status
-        FROM report_detail_view
+        SELECT aggregate_id, target, title, description, contact_email, status
+        FROM report_detail_list_view
         ORDER BY aggregate_id
         "#,
     )
@@ -53,8 +53,8 @@ pub async fn query_handler(
 ) -> Result<Json<ReportListItem>, AppError> {
     let report = sqlx::query_as::<_, ReportListItem>(
         r#"
-        SELECT aggregate_id, target, description, contact_email, status
-        FROM report_detail_view
+        SELECT aggregate_id, target, title, description, contact_email, status
+        FROM report_detail_list_view
         WHERE aggregate_id = $1
         "#,
     )
@@ -69,6 +69,7 @@ pub async fn query_handler(
 pub struct ReportListItem {
     pub aggregate_id: String,
     pub target: Option<String>,
+    pub title: Option<String>,
     pub description: Option<String>,
     pub contact_email: Option<String>,
     pub status: Option<String>,

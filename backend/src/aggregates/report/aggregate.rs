@@ -24,6 +24,7 @@ pub struct Report {
     pub status: ReportStatus,
     pub issue_id: Uuid,
     pub target: Option<ReportTarget>,
+    pub title: String,
     pub description: String,
     pub contact_email: Option<String>,
 }
@@ -47,7 +48,7 @@ impl Aggregate for Report {
                 ReportCommand::Create {
                     issue_id,
                     course_id,
-                    title: _,
+                    title,
                     description,
                     contact_email,
                 } => match self.status {
@@ -74,6 +75,7 @@ impl Aggregate for Report {
                             ReportEvent::ReportCreated {
                                 issue_id,
                                 target,
+                                title,
                                 description,
                                 contact_email,
                             },
@@ -130,12 +132,14 @@ impl Aggregate for Report {
             ReportEvent::ReportCreated {
                 issue_id,
                 target,
+                title,
                 description,
                 contact_email,
             } => {
                 self.status = ReportStatus::Open;
                 self.issue_id = issue_id;
                 self.target = Some(target);
+                self.title = title;
                 self.description = description;
                 self.contact_email = contact_email;
             }

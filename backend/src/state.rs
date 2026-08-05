@@ -217,11 +217,11 @@ pub async fn get(config: &AppConfig) -> AppState {
         resource_aggregate_services,
     ));
 
-    let report_detail_view_repo: Arc<ReportDetailViewRepo> = Arc::new(PostgresViewRepository::new(
-        "report_detail_view",
+    let report_detail_list_view_repo: Arc<ReportDetailViewRepo> = Arc::new(PostgresViewRepository::new(
+        "report_detail_list_view",
         db.clone(),
     ));
-    let report_query = ReportQuery::new(report_detail_view_repo.clone());
+    let report_query = ReportQuery::new(report_detail_list_view_repo.clone());
     let report_list_query = ReportListQuery::new(db.clone());
     let report_queries: Vec<Box<dyn Query<Report>>> = vec![
         Box::new(logging_query.clone()),

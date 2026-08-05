@@ -28,34 +28,36 @@ impl Query<Report> for ReportListQuery {
             let result =
                 match &event.payload {
                     ReportEvent::ReportCreated {
+                        title,
                         target,
                         description,
                         contact_email,
                         ..
                     } => {
                         sqlx::query(
-                            "INSERT INTO report_detail_view
-                         (aggregate_id, target, description, contact_email, status)
-                         VALUES ($1, $2, $3, $4, 'Open')
+                            "INSERT INTO report_detail_list_view
+                         (aggregate_id, target, title, description, contact_email, status)
+                         VALUES ($1, $2, $3, $4, $5, 'Open')
                          ON CONFLICT (aggregate_id) DO UPDATE
-                         SET target = $2, description = $3, contact_email = $4",
+                         SET target = $2, title = $3, description = $4, contact_email = $5",
                         )
                         .bind(aggregate_id)
                         .bind(format!("{target:?}"))
+                        .bind(title)
                         .bind(description)
                         .bind(contact_email.as_deref())
                         .execute(&self.pool)
                         .await
                     }
                     ReportEvent::ReportResolved { .. } => sqlx::query(
-                        "UPDATE report_detail_view SET status = 'Resolved' WHERE aggregate_id = $1",
+                        "UPDATE report_detail_list_view SET status = 'Resolved' WHERE aggregate_id = $1",
                     )
                     .bind(aggregate_id)
                     .execute(&self.pool)
                     .await,
                     ReportEvent::ReportReopened { .. } => {
                         sqlx::query(
-                            "UPDATE report_detail_view SET status = 'Open' WHERE aggregate_id = $1",
+                            "UPDATE report_detail_list_view SET status = 'Open' WHERE aggregate_id = $1",
                         )
                         .bind(aggregate_id)
                         .execute(&self.pool)
