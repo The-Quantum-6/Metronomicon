@@ -9,20 +9,28 @@ import AdminEdit from "./pages/AdminEdit";
 import Profile from "./pages/Profile";
 import StaffPortal from "./pages/StaffPortal";
 import About from "./pages/About";
+import PrivacyPolicy from "./pages/PrivacyPolicy";
+import Cookies from "./pages/Cookies";
+import CookieBanner from "./components/CookieBanner";
 
 function App() {
   return (
-    <Routes>
-      <Route path="/" element={<Home />} />
-      
-      <Route path="/login" element={<Login />} />
-      <Route path="/about" element={<About />} />
-      <Route path="/profile" element={<Profile />} />
-      <Route path="/staff" element={<StaffPortal />} />
-      <Route path="/courses/:id" element={<CoursePage />} />
-      <Route path="/admin" element={<Admin />} />
-      <Route path="/admin/edit/:id" element={<AdminEdit />} />
-    </Routes>
+    <>
+      <Routes>
+        <Route path="/" element={<Home />} />
+
+        <Route path="/login" element={<Login />} />
+        <Route path="/about" element={<About />} />
+        <Route path="/privacy" element={<PrivacyPolicy />} />
+        <Route path="/cookies" element={<Cookies />} />
+        <Route path="/profile" element={<Profile />} />
+        <Route path="/staff" element={<StaffPortal />} />
+        <Route path="/courses/:id" element={<CoursePage />} />
+        <Route path="/admin" element={<Admin />} />
+        <Route path="/admin/edit/:id" element={<AdminEdit />} />
+      </Routes>
+      <CookieBanner />
+    </>
   );
 }
 

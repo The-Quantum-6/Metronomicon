@@ -16,8 +16,6 @@ import LinkForm from "../components/forms/LinkForm";
 import ProjectIdeaForm from "../components/forms/ProjectIdeaForm";
 import ResourceForm from "../components/forms/ResourceForm";
 
-const DISCLAIMER_SEEN = "metronomicon_policy_acknowledged"
-
 export default function Course() {
   const navigate = useNavigate();
   const { id } = useParams();
@@ -58,14 +56,7 @@ export default function Course() {
   }).catch(console.error);
   }, [id]);
 
-  const handleContribute = () => {
-    if (localStorage.getItem(DISCLAIMER_SEEN)){
-      setShowContribute(true);
-    }
-    else {
-      setShowAlert(true)
-    }
-  }
+  const handleContribute = () => setShowAlert(true);
 
    const tabs = [
     { id: "overview" as CourseTab, label: "Overview" },

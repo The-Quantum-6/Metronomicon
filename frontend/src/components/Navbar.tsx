@@ -51,12 +51,20 @@ function Navbar() {
   const identity = user?.email ?? user?.name ?? "";
 
   const loginButton = (
-    <a
-      href={`${apiBaseUrl}/login/google`}
-      className="inline-flex items-center justify-center px-4 py-2 rounded shrink-0 bg-accent hover:bg-accent-dark text-white font-medium no-underline transition-colors"
-    >
-      Log in
-    </a>
+    <div className="flex items-center gap-2 shrink-0">
+      <span className="text-xs text-text-secondary max-w-[10rem] leading-tight">
+        By signing in you agree to our{" "}
+        <Link to="/privacy" className="underline hover:text-text">
+          Privacy Policy
+        </Link>
+      </span>
+      <a
+        href={`${apiBaseUrl}/login/google`}
+        className="inline-flex items-center justify-center px-4 py-2 rounded shrink-0 bg-accent hover:bg-accent-dark text-white font-medium no-underline transition-colors"
+      >
+        Log in
+      </a>
+    </div>
   );
 
   const accountMenu = (
