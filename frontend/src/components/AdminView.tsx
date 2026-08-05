@@ -158,7 +158,9 @@ export default function AdminView() {
   };
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-8">
+    <>
+    <ModerationGuidelines />
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
       {/* Pending contributions */}
       <section className="bg-white border border-[#DAD8D6] rounded-2xl p-5">
         <h2 className="text-xl font-semibold text-[#1A1F3A] mb-4">
@@ -304,5 +306,67 @@ export default function AdminView() {
         </div>
       </section>
     </div>
+    </>
+  );
+}
+
+function ModerationGuidelines() {
+  const [open, setOpen] = useState(true);
+
+  return (
+    <section className="bg-white border border-[#DAD8D6] rounded-2xl p-5 mt-8">
+      <button
+        onClick={() => setOpen(!open)}
+        className="flex w-full items-center justify-between text-left"
+      >
+        <h2 className="text-xl font-semibold text-[#1A1F3A]">Moderation guidelines</h2>
+        <span className="text-sm text-[#6B6B5A]">{open ? "Hide" : "Show"}</span>
+      </button>
+
+      {open && (
+        <div className="mt-4 space-y-4 text-sm text-[#4A4D57]">
+          <p>
+            You keep Metronomicon useful and trustworthy. Users suggest changes to course pages,
+            and you decide what goes live. Your work happens in your queue: contributions and
+            reports.
+          </p>
+
+          <div>
+            <h3 className="font-semibold text-[#1A1F3A] mb-1">Contributions: Approve or Reject</h3>
+            <ul className="list-disc pl-5 space-y-1">
+              <li>Each is a link, FAQ entry, or project idea.</li>
+              <li><b>Approve</b> if it's relevant, accurate, helpful, and respectful.</li>
+              <li><b>Reject</b> if it's off-topic, wrong, spam/ads, offensive, or copyright-infringing.</li>
+              <li>
+                If a contribution reproduces copyrighted material (e.g., full documents, slides, or
+                text lifted from another source), reject it and prefer a link to the original
+                instead.
+              </li>
+              <li>In doubt? Open the link or read the answer first, or leave it for a second opinion.</li>
+            </ul>
+          </div>
+
+          <div>
+            <h3 className="font-semibold text-[#1A1F3A] mb-1">Reports: Resolve</h3>
+            <ul className="list-disc pl-5 space-y-1">
+              <li>Categories: bug, copyright/sensitive, policy, other.</li>
+              <li><b>Resolve</b> = you've handled the underlying issue, or determined there wasn't one.</li>
+              <li>
+                Copyright reports should be resolved by removing the infringing content, not just
+                closing the report.
+              </li>
+            </ul>
+          </div>
+
+          <div>
+            <h3 className="font-semibold text-[#1A1F3A] mb-1">Principles</h3>
+            <p>
+              Be consistent and fair, assume good faith but verify, protect students over volume,
+              and ask a course admin when unsure.
+            </p>
+          </div>
+        </div>
+      )}
+    </section>
   );
 }

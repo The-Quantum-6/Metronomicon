@@ -25,6 +25,9 @@ function Footer() {
             <Link as={RouterLink} to="/privacy" variant="subtle">
               Privacy Policy
             </Link>
+            <Link as={RouterLink} to="/cookies" variant="subtle">
+              Cookies
+            </Link>
             <Link
               href="https://github.com"
               target="_blank"
