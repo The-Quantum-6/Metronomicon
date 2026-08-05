@@ -107,6 +107,19 @@ pub async fn get_contributions_perm_middleware(
     next.run(req).await
 }
 
+pub async fn get_reports_perm_middleware(req: Request, next: Next) -> Response {
+    let claims = match req.extensions().get::<AccessClaim>() {
+        Some(c) => c,
+        None => return StatusCode::UNAUTHORIZED.into_response(),
+    };
+
+    if claims.role != UserRole::Admin {
+        return StatusCode::FORBIDDEN.into_response();
+    }
+
+    next.run(req).await
+}
+
 #[derive(Deserialize)]
 pub struct CourseQuery {
     pub course_id: String,
@@ -183,6 +196,28 @@ pub async fn perm_middleware(State(state): State<AppState>, req: Request, next: 
         Some(c) => c,
         None => return StatusCode::UNAUTHORIZED.into_response(),
     };
+
+    if lookup_key == "ReportResolveReport" || lookup_key == "ReportReopenReport" {
+        if claims.role == UserRole::Admin {
+            let req = Request::from_parts(parts, Body::from(bytes));
+            return next.run(req).await;
+        }
+        return StatusCode::FORBIDDEN.into_response();
+    }
+
+    if lookup_key == "ReportCreate" {
+        let has_course = json
+            .as_object()
+            .and_then(|o| o.values().next())
+            .and_then(|v| v.get("course_id"))
+            .and_then(|v| v.as_str())
+            .is_some();
+
+        if !has_course {
+            let req = Request::from_parts(parts, Body::from(bytes));
+            return next.run(req).await;
+        }
+    }
 
     if lookup_key == "CourseCreate" {
         if claims.role == UserRole::Admin {

@@ -20,7 +20,7 @@ use axum::{Router, middleware};
 pub fn protected_router(state: AppState) -> Router<AppState> {
     Router::new()
         .merge(faq::router(state.clone()))
-        .merge(report::router(state.clone()))
+        .merge(report::post_router(state.clone()))
         .merge(link::router(state.clone()))
         .merge(project_idea::router(state.clone()))
         .merge(course::protected_router())
@@ -41,6 +41,7 @@ pub fn authed_router(state: AppState) -> Router<AppState> {
         .merge(permissions::router(state.clone()))
         .merge(permissions::protected_router(state.clone()))
         .merge(contribution::get_router(state.clone()))
+        .merge(report::get_router(state.clone()))
         .route_layer(middleware::from_fn_with_state(
             state.clone(),
             jwt_middleware,
