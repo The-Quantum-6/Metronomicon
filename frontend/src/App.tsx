@@ -6,8 +6,8 @@ import "@navikt/ds-css";
 import CoursePage from "./pages/Course";
 import Admin from "./pages/Admin";
 import AdminEdit from "./pages/AdminEdit";
-import Profile from "./pages/Profile";
 import StaffPortal from "./pages/StaffPortal";
+import PageReports from "./pages/PageReports";
 import About from "./pages/About";
 
 function App() {
@@ -17,8 +17,8 @@ function App() {
       
       <Route path="/login" element={<Login />} />
       <Route path="/about" element={<About />} />
-      <Route path="/profile" element={<Profile />} />
       <Route path="/staff" element={<StaffPortal />} />
+      <Route path="/pageReports" element={<PageReports />} />
       <Route path="/courses/:id" element={<CoursePage />} />
       <Route path="/admin" element={<Admin />} />
       <Route path="/admin/edit/:id" element={<AdminEdit />} />

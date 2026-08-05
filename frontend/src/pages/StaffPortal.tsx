@@ -24,7 +24,7 @@ export default function StaffPortal() {
       <Navbar />
       <main className="container mx-auto max-w-5xl p-6">
         <Link
-          to="/profile"
+          to="/"
           className="inline-flex items-center gap-1.5 text-text-secondary hover:text-text transition-colors mb-4"
         >
           <ArrowLeftIcon aria-hidden /> Back
