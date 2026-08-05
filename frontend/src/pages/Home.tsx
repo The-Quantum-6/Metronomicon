@@ -15,6 +15,7 @@ import {
   Theme,
 } from "@navikt/ds-react";
 import { apiUrl } from "../config";
+import ReportForm from "../components/forms/ReportForm";
 
 type Course = {
   aggregate_id: string;
@@ -24,6 +25,7 @@ type Course = {
 
 function Home() {
   const [courses, setCourses] = useState<Course[] | null>(null);
+  const [showReport, setShowReport] = useState(false);
 
   useEffect(() => {
     fetch(apiUrl("courses"))
@@ -46,9 +48,17 @@ function Home() {
             </Heading>
 
             <section>
-              <Heading size="large" level="2" spacing>
-                Courses
-              </Heading>
+              <div className="flex items-center justify-between gap-4 mb-6">
+                <Heading size="large" level="2">
+                  Courses
+                </Heading>
+                <button
+                  onClick={() => setShowReport(true)}
+                  className="flex items-center gap-1.5 px-3 py-1.5 text-sm text-[#6B6B5A] rounded-lg bg-transparent border border-[#6B6B5A] hover:bg-gray-100 transition-colors shrink-0"
+                >
+                  Report
+                </button>
+              </div>
 
               {courses === null ? (
                 <Loader size="large" title="Loading courses" />
@@ -77,6 +87,15 @@ function Home() {
           </VStack>
         </Page.Block>
         <Footer />
+
+        {showReport && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center backdrop-blur-sm bg-black/40">
+            <div className="bg-white rounded-2xl p-7 max-w-lg w-full mx-4 shadow-md text-[#1A1F3A]">
+              <h2 className="text-2xl font-semibold font-display mb-6">Report an issue</h2>
+              <ReportForm onCancel={() => setShowReport(false)} />
+            </div>
+          </div>
+        )}
       </Box>
     </Theme>
   );
