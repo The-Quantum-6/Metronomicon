@@ -3,18 +3,20 @@ import { useNavigate, useParams } from "react-router-dom";
 import { apiUrl } from "../config";
 
 import Navbar from "../components/Navbar";
-import type { Course, CourseTab, Faq } from "../types/courseTypes";
+import type { Course, CourseTab, Resource, Link, ProjectIdea, Faq } from "../types/courseTypes";
 import ContributeAlert from "../components/ContributeAlert";
 import Contribute, {type ContributionType} from "../components/Contribute";
 import GradeDistribution from "../components/GradeDistribution";
-import ReportForm from "../components/forms/RaportForm";
+import ReportForm from "../components/forms/ReportForm";
 import AdminView from "../components/AdminView";
 import FaqForm from "../components/forms/FaqForm";
 import { GetRoleFromCookie } from "../components/Perms";
 import { useCoursePerms, PERMISSIONS } from "../components/Perms";
+import LinkForm from "../components/forms/LinkForm";
+import ProjectIdeaForm from "../components/forms/ProjectIdeaForm";
+import ResourceForm from "../components/forms/ResourceForm";
 
 const DISCLAIMER_SEEN = "metronomicon_policy_acknowledged"
-
 
 export default function Course() {
   const navigate = useNavigate();
@@ -28,8 +30,13 @@ export default function Course() {
   const [showReport, setShowReport] = useState(false);
 
   const [mode, setMode] = useState<"create"|"edit"|"delete"|null>(null);
+  const [activeForm, setActiveForm] = useState<"resource" | "link" | "project_idea" | "faq" | null>(null);
   const [selectedFaq, setSelectedFaq] = useState<Faq | null>(null);
   const role = GetRoleFromCookie(id ?? "");
+  const [selectedResource, setSelectedResource] = useState<Resource | null>(null);
+  const [selectedLink, setSelectedLink] = useState<Link | null>(null);
+  const [selectedProjectIdea, setSelectedProjectIdea] = useState<ProjectIdea | null>(null);
+
   const [adminMode, setAdminMode] = useState(false);
   const { perms, hasPerm } = useCoursePerms(id);
   // TODO: replace with actual auth check
@@ -160,12 +167,12 @@ return (
                       <p className="text-sm px-2 py-1 border border-[#1A1F3A] rounded-full text-[#1A1F3A]">Official</p>
                     )}
                     <div className="flex gap-3">
-                      <button onClick={() => alert("edit")} 
+                      <button onClick={() => {setActiveForm("resource"); setSelectedResource(resource); setMode("edit")}} 
                       className="text-[#6B6B5A] hover:text-green-600 transition-colors">
                         <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 20h9" /><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4Z" />
                         </svg>
                         </button>
-                        <button onClick={() => alert("delete")}
+                        <button onClick={() => {setActiveForm("resource"); setSelectedResource(resource); setMode("delete") }}
                         className="text-[#6B6B5A] hover:text-red-600 transition-colors">
                           <svg xmlns="http://www.w3.org/2000/svg" width="18"height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6" /><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
                           </svg>
@@ -177,7 +184,7 @@ return (
             </>
           )}
           <button
-            onClick={() => { setPreselectedType("resource"); handleContribute(); }}
+            onClick={() => { setActiveForm("resource"); setSelectedResource(null); setMode("create") }}
             className="border border-dashed border-[#6B6B5A] rounded-lg px-4 py-2 text-lg text-[#6B6B5A] w-full hover:bg-gray-200">
             + Add resource
           </button>
@@ -202,12 +209,12 @@ return (
                     <p className="text-sm px-2 py-1 border border-[#1A1F3A] rounded-full text-[#1A1F3A]">Official</p>
                     )}
                     <div className="flex gap-3">
-                      <button onClick={() => alert("edit")} 
+                      <button onClick={() => {setActiveForm("link"); setSelectedLink(link); setMode("edit")}} 
                       className="text-[#6B6B5A] hover:text-green-600 transition-colors">
                         <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 20h9" /><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4Z" />
                         </svg>
                         </button>
-                        <button onClick={() => alert("delete")}
+                        <button onClick={() => {setActiveForm("link"); setSelectedLink(link); setMode("delete")}}
                         className="text-[#6B6B5A] hover:text-red-600 transition-colors">
                           <svg xmlns="http://www.w3.org/2000/svg" width="18"height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6" /><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
                           </svg>
@@ -219,10 +226,8 @@ return (
                 )}
                   <button
                   onClick={() => {
-                    setPreselectedType("link");
-                    handleContribute();
-                  }}
-                  className="border border-dashed border-[#6B6B5A] rounded-lg px-4 py-2 text-lg text-[#6B6B5A] w-full hover:bg-gray-200">
+                    setActiveForm("link"); setSelectedLink(null); setMode("create")}}
+                    className="border border-dashed border-[#6B6B5A] rounded-lg px-4 py-2 text-lg text-[#6B6B5A] w-full hover:bg-gray-200">
                     + Add link
                     </button>
                     </div>
@@ -241,12 +246,12 @@ return (
                   <p className="text-sm px-2 py-1 border border-[#1A1F3A] rounded-full text-[#1A1F3A]">Official</p>
                   )}
                   <div className="flex gap-3">
-                      <button onClick={() => alert("edit")} 
+                      <button onClick={() => {setActiveForm("project_idea"); setSelectedProjectIdea(idea); setMode("edit")}} 
                       className="text-[#6B6B5A] hover:text-green-600 transition-colors">
                         <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 20h9" /><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4Z" />
                         </svg>
                         </button>
-                        <button onClick={() => alert("delete")}
+                        <button onClick={() => {setActiveForm("project_idea"); setSelectedProjectIdea(idea); setMode("delete")}}
                         className="text-[#6B6B5A] hover:text-red-600 transition-colors">
                           <svg xmlns="http://www.w3.org/2000/svg" width="18"height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6" /><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
                           </svg>
@@ -255,10 +260,8 @@ return (
                   </div>
                 ))}
                 <button onClick={() => {
-                  setPreselectedType("project_idea");
-                  handleContribute();
-                }}
-                className="border border-dashed border-[#6B6B5A] rounded-lg px-4 py-2 text-lg text-[#6B6B5A] w-full hover:bg-gray-200">+ Add project idea</button>
+                  setActiveForm("project_idea"); setSelectedProjectIdea(null); setMode("create")}}
+                  className="border border-dashed border-[#6B6B5A] rounded-lg px-4 py-2 text-lg text-[#6B6B5A] w-full hover:bg-gray-200">+ Add project idea</button>
                 </div>
               )}
 
@@ -285,12 +288,12 @@ return (
                         <p className="text-sm px-2 py-1 border border-[#1A1F3A] rounded-full text-[#1A1F3A]">Official</p>
                       )}
                       <div className="flex gap-3">
-                      <button onClick={() => {setSelectedFaq(faq); setMode("edit")}} 
+                      <button onClick={() => {setActiveForm("faq"); setSelectedFaq(faq); setMode("edit")}} 
                       className="text-[#6B6B5A] hover:text-green-600 transition-colors">
                         <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 20h9" /><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4Z" />
                         </svg>
                         </button>
-                        <button onClick={() => {setSelectedFaq(faq); setMode("delete")}}
+                        <button onClick={() => {setActiveForm("faq"); setSelectedFaq(faq); setMode("delete")}}
                         className="text-[#6B6B5A] hover:text-red-600 transition-colors">
                           <svg xmlns="http://www.w3.org/2000/svg" width="18"height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6" /><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
                           </svg>
@@ -318,9 +321,7 @@ return (
             })
           )}
           <button
-            onClick={() => {
-              setSelectedFaq(null); setMode("create");
-            }}
+            onClick={() => {setActiveForm("faq"); setSelectedFaq(null); setMode("create");}}
             className="border border-dashed border-[#6B6B5A] rounded-lg px-4 py-2 text-lg text-[#6B6B5A] w-full hover:bg-gray-200">+ Add FAQ
           </button>
         </div>
@@ -350,14 +351,51 @@ return (
                 </div>
                 </div>
                 )}
-    {mode && (
+      
+    {mode && activeForm === "resource" && (
+      <div className="fixed inset-0 z-50 flex items-center justify-center backdrop-blur-sm bg-black/40">
+        <div className="bg-white rounded-2xl p-7 max-w-lg w-full mx-4 shadow-md text-[#1A1F3A]">
+          <ResourceForm
+            mode={mode}
+            resource={selectedResource ?? undefined}
+            courseId={id ?? ""}
+            onCancel={() => { setMode(null); setSelectedLink(null); setActiveForm(null);}}/>
+            </div>
+            </div>
+          )}
+
+    {mode && activeForm === "link" && (
+      <div className="fixed inset-0 z-50 flex items-center justify-center backdrop-blur-sm bg-black/40">
+        <div className="bg-white rounded-2xl p-7 max-w-lg w-full mx-4 shadow-md text-[#1A1F3A]">
+          <LinkForm
+            mode={mode}
+            link={selectedLink ?? undefined}
+            courseId={id ?? ""}
+            onCancel={() => { setMode(null); setSelectedLink(null); setActiveForm(null);}}/>
+            </div>
+            </div>
+          )}
+
+    {mode && activeForm === "project_idea" && (
+      <div className="fixed inset-0 z-50 flex items-center justify-center backdrop-blur-sm bg-black/40">
+        <div className="bg-white rounded-2xl p-7 max-w-lg w-full mx-4 shadow-md text-[#1A1F3A]">
+          <ProjectIdeaForm
+            mode={mode}
+            projectIdea={selectedProjectIdea ?? undefined}
+            courseId={id ?? ""}
+            onCancel={() => { setMode(null); setSelectedProjectIdea(null); setActiveForm(null);}}/>
+            </div>
+            </div>
+          )}
+        
+    {mode && activeForm == "faq" && (
       <div className="fixed inset-0 z-50 flex items-center justify-center backdrop-blur-sm bg-black/40">
         <div className="bg-white rounded-2xl p-7 max-w-lg w-full mx-4 shadow-md text-[#1A1F3A]">
           <FaqForm
             mode={mode}
             faq={selectedFaq ?? undefined}
             courseId={id ?? ""}
-            onCancel={() => { setMode(null); setSelectedFaq(null);}}/>
+            onCancel={() => { setMode(null); setSelectedFaq(null); setActiveForm(null)}}/>
             </div>
             </div>
           )}

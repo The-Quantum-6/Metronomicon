@@ -24,7 +24,7 @@ export default function FaqForm({mode, courseId, faq, onCancel,}: Props) {
     async function handleSubmit(e: React.SubmitEvent) {
         e.preventDefault();
         try {
-            /*create faq*/
+            //create faq
             if (mode === "create") {
                 const response = await fetch(
                     apiUrl(canInstantContribute ? "faqs" : "contributions"), {
@@ -61,7 +61,7 @@ export default function FaqForm({mode, courseId, faq, onCancel,}: Props) {
                 if (!response.ok) {
                     const error = await response.text();
                     console.error(error);
-                    alert("Failed to create");
+                    alert(canInstantContribute ? "Failed to create faq" : "Failed to propose faq");
                     return;
                 }
             }
@@ -83,7 +83,6 @@ export default function FaqForm({mode, courseId, faq, onCancel,}: Props) {
                                     course_id: courseId,
                                     question,
                                     answer,
-                                    comment,
                                 }
                             })
                         }
@@ -126,7 +125,7 @@ export default function FaqForm({mode, courseId, faq, onCancel,}: Props) {
                     if (!response.ok) {
                         const error = await response.text();
                         console.error(error);
-                        alert("Failed to contribute");
+                        alert("Failed to propose faq update");
                         return;
                     }
                 } 
@@ -152,7 +151,7 @@ export default function FaqForm({mode, courseId, faq, onCancel,}: Props) {
                     if (!response.ok) {
                     const error = await response.text();
                     console.error(error);
-                    alert("Failed to create");
+                    alert("Failed to set faq official");
                     return;
                 }
                 }
@@ -193,7 +192,7 @@ export default function FaqForm({mode, courseId, faq, onCancel,}: Props) {
                     if (!response.ok) {
                         const error = await response.text();
                         console.error(error);
-                        alert("Failed to delete faq!");
+                        alert(canInstantContribute ? "Failed to delete faq" : "Failed to propose faq removal");
                         return;
                     };
             }
@@ -202,7 +201,7 @@ export default function FaqForm({mode, courseId, faq, onCancel,}: Props) {
 
         catch(error){
             console.error(error);
-            alert("Something went wrong");
+            alert("Something went wrong. Could not connect to server.");
         }
     }
 
