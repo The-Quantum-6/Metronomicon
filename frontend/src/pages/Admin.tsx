@@ -2,6 +2,7 @@ import Navbar from "../components/Navbar";
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { apiUrl } from "../config";
+import { toast } from "../components/Toast";
 
 type Course = { id: string; name: string; code: string };
 
@@ -30,9 +31,10 @@ export default function Admin() {
     fetch(apiUrl(`courses/${id}`), { method: "DELETE" })
       .then((r) => {
         if (!r.ok) throw new Error("delete failed");
+        toast("Course deleted");
         fetchCourses();
       })
-      .catch(() => alert("Delete failed"));
+      .catch(() => toast("Delete failed", false));
   };
 
   return (

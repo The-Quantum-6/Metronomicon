@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { apiUrl } from "../../config";
+import { toast } from "../Toast";
 
 interface Props {
   courseId: string;

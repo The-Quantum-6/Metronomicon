@@ -2,6 +2,7 @@ import Navbar from "../components/Navbar";
 import { useEffect, useState, type FormEvent } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { apiUrl } from "../config";
+import { toast } from "../components/Toast";
 import ReactQuill from "react-quill-new";
 import "react-quill-new/dist/quill.snow.css";
 
@@ -40,8 +41,12 @@ export default function AdminEdit() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
     });
-    if (res.ok) navigate("/admin");
-    else alert("Update failed");
+    if (res.ok) {
+      toast("Course saved");
+      navigate("/admin");
+    } else {
+      toast("Update failed", false);
+    }
   };
 
   // Quill toolbar/modules to support headers, lists and common formats

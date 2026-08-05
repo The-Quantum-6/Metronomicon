@@ -8,6 +8,7 @@ import Admin from "./pages/Admin";
 import AdminEdit from "./pages/AdminEdit";
 import Profile from "./pages/Profile";
 import StaffPortal from "./pages/StaffPortal";
+import About from "./pages/About";
 
 function App() {
   return (
@@ -15,6 +16,7 @@ function App() {
       <Route path="/" element={<Home />} />
       
       <Route path="/login" element={<Login />} />
+      <Route path="/about" element={<About />} />
       <Route path="/profile" element={<Profile />} />
       <Route path="/staff" element={<StaffPortal />} />
       <Route path="/courses/:id" element={<CoursePage />} />

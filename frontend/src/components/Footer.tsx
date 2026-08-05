@@ -12,7 +12,7 @@ function Footer() {
             </Heading>
             <BodyShort textColor="subtle">By students, for students</BodyShort>
             <BodyShort textColor="subtle" className="font-mono">
-              Org.nr. 67696769
+              Org.nr. 936661750
             </BodyShort>
           </VStack>
 
