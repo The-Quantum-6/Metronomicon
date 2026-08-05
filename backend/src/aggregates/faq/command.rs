@@ -1,8 +1,6 @@
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
-use crate::aggregates::shared::Officiality;
-
 #[derive(Debug, Serialize, Deserialize)]
 pub enum FaqCommand {
     /// Create FAQ entry
@@ -33,7 +31,7 @@ pub enum FaqCommand {
     SetOfficial {
         faq_id: Uuid,
         course_id: Uuid,
-        officiality: Officiality,
+        official: bool,
     },
 }
 

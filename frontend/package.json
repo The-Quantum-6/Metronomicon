@@ -13,8 +13,11 @@
     "@navikt/aksel-icons": "^8.14.0",
     "@navikt/ds-css": "^8.14.0",
     "@navikt/ds-react": "^8.14.0",
+    "chart.js": "^4.5.1",
+    "jwt-decode": "^4.0.0",
     "quill": "^2.0.3",
     "react": "^19.2.6",
+    "react-chartjs-2": "^5.3.1",
     "react-dom": "^19.2.6",
     "react-quill-new": "^3.8.3",
     "react-router-dom": "^7.18.0"

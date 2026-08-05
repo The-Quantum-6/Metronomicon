@@ -4,7 +4,7 @@ use cqrs_es::{EventEnvelope, Query};
 use std::sync::Arc;
 use uuid::Uuid;
 
-use crate::aggregates::shared::{Officiality, Status};
+use crate::aggregates::shared::Status;
 use crate::views::faq::FaqDetailView;
 use crate::{
     aggregates::faq::{aggregate::Faq, event::FaqEvent},
@@ -56,8 +56,7 @@ impl Query<Faq> for CourseFaqQuery {
                     view.faqs.push(FaqDetailView {
                         faq_id,
                         status: Status::Active,
-                        officiality: Officiality::Unofficial,
-                        course_id: *course_id,
+                        official: false,
                         question: question.clone(),
                         answer: answer.clone(),
                     });
@@ -76,9 +75,9 @@ impl Query<Faq> for CourseFaqQuery {
                 FaqEvent::FaqDeleted { .. } => {
                     view.faqs.retain(|l| l.faq_id != faq_id);
                 }
-                FaqEvent::FaqOfficialStatusChanged { officiality, .. } => {
+                FaqEvent::FaqOfficialStatusChanged { official, .. } => {
                     let l = view.faqs.iter_mut().find(|l| l.faq_id == faq_id).unwrap();
-                    l.officiality = officiality.clone();
+                    l.official = official.clone();
                 }
             }
 

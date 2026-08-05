@@ -51,7 +51,13 @@ async fn main() {
     let app = if config.cors_should_be_permissive {
         let cors = CorsLayer::new()
             .allow_origin(config.frontend_url.parse::<HeaderValue>().unwrap())
-            .allow_methods([Method::GET, Method::POST, Method::PUT, Method::DELETE, Method::PATCH])
+            .allow_methods([
+                Method::GET,
+                Method::POST,
+                Method::PUT,
+                Method::DELETE,
+                Method::PATCH,
+            ])
             .allow_headers([CONTENT_TYPE])
             .allow_credentials(true); // PÅKREVD når fetch har credentials: "include"
 

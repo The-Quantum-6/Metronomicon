@@ -10,4 +10,5 @@ pub struct ProjectIdeaDetailView {
     pub title: String,
     pub body: String,
     pub difficulty: Option<Difficulty>,
+    pub official: bool,
 }

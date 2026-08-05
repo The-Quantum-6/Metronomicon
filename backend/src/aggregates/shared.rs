@@ -7,9 +7,3 @@ pub enum Status {
     Active,
     Deleted,
 }
-#[derive(Serialize, Default, Deserialize, Debug, PartialEq, Clone)]
-pub enum Officiality {
-    #[default]
-    Unofficial,
-    Official,
-}

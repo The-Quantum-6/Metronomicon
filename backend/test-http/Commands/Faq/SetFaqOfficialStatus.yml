@@ -13,7 +13,7 @@ http:
         "SetOfficial": {
           "faq_id": "550e8400-e29b-41d4-a716-446655440001",
           "course_id": "a1500188-75b4-4433-819a-870fb1134e9a",
-          "officiality": "Official"
+          "official": "true"
         }
       }
   auth: inherit

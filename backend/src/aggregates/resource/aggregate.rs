@@ -8,7 +8,7 @@ use crate::aggregates::{
         command::ResourceCommand, error::ResourceError, event::ResourceEvent,
         services::ResourceServices,
     },
-    shared::{Officiality, Status},
+    shared::Status,
 };
 
 pub struct ResourceAggregateServices {
@@ -19,7 +19,7 @@ pub struct ResourceAggregateServices {
 #[derive(Serialize, Default, Deserialize)]
 pub struct Resource {
     pub status: Status,
-    pub officiality: Officiality,
+    pub official: bool,
     pub resource_id: Uuid,
     pub course_id: Uuid,
     pub title: String,
@@ -121,7 +121,7 @@ impl Aggregate for Resource {
                 ResourceCommand::SetOfficial {
                     resource_id,
                     course_id,
-                    officiality,
+                    official,
                 } => match self.status {
                     Status::Uninitialized => Err("resource not found".into()),
                     Status::Deleted => Err("resource already deleted".into()),
@@ -131,7 +131,7 @@ impl Aggregate for Resource {
                                 ResourceEvent::ResourceOfficialStatusChanged {
                                     resource_id,
                                     course_id,
-                                    officiality,
+                                    official,
                                 },
                                 self,
                             )
@@ -168,8 +168,8 @@ impl Aggregate for Resource {
             ResourceEvent::ResourceDeleted { .. } => {
                 self.status = Status::Deleted;
             }
-            ResourceEvent::ResourceOfficialStatusChanged { officiality, .. } => {
-                self.officiality = officiality;
+            ResourceEvent::ResourceOfficialStatusChanged { official, .. } => {
+                self.official = official;
             }
         }
     }

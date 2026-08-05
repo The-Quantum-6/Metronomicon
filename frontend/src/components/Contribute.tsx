@@ -65,24 +65,28 @@ export default function ContributeModal({ onCancel, courseId, preselected = null
             <div className="mb-6">
               {selected === "resource" && (
                   <ResourceForm
+                  mode="create"
                   courseId={courseId}
                   onCancel={onCancel}/>
                   )}
 
               {selected === "link" && (
                 <LinkForm
+                mode="create"
                 courseId={courseId}
                 onCancel={onCancel}/>
                 )}
                 
                 {selected === "project_idea" && (
                   <ProjectIdeaForm
+                  mode="create"
                   courseId={courseId}
                   onCancel={onCancel}/>
                   )}
                   
                   {selected === "faq" && (
                   <FaqForm
+                  mode="create"
                   courseId={courseId}
                   onCancel={onCancel}/>
                   )}
