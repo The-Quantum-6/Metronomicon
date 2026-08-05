@@ -67,7 +67,7 @@ export default function ProjectIdeaForm({ courseId, onCancel, mode = "create", p
         if (!response.ok) {
           const error = await response.text();
           console.error(error);
-          alert(canInstantContribute ? "Failed to create project idea" : "Failed to propose project idea");
+          toast(canInstantContribute ? "Failed to create project idea" : "Failed to propose project idea", false);
           return;
         }
         setSubmitted(true);
@@ -76,7 +76,7 @@ export default function ProjectIdeaForm({ courseId, onCancel, mode = "create", p
 
       //edit project idea
       if (mode === "edit") {
-        if (!projectIdea) return alert("Missing project idea id");
+        if (!projectIdea) return toast("Missing project idea id", false);
 
         if (canInstantContribute) {
           const response = await fetch(
@@ -100,7 +100,7 @@ export default function ProjectIdeaForm({ courseId, onCancel, mode = "create", p
           if (!response.ok) {
             const error = await response.text();
             console.error(error);
-            alert("Failed to update project idea");
+            toast("Failed to update project idea", false);
             return;
           }
         } else {
@@ -132,7 +132,7 @@ export default function ProjectIdeaForm({ courseId, onCancel, mode = "create", p
           if (!response.ok) {
             const error = await response.text();
             console.error(error);
-            alert("Failed to propose project idea update");
+            toast("Failed to propose project idea update", false);
             return;
           }
         }
@@ -156,7 +156,7 @@ export default function ProjectIdeaForm({ courseId, onCancel, mode = "create", p
           if (!response.ok) {
             const error = await response.text();
             console.error(error);
-            alert("Failed to set project idea official");
+            toast("Failed to set project idea official", false);
             return;
           }
         }
@@ -166,7 +166,7 @@ export default function ProjectIdeaForm({ courseId, onCancel, mode = "create", p
 
       //delete project idea
       if (mode === "delete") {
-        if (!projectIdea) return alert("Missing project idea id");
+        if (!projectIdea) return toast("Missing project idea id", false);
 
         const response = await fetch(
           apiUrl(canInstantContribute ? "project_idea" : "contributions"), {
@@ -201,7 +201,7 @@ export default function ProjectIdeaForm({ courseId, onCancel, mode = "create", p
         if (!response.ok) {
           const error = await response.text();
           console.error(error);
-          alert(canInstantContribute ? "Failed to delete project idea" : "Failed to propose project idea removal");
+          toast(canInstantContribute ? "Failed to delete project idea" : "Failed to propose project idea removal", false);
           return;
         }
         setSubmitted(true);
@@ -209,7 +209,7 @@ export default function ProjectIdeaForm({ courseId, onCancel, mode = "create", p
       }
     } catch (error) {
       console.error(error);
-      alert("Something went wrong. Could not connect to server.");
+      toast("Something went wrong. Could not connect to server.", false);
     }
   }
 

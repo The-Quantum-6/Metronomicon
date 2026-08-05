@@ -62,7 +62,7 @@ export default function ResourceForm({ courseId, onCancel, mode = "create", reso
         if (!response.ok) {
           const error = await response.text();
           console.error(error);
-          alert(canInstantContribute ? "Failed to create resource" : "Failed to propose resource");
+          toast(canInstantContribute ? "Failed to create resource" : "Failed to propose resource", false);
           return;
         }
         setSubmitted(true);
@@ -91,7 +91,7 @@ export default function ResourceForm({ courseId, onCancel, mode = "create", reso
           if (!response.ok) {
             const error = await response.text();
             console.error(error);
-            alert("Failed to update resource");
+            toast("Failed to update resource", false);
             return;
           }
         } else {
@@ -121,7 +121,7 @@ export default function ResourceForm({ courseId, onCancel, mode = "create", reso
           if (!response.ok) {
             const error = await response.text();
             console.error(error);
-            alert("Failed to propose resource update");
+            toast("Failed to propose resource update", false);
             return;
           }
         }
@@ -146,7 +146,7 @@ export default function ResourceForm({ courseId, onCancel, mode = "create", reso
           if (!response.ok) {
             const error = await response.text();
             console.error(error);
-            alert("Failed to set resource official");
+            toast("Failed to set resource official", false);
             return;
           }
         }
@@ -190,7 +190,7 @@ export default function ResourceForm({ courseId, onCancel, mode = "create", reso
         if (!response.ok) {
           const error = await response.text();
           console.error(error);
-          alert(canInstantContribute ? "Failed to delete resource" : "Failed to propose resource removal");
+          toast(canInstantContribute ? "Failed to delete resource" : "Failed to propose resource removal", false);
           return;
         }
         setSubmitted(true);
@@ -198,7 +198,7 @@ export default function ResourceForm({ courseId, onCancel, mode = "create", reso
       }
     } catch (error) {
       console.error(error);
-      alert("Something went wrong. Could not connect to server.");
+      toast("Something went wrong. Could not connect to server.", false);
     }
   }
 

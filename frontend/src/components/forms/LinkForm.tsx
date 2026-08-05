@@ -63,7 +63,7 @@ export default function LinkForm({ courseId, onCancel, mode = "create", link }: 
         if (!response.ok) {
           const error = await response.text();
           console.error(error);
-          alert(canInstantContribute ? "Failed to create link" : "Failed to propose link");
+          toast(canInstantContribute ? "Failed to create link" : "Failed to propose link", false);
           return;
         }
         setSubmitted(true);
@@ -93,7 +93,7 @@ export default function LinkForm({ courseId, onCancel, mode = "create", link }: 
           if (!response.ok) {
             const error = await response.text();
             console.error(error);
-            alert("Failed to update link");
+            toast("Failed to update link", false);
             return;
           }
         } else {
@@ -124,7 +124,7 @@ export default function LinkForm({ courseId, onCancel, mode = "create", link }: 
           if (!response.ok) {
             const error = await response.text();
             console.error(error);
-            alert("Failed to propose link update");
+            toast("Failed to propose link update", false);
             return;
           }
         }
@@ -148,7 +148,7 @@ export default function LinkForm({ courseId, onCancel, mode = "create", link }: 
           if (!response.ok) {
             const error = await response.text();
             console.error(error);
-            alert("Failed to set link official");
+            toast("Failed to set link official", false);
             return;
           }
         }
@@ -191,7 +191,7 @@ export default function LinkForm({ courseId, onCancel, mode = "create", link }: 
         if (!response.ok) {
           const error = await response.text();
           console.error(error);
-          alert(canInstantContribute ? "Failed to delete link" : "Failed to propose link removal");
+          toast(canInstantContribute ? "Failed to delete link" : "Failed to propose link removal", false);
           return;
         }
         setSubmitted(true);
@@ -199,7 +199,7 @@ export default function LinkForm({ courseId, onCancel, mode = "create", link }: 
       }
     } catch (error) {
       console.error(error);
-      alert("Something went wrong. Could not connect to server.");
+      toast("Something went wrong. Could not connect to server.", false);
     }
   }
 
