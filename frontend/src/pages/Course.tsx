@@ -162,7 +162,7 @@ return (
                       <h3 className="font-semibold text-lg text-[#1A1F3A]">{resource.title}</h3>
                       <p className="text-base italic text-[#6B6B5A]">{resource.key}</p>
                     </div>
-
+                    <div className="flex items-center gap-2">
                     {resource.official && (
                       <p className="text-sm px-2 py-1 border border-[#1A1F3A] rounded-full text-[#1A1F3A]">Official</p>
                     )}
@@ -177,6 +177,7 @@ return (
                           <svg xmlns="http://www.w3.org/2000/svg" width="18"height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6" /><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
                           </svg>
                           </button>
+                          </div>
                           </div>
                   </div>
                 </a>
@@ -205,6 +206,7 @@ return (
                   <p className="text-base italic text-[#6B6B5A] hover:underline">{link.url}</p>
                   </a>
                   </div>
+                  <div className="flex items-center gap-2">
                   {link.official && (
                     <p className="text-sm px-2 py-1 border border-[#1A1F3A] rounded-full text-[#1A1F3A]">Official</p>
                     )}
@@ -220,6 +222,7 @@ return (
                           </svg>
                           </button>
                             </div>
+                    </div>
                     </div>
                     </div>
                   ))
@@ -242,6 +245,7 @@ return (
                 <h3 className="font-semibold text-lg text-[#1A1F3A]">{idea.title}</h3>
                 <p className="text-sm px-3 py-1 rounded-full border border-[#DAD8D6] text-[#6B6B5A]">{idea.difficulty}</p>
                 </div>
+                <div className="flex items-center gap-2">
                 {idea.official  && (
                   <p className="text-sm px-2 py-1 border border-[#1A1F3A] rounded-full text-[#1A1F3A]">Official</p>
                   )}
@@ -257,6 +261,7 @@ return (
                           </svg>
                           </button>
                           </div>
+                        </div>
                   </div>
                 ))}
                 <button onClick={() => {
