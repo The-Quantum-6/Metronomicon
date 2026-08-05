@@ -17,7 +17,7 @@ function Navbar() {
   const [checked, setChecked] = useState(false);
   const [open, setOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
-
+  const isAdmin = user?.role === "admin" || user?.role === "root";
   useEffect(() => {
     fetch(apiUrl("me"), { credentials: "include", redirect: "manual" })
       .then((r) => (r.ok ? (r.json() as Promise<User>) : null))
@@ -82,14 +82,16 @@ function Navbar() {
               {identity}
             </p>
           </div>
-          <Link
-            to="/staff"
-            role="menuitem"
-            onClick={() => setOpen(false)}
-            className="flex items-center gap-2 w-full text-left px-4 py-2.5 text-sm font-medium text-text no-underline hover:bg-surface transition-colors"
-          >
-            <PersonIcon aria-hidden /> Staff Profile
-          </Link>
+            {isAdmin && (
+            <Link
+              to="/staff"
+              role="menuitem"
+              onClick={() => setOpen(false)}
+              className="flex items-center gap-2 w-full text-left px-4 py-2.5 text-sm font-medium text-text no-underline hover:bg-surface transition-colors"
+            >
+              <PersonIcon aria-hidden /> Staff Profile
+            </Link>
+          )}
           <Link
             to="/pageReports"
             role="menuitem"
