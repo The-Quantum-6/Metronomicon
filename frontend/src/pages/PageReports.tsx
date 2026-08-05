@@ -92,7 +92,12 @@ export default function PageReports() {
           <p className="text-sm text-text-secondary">No reports.</p>
         ) : (
           <div className="flex flex-col gap-3">
-            {reports.map((report) => {
+            {[...reports]
+              .sort(
+                (a, b) =>
+                  Number(a.status === "Resolved") - Number(b.status === "Resolved")
+              )
+              .map((report) => {
               const { category, body } = parseReport(report.description);
               const isResolved = report.status === "Resolved";
               const isLoading = reportLoading === report.aggregate_id;
