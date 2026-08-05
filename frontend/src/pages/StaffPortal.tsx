@@ -1,24 +1,22 @@
 import Navbar from "../components/Navbar";
-import { useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import { Link } from "react-router-dom";
 import { apiUrl } from "../config";
-import { ArrowLeftIcon, CheckmarkIcon, PlusIcon } from "@navikt/aksel-icons";
+import { ArrowLeftIcon, PlusIcon } from "@navikt/aksel-icons";
 
 const inputStyle =
   "block w-full bg-surface-dark border border-border rounded p-2 text-text placeholder:text-placeholder focus:border-accent focus:outline-none";
 
-type UserRole = "User" | "Admin" | "Root";
-
-const ROLES: UserRole[] = ["User", "Admin", "Root"];
-
-type User = {
-  id: string;
+type CourseListItem = {
+  aggregate_id: string;
   name: string;
-  role: UserRole;
-  email?: string;
+  code: string;
+  field: string;
 };
 
 export default function StaffPortal() {
+  const [refresh, setRefresh] = useState(0);
+
   return (
     <div className="min-h-screen bg-surface-dark text-text">
       <Navbar />
@@ -33,15 +31,15 @@ export default function StaffPortal() {
         <h1 className="text-2xl font-bold text-primary mb-6">Staff portal</h1>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
-          <CreateCoursePanel />
-          <PermissionsPanel />
+          <CreateCoursePanel onCreated={() => setRefresh((n) => n + 1)} />
+          <ManageCoursesPanel refreshKey={refresh} />
         </div>
       </main>
     </div>
   );
 }
 
-function CreateCoursePanel() {
+function CreateCoursePanel({ onCreated }: { onCreated?: () => void }) {
   const [name, setName] = useState("");
   const [code, setCode] = useState("");
   const [field, setField] = useState("");
@@ -63,6 +61,7 @@ function CreateCoursePanel() {
       setCode("");
       setField("");
       setDescription("");
+      onCreated?.();
     } catch {
       alert("Create failed");
     } finally {
@@ -132,64 +131,125 @@ function CreateCoursePanel() {
   );
 }
 
-function PermissionsPanel() {
-  const [users, setUsers] = useState<User[]>([
-    { id: "1", name: "John Doe", role: "User" },
-    { id: "2", name: "John Doe", role: "User" },
-    { id: "3", name: "John Doe", role: "User" },
-  ]);
+function ManageCoursesPanel({ refreshKey }: { refreshKey: number }) {
+  const [active, setActive] = useState<CourseListItem[] | null>(null);
+  const [unactive, setUnactive] = useState<CourseListItem[] | null>(null);
+  const [busy, setBusy] = useState<string | null>(null);
 
-  const changeRole = (id: string, role: UserRole) => {
-    setUsers(users.map((user) => (user.id === id ? { ...user, role } : user)));
+  const load = () => {
+    fetch(apiUrl("courses?status=active"), { credentials: "include" })
+      .then((r) => (r.ok ? (r.json() as Promise<CourseListItem[]>) : []))
+      .then((data) => setActive(data))
+      .catch(() => setActive([]));
+    fetch(apiUrl("courses?status=unactive"), { credentials: "include" })
+      .then((r) => (r.ok ? (r.json() as Promise<CourseListItem[]>) : []))
+      .then((data) => setUnactive(data))
+      .catch(() => setUnactive([]));
   };
+
+  useEffect(() => {
+    load();
+  }, [refreshKey]);
+
+  const toggle = async (id: string, action: "activate" | "unactivate") => {
+    setBusy(id);
+    const command = action === "activate" ? "Activate" : "Unactivate";
+    try {
+      const res = await fetch(apiUrl(`courses/${id}/${action}`), {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ [command]: { course_id: id } }),
+      });
+      if (!res.ok) throw new Error("failed");
+      load();
+    } catch {
+      alert(`Failed to ${action} course`);
+    } finally {
+      setBusy(null);
+    }
+  };
+
+  const loading = active === null || unactive === null;
+  const activeList = active ?? [];
+  const unactiveList = unactive ?? [];
 
   return (
     <section className="bg-bg border border-border rounded-lg p-6">
-      <h2 className="text-lg font-bold text-primary mb-4">Manage permissions</h2>
+      <h2 className="text-lg font-bold text-primary mb-4">Manage course status</h2>
 
-      <div className="flex flex-col gap-3">
-        {users.map((user) => (
-          <div key={user.id} className="bg-surface-dark border border-border rounded-lg px-4 py-3">
-            <p className="text-sm font-semibold text-text truncate">{user.name}</p>
-            <div className="flex flex-wrap gap-2 mt-3">
-              {ROLES.map((role) => (
-                <RoleButton
-                  key={role}
-                  label={role}
-                  active={user.role === role}
-                  onClick={() => changeRole(user.id, role)}
-                />
-              ))}
-            </div>
-          </div>
-        ))}
-      </div>
+      {loading ? (
+        <p className="text-sm text-text-secondary">Loading courses...</p>
+      ) : activeList.length === 0 && unactiveList.length === 0 ? (
+        <p className="text-sm text-text-secondary">No courses yet.</p>
+      ) : (
+        <div className="flex flex-col gap-4">
+          <CourseGroup
+            label="Active"
+            courses={activeList}
+            actionLabel="Deactivate"
+            busy={busy}
+            onToggle={(id) => toggle(id, "unactivate")}
+          />
+          <CourseGroup
+            label="Unactive"
+            courses={unactiveList}
+            actionLabel="Activate"
+            busy={busy}
+            onToggle={(id) => toggle(id, "activate")}
+            primary
+          />
+        </div>
+      )}
     </section>
   );
 }
 
-function RoleButton({
+function CourseGroup({
   label,
-  active,
-  onClick,
+  courses,
+  actionLabel,
+  busy,
+  onToggle,
+  primary,
 }: {
   label: string;
-  active: boolean;
-  onClick: () => void;
+  courses: CourseListItem[];
+  actionLabel: string;
+  busy: string | null;
+  onToggle: (id: string) => void;
+  primary?: boolean;
 }) {
-  const activeStyle = "bg-primary text-white";
-  const inactiveStyle = "border border-border text-text-secondary hover:bg-surface";
+  if (courses.length === 0) return null;
 
   return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={`inline-flex items-center gap-1 px-3 py-1.5 rounded text-xs font-medium transition-colors ${
-        active ? activeStyle : inactiveStyle
-      }`}
-    >
-      {active && <CheckmarkIcon aria-hidden />}
-      {label.toUpperCase()}
-    </button>
+    <div className="flex flex-col gap-2">
+      <p className="text-xs font-semibold uppercase tracking-wide text-text-secondary">{label}</p>
+      {courses.map((c) => (
+        <div
+          key={c.aggregate_id}
+          className="flex items-center gap-3 bg-surface-dark border border-border rounded-lg px-4 py-3"
+        >
+          <div className="min-w-0 flex-1">
+            <p className="text-sm font-semibold text-text truncate">{c.name}</p>
+            <p className="text-xs text-text-secondary truncate">
+              {c.code} · {c.field}
+            </p>
+          </div>
+          <button
+            type="button"
+            disabled={busy === c.aggregate_id}
+            onClick={() => onToggle(c.aggregate_id)}
+            className={`inline-flex items-center gap-1 px-3 py-1.5 rounded text-xs font-medium transition-colors disabled:opacity-50 shrink-0 ${
+              primary
+                ? "bg-accent hover:bg-accent-dark text-white"
+                : "border border-border text-text-secondary hover:bg-surface"
+            }`}
+          >
+            {actionLabel}
+          </button>
+        </div>
+      ))}
+    </div>
   );
 }

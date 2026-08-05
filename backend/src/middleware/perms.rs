@@ -184,7 +184,10 @@ pub async fn perm_middleware(State(state): State<AppState>, req: Request, next: 
         None => return StatusCode::UNAUTHORIZED.into_response(),
     };
 
-    if lookup_key == "CourseCreate" {
+    if lookup_key == "CourseCreate"
+        || lookup_key == "CourseActivate"
+        || lookup_key == "CourseUnactivate"
+    {
         if claims.role == UserRole::Admin {
             let req = Request::from_parts(parts, Body::from(bytes));
             return next.run(req).await;

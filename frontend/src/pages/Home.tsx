@@ -26,7 +26,7 @@ function Home() {
   const [courses, setCourses] = useState<Course[] | null>(null);
 
   useEffect(() => {
-    fetch(apiUrl("courses"))
+    fetch(apiUrl("courses?status=active"))
       .then((r) => {
         if (!r.ok) throw new Error(`Failed to load courses (${r.status})`);
         return r.json() as Promise<Course[]>;
