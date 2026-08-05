@@ -83,12 +83,20 @@ function Navbar() {
             </p>
           </div>
           <Link
-            to="/profile"
+            to="/staff"
             role="menuitem"
             onClick={() => setOpen(false)}
             className="flex items-center gap-2 w-full text-left px-4 py-2.5 text-sm font-medium text-text no-underline hover:bg-surface transition-colors"
           >
             <PersonIcon aria-hidden /> Staff Profile
+          </Link>
+          <Link
+            to="/pageReports"
+            role="menuitem"
+            onClick={() => setOpen(false)}
+            className="flex items-center gap-2 w-full text-left px-4 py-2.5 text-sm font-medium text-text no-underline hover:bg-surface transition-colors"
+          >
+            <PersonIcon aria-hidden /> Page Reports
           </Link>
           <button
             type="button"
