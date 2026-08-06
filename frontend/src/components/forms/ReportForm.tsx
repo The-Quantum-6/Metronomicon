@@ -41,7 +41,7 @@ export default function ReportForm({ courseId, onCancel }: Props) {
           Create: {
             course_id: courseId ?? null,
             title: category,
-            description: `[${category}] ${description}`,
+            description: description,
             contact_email: contactEmail || null,
           },
         }),

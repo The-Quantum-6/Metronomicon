@@ -48,17 +48,9 @@ function Home() {
             </Heading>
 
             <section>
-              <div className="flex items-center justify-between gap-4 mb-6">
-                <Heading size="large" level="2">
-                  Courses
-                </Heading>
-                <button
-                  onClick={() => setShowReport(true)}
-                  className="flex items-center gap-1.5 px-3 py-1.5 text-sm text-[#6B6B5A] rounded-lg bg-transparent border border-[#6B6B5A] hover:bg-gray-100 transition-colors shrink-0"
-                >
-                  Report
-                </button>
-              </div>
+              <Heading size="large" level="2" className="mb-6">
+                Courses
+              </Heading>
 
               {courses === null ? (
                 <Loader size="large" title="Loading courses" />
@@ -87,6 +79,11 @@ function Home() {
           </VStack>
         </Page.Block>
         <Footer />
+
+        <button onClick={() => setShowReport(true)}
+        className="fixed bottom-6 right-6 z-50 flex items-center gap-1.5 px-4 py-2.5 text-sm text-[#1A1F3A] rounded-full border border-[#6B6B5A] hover:bg-gray-100 transition-colors">
+          Report
+        </button>
 
         {showReport && (
           <div className="fixed inset-0 z-50 flex items-center justify-center backdrop-blur-sm bg-black/40">
