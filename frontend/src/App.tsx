@@ -11,6 +11,7 @@ import PageReports from "./pages/PageReports";
 import About from "./pages/About";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import Cookies from "./pages/Cookies";
+import CookieBanner from "./components/CookieBanner";
 
 function App() {
   return (
@@ -26,6 +27,7 @@ function App() {
       <Route path="/courses/:id" element={<CoursePage />} />
       <Route path="/admin" element={<Admin />} />
       <Route path="/admin/edit/:id" element={<AdminEdit />} />
+      < CookieBanner />
     </Routes>
   );
 }
