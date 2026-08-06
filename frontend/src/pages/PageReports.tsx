@@ -13,12 +13,13 @@ type Report = {
   status: string;
 };
 
+/*
 function formatTarget(target: string | null): string {
   if (target && target.startsWith("Course")) {
     return "Course";
   }
   return "Site";
-}
+} */
 
 export default function PageReports() {
   const [reports, setReports] = useState<Report[]>([]);

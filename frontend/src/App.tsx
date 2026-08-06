@@ -27,6 +27,7 @@ function App() {
       <Route path="/courses/:id" element={<CoursePage />} />
       <Route path="/admin" element={<Admin />} />
       <Route path="/admin/edit/:id" element={<AdminEdit />} />
+      < CookieBanner />
     </Routes>
   );
 }

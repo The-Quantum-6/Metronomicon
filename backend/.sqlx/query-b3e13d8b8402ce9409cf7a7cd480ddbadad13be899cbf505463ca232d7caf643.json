@@ -1,0 +1,17 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO course_list_view \n                         (aggregate_id, name, code, field, status)\n                         VALUES ($1, $2, $3, $4, 'Unactive')\n                         ON CONFLICT (aggregate_id) DO UPDATE\n                         SET name = $2, code = $3, field = $4",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "b3e13d8b8402ce9409cf7a7cd480ddbadad13be899cbf505463ca232d7caf643"
+}
