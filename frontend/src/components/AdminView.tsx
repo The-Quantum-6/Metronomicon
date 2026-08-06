@@ -77,7 +77,8 @@ export default function AdminView() {
   const [actionLoading, setActionLoading] = useState<string | null>(null);
 
   const [users, setUsers] = useState<UserPerm[] | null>(null);
-  const [updatingPerm, setUpdatingPerm] = useState<string | null>(null);
+  const [pendingPerms, setPendingPerms] = useState<Record<string, number>>({});
+  const [savingUser, setSavingUser] = useState<string | null>(null);
 
   const [reports, setReports] = useState<Report[]>([]);
   const [reportsLoading, setReportsLoading] = useState(true);
@@ -128,19 +129,22 @@ export default function AdminView() {
     loadReports();
   }, [courseId]);
 
-  const togglePermission = async (userId: string, flagBit: number) => {
-    if (!courseId) return;
-
+  const togglePermission = (userId: string, flagBit: number) => {
     const user = users?.find((u) => u.user_id === userId);
     if (!user) return;
 
-    const newPerms = user.perms ^ flagBit;
+    const current = pendingPerms[userId] ?? user.perms;
+    const newPerms = current ^ flagBit;
 
-    setUpdatingPerm(`${userId}-${flagBit}`);
+    setPendingPerms((prev) => ({ ...prev, [userId]: newPerms }));
+  };
 
-    setUsers((prev) =>
-      prev ? prev.map((u) => (u.user_id === userId ? { ...u, perms: newPerms } : u)) : []
-    );
+  const savePermissions = async (userId: string) => {
+    if (!courseId) return;
+    const newPerms = pendingPerms[userId];
+    if (newPerms === undefined) return;
+
+    setSavingUser(userId);
 
     try {
       const res = await fetch(`${apiUrl("permissions")}?course_id=${encodeURIComponent(courseId)}`, {
@@ -155,14 +159,30 @@ export default function AdminView() {
       });
 
       if (!res.ok) throw new Error("Serverfeil ved oppdatering av rettighet");
+
+      setUsers((prev) =>
+        prev ? prev.map((u) => (u.user_id === userId ? { ...u, perms: newPerms } : u)) : []
+      );
+
+      setPendingPerms((prev) => {
+        const next = { ...prev };
+        delete next[userId];
+        return next;
+      });
     } catch (err) {
       console.error("Feil ved lagring:", err);
-      setUsers((prev) =>
-        prev ? prev.map((u) => (u.user_id === userId ? { ...u, perms: user.perms } : u)) : []
-      );
+      alert("Kunne ikke lagre rettigheter.");
     } finally {
-      setUpdatingPerm(null);
+      setSavingUser(null);
     }
+  };
+
+  const discardPermissions = (userId: string) => {
+    setPendingPerms((prev) => {
+      const next = { ...prev };
+      delete next[userId];
+      return next;
+    });
   };
 
   const handleModerate = async (contributionId: string, action: string) => {
@@ -412,6 +432,9 @@ export default function AdminView() {
           ) : (
             users.map((user) => {
               const isOpen = openUserId === user.user_id;
+              const effectivePerms = pendingPerms[user.user_id] ?? user.perms;
+              const isEdited = pendingPerms[user.user_id] !== undefined;
+              const isSaving = savingUser === user.user_id;
 
               return (
                 <div key={user.user_id} className="border border-[#DAD8D6] rounded-xl p-4 bg-white flex flex-col justify-between">
@@ -433,25 +456,33 @@ export default function AdminView() {
                       <div className="mt-3 border-t border-[#DAD8D6] pt-3">
                         <div className="flex flex-wrap gap-2">
                           {Object.entries(PERMISSION_FLAGS).map(([permName, flagBit]) => {
-                            const hasPermission = (user.perms & flagBit) !== 0;
-                            const isBtnLoading = updatingPerm === `${user.user_id}-${flagBit}`;
+                            const hasPermission = (effectivePerms & flagBit) !== 0;
 
                             return (
-                              <button
-                                key={`${user.user_id}-${permName}`}
-                                disabled={isBtnLoading}
+                              <button key={`${user.user_id}-${permName}`} disabled={isSaving}
                                 onClick={() => togglePermission(user.user_id, flagBit)}
-                                className={`border rounded-lg px-3 py-2 text-sm transition-colors disabled:opacity-50 ${
-                                  hasPermission
-                                    ? "border-green-600 bg-green-50 text-green-700 font-medium"
-                                    : "border-[#DAD8D6] text-[#1A1F3A] hover:bg-gray-100"
-                                }`}
-                              >
+                                className={`border rounded-lg px-3 py-2 text-sm transition-colors disabled:opacity-50 
+                                  ${hasPermission ? "border-green-600 bg-green-50 text-green-700 font-medium"
+                                    : "border-[#DAD8D6] text-[#1A1F3A] hover:bg-gray-100"}`}>
                                 {permName}
                               </button>
                             );
                           })}
                         </div>
+
+                        {isEdited && (
+                          <div className="flex items-center gap-2 mt-3">
+                            <button disabled={isSaving} onClick={() => savePermissions(user.user_id)}
+                              className="inline-flex items-center gap-1.5 bg-[#1A1F3A] text-white hover:opacity-90 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors disabled:opacity-50">
+                              <CheckmarkIcon aria-hidden />
+                              {isSaving ? "Saving..." : "Save"}
+                            </button>
+                            <button disabled={isSaving} onClick={() => discardPermissions(user.user_id)}
+                              className="border border-[#DAD8D6] text-[#4A4D57] hover:bg-gray-100 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors disabled:opacity-50">
+                              Discard
+                            </button>
+                          </div>
+                        )}
 
                         {/* ID */}
                         <div className="mt-4 pt-2 border-t border-[#EAE8E6] text-xs font-mono text-[#6B6B5A] select-all">
