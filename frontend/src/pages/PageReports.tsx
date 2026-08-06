@@ -7,9 +7,10 @@ import { ArrowLeftIcon } from "@navikt/aksel-icons";
 type Report = {
   aggregate_id: string;
   target: string | null;
-  description: string | null;
+  title: string;
+  description: string;
   contact_email: string | null;
-  status: string | null;
+  status: string;
 };
 
 function formatTarget(target: string | null): string {
@@ -30,8 +31,9 @@ export default function PageReports() {
       setReports(data);
     } catch {
       setReports([]);
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   }
 
   useEffect(() => {
@@ -48,9 +50,10 @@ export default function PageReports() {
     loadReports();
   }
 
-  const openReports = reports.filter((report) => report.status !== "Resolved");
-  const resolvedReports = reports.filter((report) => report.status === "Resolved");
-  const reportsToShow = [...openReports, ...resolvedReports];
+
+  const siteReports = reports.filter((report) => report.target === "Site");
+  const openReports = siteReports.filter((report) => report.status !== "Resolved");
+  const resolvedReports = siteReports.filter((report) => report.status === "Resolved");
 
   return (
     <div className="min-h-screen bg-surface-dark text-text">
@@ -67,45 +70,63 @@ export default function PageReports() {
 
         {loading ? (
           <p className="text-sm text-text-secondary">Loading reports...</p>
-        ) : reportsToShow.length === 0 ? (
+        ) : siteReports.length === 0 ? (
           <p className="text-sm text-text-secondary">No reports.</p>
         ) : (
           <div className="flex flex-col gap-3">
-            {reportsToShow.map((report) => {
-              const isResolved = report.status === "Resolved";
-
-              return (
+            <div className={`flex flex-col gap-3 ${resolvedReports.length > 0 ? "border-b border-border pb-5" : ""}`}>
+              {openReports.length === 0 && (
+                <p className="text-sm text-text-muted">No open reports.</p>
+              )}
+              {openReports.map((report) => (
                 <div
                   key={report.aggregate_id}
-                  className="flex items-start justify-between gap-4 bg-bg border border-border rounded-lg px-5 py-4"
+                  className="flex items-start justify-between gap-4 bg-bg border border-border rounded-xl px-5 py-4"
                 >
-                  <div className="min-w-0">
-                    <p className="text-sm text-text">{report.description}</p>
+                  <div className="min-w-0 flex flex-col gap-1">
+                    <div className="flex items-center">
+                      <span className="text-[11px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-600 border border-emerald-500/20">Status: Open</span>
+                    </div>
+                    <h2 className="text-base font-semibold text-text mt-1">{report.title}</h2>
+                    <p className="text-sm text-text-secondary">{report.description}</p>
                     <p className="text-xs text-text-muted mt-1">
-                      {formatTarget(report.target)}
-                      {report.contact_email ? ` · ${report.contact_email}` : ""}
-                      {isResolved ? " · Resolved" : " · Open"}
+                      {report.contact_email ? ` · Contact: ${report.contact_email}` : ""}
                     </p>
                   </div>
 
-                  {isResolved ? (
+                  <button
+                    onClick={() => updateReport(report.aggregate_id, "ResolveReport")}
+                    className="bg-[#1A1F3A] text-white hover:opacity-90 px-3 py-1.5 rounded text-sm shrink-0 font-medium transition-colors mt-1">
+                    Resolve
+                  </button>
+                </div>
+              ))}
+            </div>
+            {resolvedReports.length > 0 && (
+              <div className="flex flex-col gap-3 pt-1">
+                <h2 className="text-xs font-semibold uppercase tracking-wider text-text-muted">Resolved ({resolvedReports.length})</h2>
+                {resolvedReports.map((report) => (
+                  <div
+                    key={report.aggregate_id}
+                    className="flex items-start justify-between gap-4 bg-surface border border-border rounded-xl px-5 py-4 opacity-60 transition-opacity hover:opacity-90">
+                    <div className="min-w-0 flex flex-col gap-1">
+                      <div className="flex items-center">
+                        <span className="text-[11px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded bg-gray-500/10 text-text-muted border border-border">Status: Resolved</span>
+                      </div>
+                      <h3 className="text-base font-semibold text-text-secondary line-through mt-1">{report.title}</h3>
+                      <p className="text-sm text-text-secondary line-through">{report.description}</p>
+                      <p className="text-xs text-text-muted mt-1">{report.contact_email ? `Contact: ${report.contact_email}` : ""}</p>
+                    </div>
                     <button
                       onClick={() => updateReport(report.aggregate_id, "ReopenReport")}
-                      className="border border-border text-text-secondary hover:bg-surface px-3 py-1.5 rounded text-sm shrink-0"
+                      className="border border-border text-text-secondary hover:bg-bg px-3 py-1.5 rounded text-sm shrink-0 font-medium transition-colors mt-1"
                     >
                       Reopen
                     </button>
-                  ) : (
-                    <button
-                      onClick={() => updateReport(report.aggregate_id, "ResolveReport")}
-                      className="bg-green-600 text-white hover:bg-green-700 px-3 py-1.5 rounded text-sm shrink-0"
-                    >
-                      Resolve
-                    </button>
-                  )}
-                </div>
-              );
-            })}
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         )}
       </main>
