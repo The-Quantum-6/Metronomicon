@@ -1,0 +1,17 @@
+info:
+  name: List files (staff)
+  type: http
+  seq: 8
+
+# Bucket-wide dump of every object key, pending or approved — restricted to
+# Admin/Root since it isn't scoped to a course.
+http:
+  method: GET
+  url: http://localhost:3000/files
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

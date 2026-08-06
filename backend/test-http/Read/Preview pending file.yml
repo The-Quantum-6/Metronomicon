@@ -1,0 +1,19 @@
+info:
+  name: Preview pending file
+  type: http
+  seq: 7
+
+# Requires the logged-in user to have MODERATE_FILE on course_id — the
+# default permission set does not include it, so this 403s for a regular
+# user. Lets a moderator inspect an upload before approving it, since
+# "Download file" only serves already-approved resources.
+http:
+  method: GET
+  url: http://localhost:3000/files/REPLACE_WITH_KEY/preview?course_id=4168a724-7206-4540-a632-87170ce4f7d5
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

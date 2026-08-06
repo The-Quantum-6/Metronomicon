@@ -1,0 +1,31 @@
+info:
+  name: Contribute remove resource
+  type: http
+  seq: 2
+
+http:
+  method: POST
+  url: http://localhost:3000/contributions
+  body:
+    type: json
+    data: |-
+      {
+        "Propose": {
+          "course_id": "4168a724-7206-4540-a632-87170ce4f7d5",
+          "contribution": {
+            "File": {
+              "RemoveResource": {
+                "resource_id": "REPLACE_WITH_RESOURCE_ID"
+              }
+            }
+          },
+          "comment": "Outdated, replaced by week 2 notes"
+        }
+      }
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

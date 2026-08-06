@@ -95,6 +95,20 @@ impl Storage {
         Ok(data.into_bytes().to_vec())
     }
 
+    /// Delete the object at `key`. Deleting a non-existent key is not an
+    /// error (S3 semantics), so this is safe to call even if the upload
+    /// never happened.
+    pub async fn delete(&self, key: &str) -> Result<(), StorageError> {
+        self.client
+            .delete_object()
+            .bucket(self.bucket.clone())
+            .key(key)
+            .send()
+            .await
+            .map_err(|e| StorageError::Sdk(e.to_string()))?;
+        Ok(())
+    }
+
     /// Check whether an object exists under `key`, without downloading it.
     pub async fn exists(&self, key: &str) -> Result<bool, StorageError> {
         match self

@@ -12,7 +12,7 @@ use crate::{middleware::{jwt::jwt_middleware, perms::perm_middleware}, state::Ap
 use axum::{Router, middleware};
 
 pub fn protected_router(state: AppState) -> Router<AppState> {
-    Router::new()
+    let perm_gated = Router::new()
         .merge(user::router(state.clone()))
         .merge(faq::router(state.clone()))
         .merge(report::router(state.clone()))
@@ -22,7 +22,12 @@ pub fn protected_router(state: AppState) -> Router<AppState> {
         .merge(resources::router())
         .merge(course::protected_router(state.clone()))
         .route_layer(middleware::from_fn_with_state(state.clone(), perm_middleware))
-        .route_layer(middleware::from_fn_with_state(state.clone(), jwt_middleware))
+        .route_layer(middleware::from_fn_with_state(state.clone(), jwt_middleware));
+
+    // `files::protected_router` carries its own `jwt_middleware` layer and
+    // deliberately skips `perm_middleware` (which can't parse multipart
+    // bodies) — merged after the layers above so it isn't wrapped by them.
+    perm_gated.merge(files::protected_router(state.clone()))
 }
 
 pub fn router() -> Router<AppState> {

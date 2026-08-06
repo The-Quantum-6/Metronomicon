@@ -1,6 +1,7 @@
 use async_trait::async_trait;
 use cqrs_es::persist::ViewRepository;
 use cqrs_es::{EventEnvelope, Query};
+use sqlx::{Pool, Postgres};
 use std::sync::Arc;
 use uuid::Uuid;
 
@@ -10,6 +11,27 @@ use crate::{
     aggregates::resource::{aggregate::Resource, event::ResourceEvent},
     views::course::active_detailed::CourseDetailViewRepo,
 };
+
+/// Whether `key` belongs to a resource that is Active in an Active course —
+/// i.e. an approved, undeleted resource. Used to gate file downloads so
+/// pending (not-yet-approved) uploads aren't publicly reachable.
+pub async fn resource_key_is_active(pool: &Pool<Postgres>, key: &str) -> Result<bool, sqlx::Error> {
+    let exists: Option<bool> = sqlx::query_scalar(
+        "SELECT EXISTS(
+            SELECT 1
+            FROM course_detail_view,
+                 jsonb_array_elements(payload->'resources') AS resource
+            WHERE payload->>'status' = 'Active'
+              AND resource->>'key' = $1
+              AND resource->>'status' = 'Active'
+        )",
+    )
+    .bind(key)
+    .fetch_one(pool)
+    .await?;
+
+    Ok(exists.unwrap_or(false))
+}
 
 pub struct CourseResourceQuery {
     view_repo: Arc<CourseDetailViewRepo>,

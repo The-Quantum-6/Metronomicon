@@ -44,7 +44,7 @@ pub enum FileContributionKind {
     /// Key refers to the objects key in S3(Garage)
     AddResource {
         title: String,
-        key: Uuid,
+        key: String,
     },
     RemoveResource {
         resource_id: Uuid,

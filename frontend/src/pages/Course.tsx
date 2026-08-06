@@ -156,7 +156,7 @@ return (
         <div>
           {course.resources.map((resource) => (
             <a key={resource.resource_id}
-            href={resource.key}
+            href={apiUrl(`files/${resource.key}`)}
             target="_blank"
             className="block border border-[#DAD8D6] rounded-xl p-3 mb-3 hover:bg-gray-200 transition-colors">
               <div className="flex justify-between items-start">

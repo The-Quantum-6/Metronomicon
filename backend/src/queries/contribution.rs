@@ -9,13 +9,15 @@ use uuid::Uuid;
 use crate::aggregates::{
     contribution::{
         aggregate::Contribution,
-        command::{ContributionKind, TextContributionKind},
+        command::{ContributionKind, FileContributionKind, TextContributionKind},
         event::ContributionEvent,
     },
     faq::{aggregate::Faq, command::FaqCommand},
     link::{aggregate::Link, command::LinkCommand},
     project_idea::{aggregate::ProjectIdea, command::ProjectIdeaCommand},
+    resource::{aggregate::Resource, command::ResourceCommand},
 };
+use crate::storage::Storage;
 
 pub struct ContributionQuery;
 
@@ -89,12 +91,15 @@ pub struct ContributionProcessManager {
     link: Arc<PostgresCqrs<Link>>,
     faq: Arc<PostgresCqrs<Faq>>,
     project_idea: Arc<PostgresCqrs<ProjectIdea>>,
+    resource: Arc<PostgresCqrs<Resource>>,
+    storage: Storage,
 }
 
 enum AggregateCommand {
     Link(LinkCommand),
     Faq(FaqCommand),
     ProjectIdea(ProjectIdeaCommand),
+    Resource(ResourceCommand),
 }
 
 impl AggregateCommand {
@@ -103,6 +108,7 @@ impl AggregateCommand {
             AggregateCommand::Link(cmd) => cmd.id(),
             AggregateCommand::Faq(cmd) => cmd.id(),
             AggregateCommand::ProjectIdea(cmd) => cmd.id(),
+            AggregateCommand::Resource(cmd) => cmd.id(),
         }
     }
 }
@@ -113,17 +119,21 @@ impl ContributionProcessManager {
         link: Arc<PostgresCqrs<Link>>,
         faq: Arc<PostgresCqrs<Faq>>,
         project_idea: Arc<PostgresCqrs<ProjectIdea>>,
+        resource: Arc<PostgresCqrs<Resource>>,
+        storage: Storage,
     ) -> Self {
         Self {
             pool,
             link,
             faq,
             project_idea,
+            resource,
+            storage,
         }
     }
 
-    async fn handle_approved(&self, contribution_id: &str) {
-        // Fetch the stored contribution row (course_id + contribution JSONB)
+    /// Fetches the stored contribution row (course_id + contribution JSONB) for `contribution_id`.
+    async fn fetch_contribution(&self, contribution_id: &str) -> Option<(String, ContributionKind)> {
         let row = match sqlx::query(
             "SELECT course_id, contribution FROM contribution_list_view WHERE aggregate_id = $1",
         )
@@ -136,25 +146,45 @@ impl ContributionProcessManager {
                 println!(
                     "ContributionProcessManager: no contribution_list_view row for {contribution_id}"
                 );
-                return;
+                return None;
             }
             Err(e) => {
                 println!("ContributionProcessManager: fetch error: {e}");
-                return;
+                return None;
             }
         };
 
         let course_id: String = row.get("course_id");
         let contribution_json: serde_json::Value = row.get("contribution");
 
-        // Deserialize back into your ContributionKind enum.
-        // Adjust the type path to match where ContributionKind actually lives.
-        let kind = match serde_json::from_value(contribution_json) {
-            Ok(k) => k,
+        match serde_json::from_value(contribution_json) {
+            Ok(k) => Some((course_id, k)),
             Err(e) => {
                 println!("ContributionProcessManager: failed to deserialize kind: {e}");
-                return;
+                None
             }
+        }
+    }
+
+    /// A denied File(AddResource) contribution leaves an orphaned upload in Garage
+    /// (the file exists, but no Resource event was ever written for it) — clean it up.
+    async fn handle_denied(&self, contribution_id: &str) {
+        let Some((_, kind)) = self.fetch_contribution(contribution_id).await else {
+            return;
+        };
+
+        if let ContributionKind::File(FileContributionKind::AddResource { key, .. }) = kind {
+            if let Err(e) = self.storage.delete(&key).await {
+                println!(
+                    "ContributionProcessManager: failed to delete denied upload {key} for {contribution_id}: {e}"
+                );
+            }
+        }
+    }
+
+    async fn handle_approved(&self, contribution_id: &str) {
+        let Some((course_id, kind)) = self.fetch_contribution(contribution_id).await else {
+            return;
         };
 
         let mut metadata = HashMap::new();
@@ -235,11 +265,22 @@ impl ContributionProcessManager {
                     AggregateCommand::ProjectIdea(ProjectIdeaCommand::Delete { idea_id })
                 }
             },
-            _ => {
-                todo!(
-                    "ContributionProcessManager: contribution {contribution_id} has an unhandled kind, skipping"
-                )
-            }
+            ContributionKind::File(f) => match f {
+                FileContributionKind::AddResource { title, key } => {
+                    AggregateCommand::Resource(ResourceCommand::Create {
+                        resource_id: Uuid::new_v4(),
+                        course_id: Uuid::parse_str(&course_id).unwrap(),
+                        title,
+                        key,
+                    })
+                }
+                FileContributionKind::RemoveResource { resource_id } => {
+                    AggregateCommand::Resource(ResourceCommand::Delete {
+                        resource_id,
+                        course_id: Uuid::parse_str(&course_id).unwrap(),
+                    })
+                }
+            },
         };
 
         let id = cmd.id().to_string();
@@ -270,6 +311,17 @@ impl ContributionProcessManager {
                     );
                 }
             }
+            AggregateCommand::Resource(cmd) => {
+                if let Err(e) = self
+                    .resource
+                    .execute_with_metadata(&id, cmd, metadata)
+                    .await
+                {
+                    println!(
+                        "ContributionProcessManager: failed to execute resource command for {contribution_id}: {e:?}"
+                    );
+                }
+            }
         }
     }
 }
@@ -288,7 +340,10 @@ impl Query<Contribution> for ContributionProcessManager {
                     let id = &event.aggregate_id;
                     self.handle_approved(id).await;
                 }
-                ContributionEvent::ContributionDenied => (),
+                ContributionEvent::ContributionDenied => {
+                    let id = &event.aggregate_id;
+                    self.handle_denied(id).await;
+                }
             }
         }
     }

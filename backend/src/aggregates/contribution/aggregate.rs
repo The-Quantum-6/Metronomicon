@@ -4,7 +4,10 @@ use uuid::Uuid;
 
 use crate::aggregates::{
     contribution::{
-        command::{ContributionCommand, ContributionKind, ModerationVerdict, TextContributionKind},
+        command::{
+            ContributionCommand, ContributionKind, FileContributionKind, ModerationVerdict,
+            TextContributionKind,
+        },
         error::ContributionError,
         event::ContributionEvent,
     },
@@ -12,6 +15,7 @@ use crate::aggregates::{
     faq::services::FaqExistanceService,
     link::services::LinkServices,
     project_idea::services::ProjectIdeaExistanceService,
+    resource::services::{ResourceExistanceService, ResourceServices},
 };
 
 #[derive(Debug, Serialize, Deserialize, PartialEq, Default)]
@@ -28,6 +32,8 @@ pub struct ContributionAggregateServices {
     pub course: CourseExistanceService,
     pub faq: FaqExistanceService,
     pub project_idea: ProjectIdeaExistanceService,
+    pub resource: ResourceServices,
+    pub resource_existance: ResourceExistanceService,
 }
 
 #[derive(Serialize, Default, Deserialize)]
@@ -181,7 +187,28 @@ impl Aggregate for Contribution {
                                     return Err("project idea does not exist in course".into());
                                 }
                             }
-                            _ => todo!("Add support for project_idea and resource"),
+                            ContributionKind::File(FileContributionKind::AddResource {
+                                title: _,
+                                key,
+                            }) => {
+                                service
+                                    .resource
+                                    .check_exists(key)
+                                    .await
+                                    .map_err(|e| format!("file validation error: {}", e))?;
+                            }
+                            ContributionKind::File(FileContributionKind::RemoveResource {
+                                resource_id,
+                            }) => {
+                                let exists = service
+                                    .resource_existance
+                                    .resource_exists(&course_id.to_string(), resource_id)
+                                    .await
+                                    .map_err(|e| format!("database error: {}", e))?;
+                                if !exists {
+                                    return Err("resource does not exist in course".into());
+                                }
+                            }
                         }
                         let _: () = sink
                             .write(

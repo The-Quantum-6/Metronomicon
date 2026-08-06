@@ -8,6 +8,7 @@ use axum::{
     middleware::Next,
     response::{IntoResponse, Response},
 };
+use sqlx::Row;
 use std::collections::HashMap;
 use std::sync::OnceLock;
 use uuid::Uuid;
@@ -89,18 +90,61 @@ pub async fn perm_middleware(State(state): State<AppState>, req: Request, next: 
         .and_then(|o| o.keys().next().cloned())
         .unwrap_or_default();
 
-    // Contribution permissions are split by kind (Text/File), taken from the payload:
-    // {"Propose": {"contribution": {"Text": {...}}}} -> "ContributionPropose_Text"
-    let lookup_key = if aggregate == "Contribution" && command_key == "Propose" {
+    // Contribution permissions are split by kind (Text/File). For Propose the
+    // kind is right there in the payload: {"Propose": {"contribution": {"Text": {...}}}}
+    // -> "ContributionPropose_Text". Moderate's payload only has a
+    // contribution_id + verdict — no kind, no course_id — so both have to be
+    // looked up from the stored contribution instead.
+    let (lookup_key, course_id) = if aggregate == "Contribution" && command_key == "Propose" {
         let kind = json
             .get(command_key.as_str())
             .and_then(|v| v.get("contribution"))
             .and_then(|v| v.as_object())
             .and_then(|o| o.keys().next().cloned())
             .unwrap_or_default();
-        format!("{}{}_{}", aggregate, command_key, kind)
+        let course_id = json
+            .get(command_key.as_str())
+            .and_then(|v| v.get("course_id"))
+            .and_then(|v| v.as_str())
+            .unwrap_or_default()
+            .to_string();
+        (format!("{}{}_{}", aggregate, command_key, kind), course_id)
+    } else if aggregate == "Contribution" && command_key == "Moderate" {
+        let contribution_id = json
+            .get(command_key.as_str())
+            .and_then(|v| v.get("contribution_id"))
+            .and_then(|v| v.as_str())
+            .unwrap_or_default();
+
+        let row = sqlx::query(
+            "SELECT course_id, contribution FROM contribution_list_view WHERE aggregate_id = $1",
+        )
+        .bind(contribution_id)
+        .fetch_optional(&state.pool)
+        .await;
+
+        match row {
+            Ok(Some(row)) => {
+                let course_id: String = row.get("course_id");
+                let contribution_json: serde_json::Value = row.get("contribution");
+                let kind = contribution_json
+                    .as_object()
+                    .and_then(|o| o.keys().next().cloned())
+                    .unwrap_or_default();
+                (format!("{}{}_{}", aggregate, command_key, kind), course_id)
+            }
+            Ok(None) => return StatusCode::NOT_FOUND.into_response(),
+            Err(_) => return StatusCode::INTERNAL_SERVER_ERROR.into_response(),
+        }
     } else {
-        format!("{}{}", aggregate, command_key)
+        let course_id = json
+            .as_object()
+            .and_then(|o| o.values().next())
+            .and_then(|v| v.get("course_id"))
+            .and_then(|v| v.as_str())
+            .unwrap_or_default()
+            .to_string();
+        (format!("{}{}", aggregate, command_key), course_id)
     };
 
     let claims = match parts.extensions.get::<AccessClaim>().cloned() {
@@ -123,14 +167,6 @@ pub async fn perm_middleware(State(state): State<AppState>, req: Request, next: 
         Ok(id) => id,
         Err(_) => return StatusCode::UNAUTHORIZED.into_response(),
     };
-    
-    let course_id = json
-        .as_object()
-        .and_then(|o| o.values().next())
-        .and_then(|v| v.get("course_id"))
-        .and_then(|v| v.as_str())
-        .unwrap_or_default()
-        .to_string();
 
 
     if let Err(_) = default_permissions(&state.pool, user_id, &course_id).await {

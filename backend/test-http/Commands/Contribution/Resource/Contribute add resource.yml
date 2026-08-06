@@ -1,0 +1,33 @@
+info:
+  name: Contribute add resource
+  type: http
+  seq: 1
+
+# Run "Upload file" first and paste the returned "key" in below.
+http:
+  method: POST
+  url: http://localhost:3000/contributions
+  body:
+    type: json
+    data: |-
+      {
+        "Propose": {
+          "course_id": "4168a724-7206-4540-a632-87170ce4f7d5",
+          "contribution": {
+            "File": {
+              "AddResource": {
+                "title": "Lecture notes week 1",
+                "key": "REPLACE_WITH_UPLOADED_KEY"
+              }
+            }
+          },
+          "comment": "Notes from the first lecture"
+        }
+      }
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

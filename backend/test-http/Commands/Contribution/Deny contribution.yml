@@ -1,0 +1,28 @@
+info:
+  name: Deny contribution
+  type: http
+  seq: 2
+
+# For a File(AddResource) contribution, denying it deletes the uploaded
+# object from Garage (see ContributionProcessManager::handle_denied) — so
+# after running this, "Download file" / "Preview file" for that key should
+# both fail.
+http:
+  method: POST
+  url: http://localhost:3000/contributions
+  body:
+    type: json
+    data: |-
+      {
+        "Moderate": {
+          "contribution_id": "65eb76e9-ce8d-4166-ad9b-24d00f485e9e",
+          "verdict": "Deny"
+        }
+      }
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

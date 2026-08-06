@@ -1,0 +1,29 @@
+info:
+  name: Upload file
+  type: http
+  seq: 1
+
+# Requires being logged in (cookie auth) with at least SUGGEST_FILE on the
+# course — everyone gets that by default. Update the "value" of the "file"
+# field below to point at a real file on disk before running this.
+# Returns { "key": "<generated>.<ext>" } — feed that into
+# "Contribute add resource" (or, for staff, "Create resource") next.
+http:
+  method: POST
+  url: http://localhost:3000/files
+  body:
+    type: multipartForm
+    data:
+      - name: file
+        type: file
+        value: ./sample-upload.txt
+      - name: course_id
+        type: text
+        value: "4168a724-7206-4540-a632-87170ce4f7d5"
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

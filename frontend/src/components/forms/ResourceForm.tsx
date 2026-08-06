@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { apiUrl } from "../../config";
 import type { ContributeMode } from "../Contribute";
 
 interface Props {
@@ -7,25 +8,88 @@ interface Props {
   onCancel: () => void;
 }
 
-// TODO: use courseId and mode when file upload is ready
-// (direct: POST /files then /resources Create; propose: /contributions with File::AddResource)
-export default function ResourceForm({onCancel }: Props) {
+export default function ResourceForm({ courseId, mode, onCancel }: Props) {
   const [title, setTitle] = useState("");
   const [file, setFile] = useState<File | null>(null);
   const [submitted, setSubmitted] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
 
-  function handleSubmit(e: React.SubmitEvent) {
+  async function handleSubmit(e: React.SubmitEvent) {
     e.preventDefault();
-    // TODO: implement file upload when ready
-    console.log("submit resource", title, file);
-    setSubmitted(true);
+    if (!file) return;
+    setSubmitting(true);
+
+    try {
+      // Step 1: upload the file itself, which just gets us back a storage key.
+      // Nothing is visible/public yet — the file only becomes reachable once
+      // a resource pointing at this key is approved (or created directly).
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("course_id", courseId);
+
+      const uploadResponse = await fetch(apiUrl("files"), {
+        method: "POST",
+        credentials: "include",
+        body: formData,
+      });
+
+      if (!uploadResponse.ok) {
+        const error = await uploadResponse.text();
+        console.error(error);
+        alert("Could not upload the file.");
+        setSubmitting(false);
+        return;
+      }
+
+      const { key } = (await uploadResponse.json()) as { key: string };
+
+      // Step 2: record the resource — either straight to the course (staff)
+      // or as a contribution awaiting moderation.
+      const endpoint = mode === "direct" ? "resources" : "contributions";
+      const payload =
+        mode === "direct"
+          ? { Create: { course_id: courseId, title, key } }
+          : {
+              Propose: {
+                course_id: courseId,
+                contribution: { File: { AddResource: { title, key } } },
+                comment: "",
+              },
+            };
+
+      const response = await fetch(apiUrl(endpoint), {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include",
+        body: JSON.stringify(payload),
+      });
+
+      if (response.ok) {
+        setSubmitted(true);
+      } else {
+        const error = await response.text();
+        console.error(error);
+        alert("Something went wrong.");
+      }
+    } catch (error) {
+      console.error(error);
+      alert("Could not connect to server.");
+    } finally {
+      setSubmitting(false);
+    }
   }
 
   if (submitted) {
     return (
       <div className="text-center py-6 bg-[#F4F2EB] rounded-lg">
         <h3 className="text-xl font-semibold text-[#1A1F3A] mb-2">Thank you for your contribution!</h3>
-        <p className="text-[#6B6B5A] mb-6">Your file or document has been submitted and is waiting for review.</p>
+        <p className="text-[#6B6B5A] mb-6">
+          {mode === "direct"
+            ? "Your file has been published."
+            : "Your file or document has been submitted and is waiting for review."}
+        </p>
         <button type="button" onClick={onCancel} className="px-4 py-2 bg-[#1A1F3A] text-lg text-white rounded-lg hover:opacity-90">
           Back to course
         </button>
@@ -69,8 +133,8 @@ export default function ResourceForm({onCancel }: Props) {
         <button type="button" onClick={onCancel} className="px-4 py-2 text-lg text-[#6B6B5A] border border-[#6B6B5A] rounded-lg hover:bg-gray-100">
           Cancel
         </button>
-        <button type="submit" className="px-4 py-2 text-lg bg-[#1A1F3A] text-white rounded-lg hover:opacity-90 disabled:opacity-50">
-          Send for review
+        <button type="submit" disabled={submitting} className="px-4 py-2 text-lg bg-[#1A1F3A] text-white rounded-lg hover:opacity-90 disabled:opacity-50">
+          {submitting ? "Uploading..." : mode === "direct" ? "Publish" : "Send for review"}
         </button>
       </div>
     </form>

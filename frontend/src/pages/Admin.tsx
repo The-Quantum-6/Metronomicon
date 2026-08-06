@@ -39,7 +39,15 @@ export default function Admin() {
     <div className="min-h-screen bg-surface-dark text-text">
       <Navbar />
       <main className="container mx-auto p-6">
-        <h1 className="text-2xl font-bold text-primary mb-6">Admin — Courses</h1>
+        <div className="flex items-center justify-between mb-6">
+          <h1 className="text-2xl font-bold text-primary">Admin — Courses</h1>
+          <Link
+            to="/admin/contributions"
+            className="bg-accent hover:bg-accent-dark text-white px-3 py-1.5 rounded text-sm transition"
+          >
+            Pending contributions
+          </Link>
+        </div>
 
         {loading ? (
           <div className="text-text-muted">Loading...</div>
