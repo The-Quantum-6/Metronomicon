@@ -243,7 +243,7 @@ pub async fn login_callback(
     session.insert("refresh_token", new_refresh).await.ok();
     session.insert("user_id", user.id).await.ok();
 
-    let mut response = Redirect::to("http://localhost:80/profile").into_response();
+    let mut response = Redirect::to("/").into_response();
     response
         .headers_mut()
         .insert(header::SET_COOKIE, HeaderValue::from_str(&cookie).unwrap());
