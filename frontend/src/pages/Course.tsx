@@ -36,7 +36,7 @@ export default function Course() {
   const [selectedProjectIdea, setSelectedProjectIdea] = useState<ProjectIdea | null>(null);
 
   const [adminMode, setAdminMode] = useState(false);
-  const { perms, hasPerm } = useCoursePerms(id);
+  const { hasPerm } = useCoursePerms(id);
   // TODO: replace with actual auth check
   const isAdmin = (hasPerm(PERMISSIONS.MODERATE_TEXT) || hasPerm(PERMISSIONS.MODERATE_FILE) || hasPerm(PERMISSIONS.PAGE_ADMIN) || hasPerm(PERMISSIONS.TRANSFER_PERMS) || role === "admin");
 

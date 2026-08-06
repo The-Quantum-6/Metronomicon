@@ -11,7 +11,6 @@ import PageReports from "./pages/PageReports";
 import About from "./pages/About";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import Cookies from "./pages/Cookies";
-import CookieBanner from "./components/CookieBanner";
 
 function App() {
   return (
