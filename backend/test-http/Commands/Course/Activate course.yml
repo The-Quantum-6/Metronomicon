@@ -1,0 +1,23 @@
+info:
+  name: Activate course
+  type: http
+  seq: 5
+
+http:
+  method: POST
+  url: http://localhost:3000/courses/1b353b1f-ffe5-4dea-b0ef-2d4f9f6bd68e/activate
+  body:
+    type: json
+    data: |-
+      {
+        "Activate": {
+          "course_id": "1b353b1f-ffe5-4dea-b0ef-2d4f9f6bd68e"
+        }
+      }
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

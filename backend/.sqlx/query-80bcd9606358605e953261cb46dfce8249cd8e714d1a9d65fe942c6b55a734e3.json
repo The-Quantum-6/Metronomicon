@@ -1,0 +1,40 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            SELECT aggregate_id, course_id, contribution, status\n            FROM contribution_list_view\n            WHERE ($1::text IS NULL OR course_id = $1)\n            ORDER BY \n                CASE WHEN status = 'Proposed' THEN 0 ELSE 1 END,\n                aggregate_id\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "aggregate_id",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 1,
+        "name": "course_id",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 2,
+        "name": "contribution",
+        "type_info": "Jsonb"
+      },
+      {
+        "ordinal": 3,
+        "name": "status",
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "80bcd9606358605e953261cb46dfce8249cd8e714d1a9d65fe942c6b55a734e3"
+}

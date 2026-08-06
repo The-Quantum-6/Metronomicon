@@ -1,0 +1,25 @@
+info:
+  name: SetLinkOfficialStatus
+  type: http
+  seq: 4
+
+http:
+  method: POST
+  url: http://localhost:3000/project_idea
+  body:
+    type: json
+    data: |-
+      {
+        "SetOfficial": {
+          "idea_id": "550e8400-e29b-41d4-a716-446655440001",
+          "course_id": "1b353b1f-ffe5-4dea-b0ef-2d4f9f6bd68e",
+          "official": true
+        }
+      }
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

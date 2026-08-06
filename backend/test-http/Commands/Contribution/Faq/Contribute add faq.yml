@@ -1,0 +1,32 @@
+info:
+  name: Contribute add faq
+  type: http
+  seq: 2
+
+http:
+  method: POST
+  url: http://localhost:3000/contributions
+  body:
+    type: json
+    data: |-
+      {
+        "Propose": {
+          "course_id": "4168a724-7206-4540-a632-87170ce4f7d5",
+          "contribution": {
+            "Text": {
+              "AddFaqEntry": {
+                "question": "How do I submit an assignment?",
+                "answer": "Use the submission portal linked on the course homepage."
+              }
+            }
+          },
+          "comment": "Common question from students"
+        }
+      }
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

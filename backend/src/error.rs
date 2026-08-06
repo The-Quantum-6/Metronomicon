@@ -83,10 +83,7 @@ impl IntoResponse for AppError {
                 StatusCode::INTERNAL_SERVER_ERROR,
                 "Something went wrong on our end. Please try again later.",
             ),
-            Self::Multipart(_) => (
-                StatusCode::BAD_REQUEST,
-                "The upload was malformed",
-            ),
+            Self::Multipart(_) => (StatusCode::BAD_REQUEST, "The upload was malformed"),
             // Self::Session(_) => (StatusCode::INTERNAL_SERVER_ERROR, "Session storage failed"),
             // Self::Auth(_) => (StatusCode::FORBIDDEN, "You don't have permission to do that"),
         };

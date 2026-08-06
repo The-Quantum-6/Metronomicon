@@ -1,0 +1,31 @@
+info:
+  name: Contribute remove link
+  type: http
+  seq: 3
+
+http:
+  method: POST
+  url: http://localhost:3000/contributions
+  body:
+    type: json
+    data: |-
+      {
+        "Propose": {
+          "course_id": "4168a724-7206-4540-a632-87170ce4f7d5",
+          "contribution": {
+            "Text": {
+              "RemoveLink": {
+                "link_id": "a2f9c367-7275-4793-96eb-875ec5cfcab2"
+              }
+            }
+          },
+          "comment": "Broken link"
+        }
+      }
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
