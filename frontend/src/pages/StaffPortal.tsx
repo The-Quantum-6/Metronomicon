@@ -1,5 +1,5 @@
 import Navbar from "../components/Navbar";
-import { useEffect, useState, type FormEvent } from "react";
+import { useEffect, useRef, useState, type FormEvent } from "react";
 import { Link } from "react-router-dom";
 import { apiUrl } from "../config";
 import { ArrowLeftIcon, PlusIcon } from "@navikt/aksel-icons";
@@ -38,6 +38,54 @@ export default function StaffPortal() {
     </div>
   );
 }
+const course_field = [
+  "Computer Science",
+  "Art, Design and Drama",
+  "Built Environment",
+  "Mechanical, Electrical and Chemical Engineering",
+  "Product Design",
+];
+
+function FieldDragDown({value, onChange,}: {
+  value: string;
+  onChange: (value: string) => void;}) {
+    const [open, setOpen] = useState(false);
+    const containerRef = useRef<HTMLDivElement | null>(null);
+    
+    useEffect(() => {
+      function handleClickOutside(e: MouseEvent) {
+      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+        setOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const filtered = course_field.filter((f) =>
+    f.toLowerCase().includes(value.toLowerCase())
+  );
+
+  return (
+    <div ref={containerRef} className="relative">
+      <input className={inputStyle} placeholder="Computer Science e.g. " value={value}
+        onChange={(e) => {onChange(e.target.value); setOpen(true);}}
+        onFocus={() => setOpen(true)} required/>
+
+      {open && filtered.length > 0 && (
+        <div className="absolute z-20 mt-1 w-full max-h-56 overflow-auto bg-bg border border-border rounded shadow-md">
+          {filtered.map((option) => (
+            <button key={option} type="button"
+              onClick={() => {onChange(option); setOpen(false);}} 
+              className="block w-full text-left px-3 py-2 text-sm text-text hover:bg-surface-dark transition-colors">
+                {option}
+                </button>
+              ))}
+              </div>
+            )}
+            </div>
+            );
+          }
 
 function CreateCoursePanel({ onCreated }: { onCreated?: () => void }) {
   const [name, setName] = useState("");
@@ -97,14 +145,8 @@ function CreateCoursePanel({ onCreated }: { onCreated?: () => void }) {
 
         <div>
           <label className="block text-sm font-medium text-text-secondary mb-1">Course field</label>
-          <input
-            className={inputStyle}
-            placeholder="Computer Science e.g. "
-            value={field}
-            onChange={(e) => setField(e.target.value)}
-            required
-          />
-        </div>
+          <FieldDragDown value={field} onChange={setField} />
+          </div>
 
         <div>
           <label className="block text-sm font-medium text-text-secondary mb-1">
