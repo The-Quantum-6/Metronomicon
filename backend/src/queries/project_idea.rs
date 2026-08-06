@@ -4,6 +4,7 @@ use cqrs_es::{EventEnvelope, Query};
 use std::sync::Arc;
 use uuid::Uuid;
 
+use crate::aggregates::course;
 use crate::aggregates::shared::Status;
 use crate::views::project_idea::ProjectIdeaDetailView;
 use crate::{
@@ -29,6 +30,10 @@ impl Query<ProjectIdea> for CourseProjectIdeaQuery {
                 ProjectIdeaEvent::ProjectCreated { course_id, .. } => course_id.to_string(),
                 ProjectIdeaEvent::ProjectUpdated { course_id, .. } => course_id.to_string(),
                 ProjectIdeaEvent::ProjectDeleted { course_id, .. } => course_id.to_string(),
+                ProjectIdeaEvent::ProjectOfficialStatusChanged {
+                    course_id,
+                    official,
+                } => course_id.to_string(),
             };
 
             let (mut view, context) = match self.view_repo.load_with_context(&course_id).await {
@@ -58,6 +63,7 @@ impl Query<ProjectIdea> for CourseProjectIdeaQuery {
                         title: title.clone(),
                         body: body.clone(),
                         difficulty: difficulty.clone(),
+                        official: false,
                     });
                 }
                 ProjectIdeaEvent::ProjectUpdated {
@@ -83,6 +89,14 @@ impl Query<ProjectIdea> for CourseProjectIdeaQuery {
                 }
                 ProjectIdeaEvent::ProjectDeleted { .. } => {
                     view.project_ideas.retain(|p| p.idea_id != idea_id);
+                }
+                ProjectIdeaEvent::ProjectOfficialStatusChanged { official, .. } => {
+                    let p = view
+                        .project_ideas
+                        .iter_mut()
+                        .find(|p| p.idea_id == idea_id)
+                        .unwrap();
+                    p.official = *official;
                 }
             }
 

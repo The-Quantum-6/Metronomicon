@@ -25,6 +25,10 @@ pub enum ProjectIdeaEvent {
         idea_id: Uuid,
         course_id: Uuid,
     },
+    ProjectOfficialStatusChanged {
+        course_id: Uuid,
+        official: bool,
+    },
 }
 
 impl DomainEvent for ProjectIdeaEvent {

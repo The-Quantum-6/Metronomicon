@@ -1,4 +1,5 @@
 use crate::extractors::faq::FaqCommandExtractor;
+use crate::middleware::jwt::jwt_middleware;
 use crate::middleware::perms::perm_middleware;
 use crate::models::permissions::Permissions;
 use crate::state::AppState;
@@ -14,9 +15,7 @@ use axum::response::Response;
 use axum::routing::post;
 
 pub fn router(state: AppState) -> Router<AppState> {
-    Router::new()
-        .route("/faqs", post(handle_command))
-        .route_layer(middleware::from_fn_with_state(state, perm_middleware))
+    Router::new().route("/faqs", post(handle_command))
 }
 
 pub async fn handle_command(

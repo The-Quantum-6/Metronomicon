@@ -28,6 +28,14 @@ pub enum ProjectIdeaCommand {
     ///
     /// Requires `write_text`
     Delete { idea_id: Uuid },
+    /// Set project idea official status
+    ///
+    /// Requires `page_admin`
+    SetOfficial {
+        idea_id: Uuid,
+        course_id: Uuid,
+        official: bool,
+    },
 }
 
 impl ProjectIdeaCommand {
@@ -36,6 +44,7 @@ impl ProjectIdeaCommand {
             ProjectIdeaCommand::Create { idea_id, .. } => idea_id,
             ProjectIdeaCommand::Update { idea_id, .. } => idea_id,
             ProjectIdeaCommand::Delete { idea_id, .. } => idea_id,
+            ProjectIdeaCommand::SetOfficial { idea_id, .. } => idea_id,
         }
     }
 }

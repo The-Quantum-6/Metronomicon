@@ -1,18 +1,23 @@
 use crate::error::{AppError, RequestError};
 use crate::state::AppState;
-use crate::{extractors::report::ReportCommandExtractor, middleware::perms::perm_middleware};
+use crate::{extractors::report::ReportCommandExtractor, middleware::perms::get_reports_perm_middleware};
+use axum::middleware;
 use axum::{
-     Json, Router,
-     extract::{Path, State},
+    Json, Router,
+    extract::{Path, State},
     routing::{get, post},
 };
 use serde::Serialize;
-pub fn router() -> Router<AppState> {
+
+pub fn get_router(_state: AppState) -> Router<AppState> {
     Router::new()
         .route("/reports", get(list_reports))
-        .route("/reports", post(handle_command))
         .route("/reports/{id}", get(query_handler))
-        .route_layer(middleware::from_fn_with_state(state, perm_middleware))
+        .route_layer(middleware::from_fn(get_reports_perm_middleware))
+}
+
+pub fn post_router(_state: AppState) -> Router<AppState> {
+    Router::new().route("/reports", post(handle_command))
 }
 
 pub async fn handle_command(
@@ -36,8 +41,8 @@ pub async fn list_reports(
 ) -> Result<Json<Vec<ReportListItem>>, AppError> {
     let reports = sqlx::query_as::<_, ReportListItem>(
         r#"
-        SELECT aggregate_id, target, description, contact_email, status
-        FROM report_detail_view
+        SELECT aggregate_id, target, title, description, contact_email, status
+        FROM report_detail_list_view
         ORDER BY aggregate_id
         "#,
     )
@@ -53,17 +58,15 @@ pub async fn query_handler(
 ) -> Result<Json<ReportListItem>, AppError> {
     let report = sqlx::query_as::<_, ReportListItem>(
         r#"
-        SELECT aggregate_id, target, description, contact_email, status
-        FROM report_detail_view
+        SELECT aggregate_id, target, title, description, contact_email, status
+        FROM report_detail_list_view
         WHERE aggregate_id = $1
         "#,
     )
     .bind(&id)
     .fetch_optional(&state.pool)
     .await?
-    .ok_or(AppError::BadRequest(
-        RequestError::NonExsistant("Report"),
-    ))?;
+    .ok_or(AppError::BadRequest(RequestError::NonExsistant("Report")))?;
 
     Ok(Json(report))
 }
@@ -71,6 +74,7 @@ pub async fn query_handler(
 pub struct ReportListItem {
     pub aggregate_id: String,
     pub target: Option<String>,
+    pub title: Option<String>,
     pub description: Option<String>,
     pub contact_email: Option<String>,
     pub status: Option<String>,

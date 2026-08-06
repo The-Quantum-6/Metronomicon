@@ -14,10 +14,15 @@ pub enum CourseCommand {
         description: String,
     },
 
-    /// Delete course
+    /// Activate course
     ///
     /// `SUPERUSER` only
-    Delete { course_id: Uuid },
+    Activate { course_id: Uuid },
+
+    /// Unactivate course
+    ///
+    /// `SUPERUSER` only
+    Unactivate { course_id: Uuid },
 
     /// Update course metadata
     ///
@@ -44,10 +49,11 @@ impl CourseCommand {
     pub fn id(&self) -> &Uuid {
         match self {
             CourseCommand::Create { course_id, .. } => course_id,
-            CourseCommand::Delete { course_id, .. } => course_id,
             CourseCommand::UpdateMetadata { course_id, .. } => course_id,
             CourseCommand::AddTag { course_id, .. } => course_id,
             CourseCommand::RemoveTag { course_id, .. } => course_id,
+            CourseCommand::Activate { course_id, .. } => course_id,
+            CourseCommand::Unactivate { course_id, .. } => course_id,
         }
     }
 }

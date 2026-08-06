@@ -20,6 +20,7 @@ impl View<Report> for ReportDetailView {
     fn update(&mut self, event: &cqrs_es::EventEnvelope<Report>) {
         match &event.payload {
             ReportEvent::ReportCreated {
+                title,
                 target,
                 description,
                 contact_email,

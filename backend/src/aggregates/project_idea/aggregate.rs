@@ -25,6 +25,7 @@ pub struct ProjectIdea {
     pub title: String,
     pub body: String,
     pub difficulty: Option<Difficulty>,
+    pub official: bool,
 }
 
 impl Aggregate for ProjectIdea {
@@ -118,6 +119,26 @@ impl Aggregate for ProjectIdea {
                         Ok(())
                     }
                 },
+                ProjectIdeaCommand::SetOfficial {
+                    idea_id,
+                    course_id,
+                    official,
+                } => match self.status {
+                    Status::Uninitialized => Err("Project idea not found".into()),
+                    Status::Deleted => Err("Project idea already deleted".into()),
+                    Status::Active => {
+                        let _: () = sink
+                            .write(
+                                ProjectIdeaEvent::ProjectOfficialStatusChanged {
+                                    course_id,
+                                    official,
+                                },
+                                self,
+                            )
+                            .await;
+                        Ok(())
+                    }
+                },
             }
         }
     }
@@ -137,6 +158,7 @@ impl Aggregate for ProjectIdea {
                 self.title = title;
                 self.body = body;
                 self.difficulty = difficulty;
+                self.official = false;
             }
             ProjectIdeaEvent::ProjectUpdated {
                 title,
@@ -156,6 +178,12 @@ impl Aggregate for ProjectIdea {
             }
             ProjectIdeaEvent::ProjectDeleted { .. } => {
                 self.status = Status::Deleted;
+            }
+            ProjectIdeaEvent::ProjectOfficialStatusChanged {
+                course_id,
+                official,
+            } => {
+                self.official = official;
             }
         }
     }

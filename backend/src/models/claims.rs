@@ -16,6 +16,7 @@ pub struct PermsClaim {
     pub sub: String,
     pub resource_id: String,
     pub perms: i32,
+    pub role: UserRole,
     pub exp: u64,
     pub iat: u64,
 }

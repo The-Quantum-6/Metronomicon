@@ -1,10 +1,7 @@
 use cqrs_es::Aggregate;
 use serde::{Deserialize, Serialize};
 
-use crate::aggregates::{
-    course::{command::CourseCommand, error::CourseError, event::CourseEvent},
-    shared::Status,
-};
+use crate::aggregates::course::{command::CourseCommand, error::CourseError, event::CourseEvent};
 
 /// The `Course` aggregate — the central building block for all course-related behaviour.
 ///
@@ -24,9 +21,16 @@ use crate::aggregates::{
 /// A command is invalid when the *current state* makes it impossible to execute —
 /// e.g. creating a course that already exists. This is distinct from a command
 /// that simply can't be parsed (handle that at the type level instead).
+#[derive(Serialize, Default, Deserialize, Debug, PartialEq, Clone)]
+pub enum CourseStatus {
+    #[default]
+    Uninitialized,
+    Active,
+    Unactive,
+}
 #[derive(Serialize, Default, Deserialize)]
 pub struct Course {
-    pub status: Status,
+    pub status: CourseStatus,
     pub name: String,
     pub code: String,
     pub field: String,
@@ -70,7 +74,7 @@ impl Aggregate for Course {
                     description,
                     ..
                 } => match self.status {
-                    Status::Uninitialized => {
+                    CourseStatus::Uninitialized => {
                         let _: () = sink
                             .write(
                                 CourseEvent::CourseCreated {
@@ -86,13 +90,13 @@ impl Aggregate for Course {
                     }
                     _ => Err("course already exists".into()),
                 },
-                CourseCommand::Delete { .. } => match self.status {
-                    Status::Uninitialized => Err("course not found".into()),
-                    Status::Active => {
-                        let _: () = sink.write(CourseEvent::CourseDeleted, self).await;
+                CourseCommand::Unactivate { .. } => match self.status {
+                    CourseStatus::Uninitialized => Err("course not found".into()),
+                    CourseStatus::Unactive => Err("course is already unactive".into()),
+                    CourseStatus::Active => {
+                        let _: () = sink.write(CourseEvent::CourseUnactivated, self).await;
                         Ok(())
                     }
-                    Status::Deleted => Err("course is already deleted".into()),
                 },
                 CourseCommand::UpdateMetadata {
                     name,
@@ -101,8 +105,8 @@ impl Aggregate for Course {
                     description,
                     ..
                 } => match self.status {
-                    Status::Uninitialized => Err("course not found".into()),
-                    Status::Active => {
+                    CourseStatus::Uninitialized => Err("course not found".into()),
+                    CourseStatus::Active => {
                         let _: () = sink
                             .write(
                                 CourseEvent::CourseMetadataUpdated {
@@ -116,11 +120,11 @@ impl Aggregate for Course {
                             .await;
                         Ok(())
                     }
-                    Status::Deleted => Err("cannot modify deleted course".into()),
+                    CourseStatus::Unactive => Err("cannot modify unactive course".into()),
                 },
                 CourseCommand::AddTag { tag, .. } => match self.status {
-                    Status::Uninitialized => Err("course not found".into()),
-                    Status::Active => {
+                    CourseStatus::Uninitialized => Err("course not found".into()),
+                    CourseStatus::Active => {
                         if self.tags.contains(&tag) {
                             Err("tag already exists".into())
                         } else {
@@ -128,11 +132,11 @@ impl Aggregate for Course {
                             Ok(())
                         }
                     }
-                    Status::Deleted => Err("cannot modify deleted course".into()),
+                    CourseStatus::Unactive => Err("cannot modify unactive course".into()),
                 },
                 CourseCommand::RemoveTag { tag, .. } => match self.status {
-                    Status::Uninitialized => Err("course not found".into()),
-                    Status::Active => {
+                    CourseStatus::Uninitialized => Err("course not found".into()),
+                    CourseStatus::Active => {
                         if self.tags.contains(&tag) {
                             sink.write(CourseEvent::TagRemoved { tag }, self).await;
                             Ok(())
@@ -140,7 +144,23 @@ impl Aggregate for Course {
                             Err("tag not found".into())
                         }
                     }
-                    Status::Deleted => Err("cannot modify deleted course".into()),
+                    CourseStatus::Unactive => Err("cannot modify unactive course".into()),
+                },
+                CourseCommand::Activate { .. } => match self.status {
+                    CourseStatus::Uninitialized => Err("course not found".into()),
+                    CourseStatus::Active => Err("course is already active".into()),
+                    CourseStatus::Unactive => {
+                        let _: () = sink.write(CourseEvent::CourseActivated, self).await;
+                        Ok(())
+                    }
+                },
+                CourseCommand::Unactivate { .. } => match self.status {
+                    CourseStatus::Uninitialized => Err("course not found".into()),
+                    CourseStatus::Unactive => Err("course is already unactive".into()),
+                    CourseStatus::Active => {
+                        let _: () = sink.write(CourseEvent::CourseUnactivated, self).await;
+                        Ok(())
+                    }
                 },
             }
         }
@@ -164,13 +184,14 @@ impl Aggregate for Course {
                 field,
                 description,
             } => {
-                self.status = Status::Active;
+                self.status = CourseStatus::Unactive;
                 self.name = name;
                 self.code = code;
                 self.field = field;
                 self.description = description;
             }
-            CourseEvent::CourseDeleted => self.status = Status::Deleted,
+            CourseEvent::CourseUnactivated => self.status = CourseStatus::Unactive,
+            CourseEvent::CourseActivated => self.status = CourseStatus::Active,
             CourseEvent::CourseMetadataUpdated {
                 name,
                 code,
@@ -265,33 +286,33 @@ mod tests {
     // ── Delete ────────────────────────────────────────────────────────────────
 
     #[test]
-    fn test_delete_course() {
+    fn test_unactivate_course() {
         framework()
             .given(vec![created_event()])
-            .when(CourseCommand::Delete {
+            .when(CourseCommand::Unactivate {
                 course_id: course_id(),
             })
-            .then_expect_events(vec![CourseEvent::CourseDeleted]);
+            .then_expect_events(vec![CourseEvent::CourseUnactivated]);
     }
 
     #[test]
-    fn test_cannot_delete_uninitialized_course() {
+    fn test_cannot_unactivate_uninitialized_course() {
         framework()
             .given_no_previous_events()
-            .when(CourseCommand::Delete {
+            .when(CourseCommand::Unactivate {
                 course_id: course_id(),
             })
             .then_expect_error_message("course not found");
     }
 
     #[test]
-    fn test_delete_already_deleted_course_returns_error() {
+    fn test_unactivate_already_unactivated_course_returns_error() {
         framework()
-            .given(vec![created_event(), CourseEvent::CourseDeleted])
-            .when(CourseCommand::Delete {
+            .given(vec![created_event(), CourseEvent::CourseUnactivated])
+            .when(CourseCommand::Unactivate {
                 course_id: course_id(),
             })
-            .then_expect_error_message("course is already deleted");
+            .then_expect_error_message("course is already unactive");
     }
 
     // ── UpdateMetadata ────────────────────────────────────────────────────────
@@ -332,7 +353,7 @@ mod tests {
     #[test]
     fn test_update_metadata_on_deleted_course_returns_error() {
         framework()
-            .given(vec![created_event(), CourseEvent::CourseDeleted])
+            .given(vec![created_event(), CourseEvent::CourseUnactivated])
             .when(CourseCommand::UpdateMetadata {
                 course_id: course_id(),
                 name: Some("Ghost".into()),
@@ -340,7 +361,7 @@ mod tests {
                 field: None,
                 description: None,
             })
-            .then_expect_error_message("cannot modify deleted course");
+            .then_expect_error_message("cannot modify unactive course");
     }
 
     // ── AddTag / RemoveTag ────────────────────────────────────────────────────

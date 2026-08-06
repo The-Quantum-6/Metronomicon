@@ -74,8 +74,9 @@ pub struct Cqrs {
 pub struct AppState {
     pub oidc_client: OidcClient,
     pub http_client: Client,
+    pub karakterweb_api_key: String,
     pub cqrs: Arc<Cqrs>,
-    pub course_view_repo: ActiveCourseViewRepo,
+    pub course_view_repo: Arc<CourseDetailViewRepo>,
     pub pool: Pool<Postgres>,
     pub storage: Storage,
     pub jwt_encode: Arc<EncodingKey>,
@@ -216,11 +217,11 @@ pub async fn get(config: &AppConfig) -> AppState {
         resource_aggregate_services,
     ));
 
-    let report_detail_view_repo: Arc<ReportDetailViewRepo> = Arc::new(PostgresViewRepository::new(
-        "report_detail_view",
+    let report_detail_list_view_repo: Arc<ReportDetailViewRepo> = Arc::new(PostgresViewRepository::new(
+        "report_detail_list_view",
         db.clone(),
     ));
-    let report_query = ReportQuery::new(report_detail_view_repo.clone());
+    let report_query = ReportQuery::new(report_detail_list_view_repo.clone());
     let report_list_query = ReportListQuery::new(db.clone());
     let report_queries: Vec<Box<dyn Query<Report>>> = vec![
         Box::new(logging_query.clone()),
@@ -239,6 +240,7 @@ pub async fn get(config: &AppConfig) -> AppState {
     AppState {
         oidc_client,
         http_client,
+        karakterweb_api_key: config.karakterweb_api_key.clone(),
         cqrs: Arc::new(Cqrs {
             course: course_cqrs,
             link: link_cqrs,
@@ -248,7 +250,7 @@ pub async fn get(config: &AppConfig) -> AppState {
             resource: resource_cqrs,
             report: report_cqrs,
         }),
-        course_view_repo: ActiveCourseViewRepo(course_view_repo),
+        course_view_repo: course_view_repo,
         pool: db,
         storage,
         jwt_encode: Arc::new(EncodingKey::from_secret(jsonwebtoken_secret.as_ref())),

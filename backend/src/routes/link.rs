@@ -11,7 +11,6 @@ use axum::routing::post;
 
 pub fn router(state: AppState) -> Router<AppState> {
     Router::new().route("/links", post(handle_command))
-    .route_layer(middleware::from_fn_with_state(state, perm_middleware))
 }
 
 pub async fn handle_command(

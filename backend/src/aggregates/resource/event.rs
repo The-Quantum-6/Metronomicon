@@ -3,8 +3,6 @@ use serde::{Deserialize, Serialize};
 use strum::Display;
 use uuid::Uuid;
 
-use crate::aggregates::shared::Officiality;
-
 #[derive(Debug, Serialize, Deserialize, PartialEq, Clone, Display)]
 pub enum ResourceEvent {
     ResourceCreated {
@@ -26,7 +24,7 @@ pub enum ResourceEvent {
     ResourceOfficialStatusChanged {
         resource_id: Uuid,
         course_id: Uuid,
-        officiality: Officiality,
+        official: bool,
     },
 }
 

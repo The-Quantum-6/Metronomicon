@@ -5,7 +5,7 @@ use uuid::Uuid;
 use crate::aggregates::{
     course::service::CourseExistanceService,
     faq::{command::FaqCommand, error::FaqError, event::FaqEvent},
-    shared::{Officiality, Status},
+    shared::Status,
 };
 
 /// External dependencies `Faq::handle` needs beyond its own state — currently
@@ -18,11 +18,11 @@ pub struct FaqAggregateServices {
 #[derive(Serialize, Default, Deserialize)]
 pub struct Faq {
     pub status: Status,
-    pub officiality: Officiality,
     pub faq_id: Uuid,
     pub course_id: Uuid,
     pub question: String,
     pub answer: String,
+    pub official: bool,
 }
 
 impl Aggregate for Faq {
@@ -109,7 +109,7 @@ impl Aggregate for Faq {
 
                 FaqCommand::SetOfficial {
                     course_id,
-                    officiality,
+                    official,
                     ..
                 } => match self.status {
                     Status::Uninitialized => Err("Faq not found".into()),
@@ -119,7 +119,7 @@ impl Aggregate for Faq {
                             .write(
                                 FaqEvent::FaqOfficialStatusChanged {
                                     course_id,
-                                    officiality,
+                                    official,
                                 },
                                 self,
                             )
@@ -144,6 +144,7 @@ impl Aggregate for Faq {
                 self.course_id = course_id;
                 self.question = question;
                 self.answer = answer;
+                self.official = false;
             }
             FaqEvent::FaqDeleted { .. } => self.status = Status::Deleted,
             FaqEvent::FaqUpdated {
@@ -156,8 +157,8 @@ impl Aggregate for Faq {
                     self.answer = answer;
                 }
             }
-            FaqEvent::FaqOfficialStatusChanged { officiality, .. } => {
-                self.officiality = officiality;
+            FaqEvent::FaqOfficialStatusChanged { official, .. } => {
+                self.official = official;
             }
         }
     }
@@ -348,11 +349,11 @@ mod tests {
             .when(FaqCommand::SetOfficial {
                 faq_id: faq_id(),
                 course_id: course_id(),
-                officiality: Officiality::Official,
+                official: true,
             })
             .then_expect_events(vec![FaqEvent::FaqOfficialStatusChanged {
                 course_id: course_id(),
-                officiality: Officiality::Official,
+                official: true,
             }]);
     }
 
@@ -363,7 +364,7 @@ mod tests {
             .when(FaqCommand::SetOfficial {
                 faq_id: faq_id(),
                 course_id: course_id(),
-                officiality: Officiality::Official,
+                official: true,
             })
             .then_expect_error_message("Faq not found");
     }
@@ -381,7 +382,7 @@ mod tests {
             .when(FaqCommand::SetOfficial {
                 faq_id: faq_id(),
                 course_id: course_id(),
-                officiality: Officiality::Official,
+                official: true,
             })
             .then_expect_error_message("Faq is already deleted");
     }

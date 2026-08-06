@@ -10,6 +10,7 @@ pub enum ReportEvent {
     ReportCreated {
         issue_id: Uuid,
         target: ReportTarget,
+        title: String,
         description: String,
         contact_email: Option<String>,
     },
