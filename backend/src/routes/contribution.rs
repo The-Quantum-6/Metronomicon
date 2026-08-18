@@ -46,7 +46,7 @@ pub async fn list_contributions(
         sqlx::query_as!(
             ContributionDTO,
             r#"
-            SELECT aggregate_id, course_id, contribution, status
+            SELECT aggregate_id, course_id, contribution, status, comment
             FROM contribution_list_view
             ORDER BY aggregate_id
             "#
@@ -63,4 +63,5 @@ pub struct ContributionDTO {
     course_id: String,
     contribution: serde_json::Value,
     status: String,
+    comment: String,
 }

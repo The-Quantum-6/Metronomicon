@@ -4,7 +4,10 @@ use uuid::Uuid;
 
 use crate::aggregates::{
     contribution::{
-        command::{ContributionCommand, ContributionKind, ModerationVerdict, TextContributionKind},
+        command::{
+            ContributionCommand, ContributionKind, FileContributionKind, ModerationVerdict,
+            TextContributionKind,
+        },
         error::ContributionError,
         event::ContributionEvent,
     },
@@ -12,6 +15,7 @@ use crate::aggregates::{
     faq::services::FaqExistanceService,
     link::services::LinkServices,
     project_idea::services::ProjectIdeaExistanceService,
+    resource::services::{ResourceExistanceService, ResourceServices},
 };
 
 #[derive(Debug, Serialize, Deserialize, PartialEq, Default)]
@@ -28,6 +32,10 @@ pub struct ContributionAggregateServices {
     pub course: CourseExistanceService,
     pub faq: FaqExistanceService,
     pub project_idea: ProjectIdeaExistanceService,
+    /// Verifies the uploaded object behind a file contribution.
+    pub resource_storage: ResourceServices,
+    /// Verifies that a resource proposed for removal is actually on the course.
+    pub resource: ResourceExistanceService,
 }
 
 #[derive(Serialize, Default, Deserialize)]
@@ -181,7 +189,31 @@ impl Aggregate for Contribution {
                                     return Err("project idea does not exist in course".into());
                                 }
                             }
-                            _ => todo!("Add support for project_idea and resource"),
+                            ContributionKind::File(FileContributionKind::AddResource {
+                                title: _,
+                                key,
+                            }) => {
+                                // The client uploads to POST /files first; refuse
+                                // to queue a proposal pointing at a key that is
+                                // not actually in the bucket.
+                                service
+                                    .resource_storage
+                                    .check_exists(key)
+                                    .await
+                                    .map_err(|e| format!("resource validation error: {}", e))?;
+                            }
+                            ContributionKind::File(FileContributionKind::RemoveResource {
+                                resource_id,
+                            }) => {
+                                let exists = service
+                                    .resource
+                                    .resource_exists(&course_id.to_string(), resource_id)
+                                    .await
+                                    .map_err(|e| format!("database error: {}", e))?;
+                                if !exists {
+                                    return Err("resource does not exist in course".into());
+                                }
+                            }
                         }
                         let _: () = sink
                             .write(

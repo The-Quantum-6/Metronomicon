@@ -1,4 +1,6 @@
 import { useState } from "react";
+import { apiUrl } from "../../config";
+import { proposeContribution, uploadFile } from "../../api/contributions";
 import type { ContributeMode } from "../Contribute";
 
 interface Props {
@@ -7,25 +9,62 @@ interface Props {
   onCancel: () => void;
 }
 
-// TODO: use courseId and mode when file upload is ready
-// (direct: POST /files then /resources Create; propose: /contributions with File::AddResource)
-export default function ResourceForm({onCancel }: Props) {
+// Mirrors the backend default for UPLOAD_MAX_BYTES. Checked here only to fail
+// fast with a readable message; the server enforces the real limit.
+const MAX_UPLOAD_BYTES = 10 * 1024 * 1024;
+
+export default function ResourceForm({ courseId, mode, onCancel }: Props) {
   const [title, setTitle] = useState("");
   const [file, setFile] = useState<File | null>(null);
   const [submitted, setSubmitted] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  function handleSubmit(e: React.SubmitEvent) {
+  async function handleSubmit(e: React.SubmitEvent) {
     e.preventDefault();
-    // TODO: implement file upload when ready
-    console.log("submit resource", title, file);
-    setSubmitted(true);
+    if (!file) return;
+
+    if (file.size > MAX_UPLOAD_BYTES) {
+      setError("The file is larger than 10 MiB. Please upload a smaller file.");
+      return;
+    }
+
+    setSubmitting(true);
+    setError(null);
+    try {
+      // The file has to exist in storage before either path can reference it:
+      // both the aggregate and the contribution validate that the key is real.
+      const key = await uploadFile(file);
+
+      if (mode === "direct") {
+        const response = await fetch(apiUrl("resources"), {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify({ Create: { course_id: courseId, title, key } }),
+        });
+        if (!response.ok) throw new Error(await response.text());
+      } else {
+        await proposeContribution(courseId, { File: { AddResource: { title, key } } }, "");
+      }
+      setSubmitted(true);
+    } catch (err) {
+      console.error(err);
+      setError(err instanceof Error ? err.message : "Could not upload the file.");
+    } finally {
+      setSubmitting(false);
+    }
   }
 
   if (submitted) {
     return (
       <div className="text-center py-6 bg-[#F4F2EB] rounded-lg">
         <h3 className="text-xl font-semibold text-[#1A1F3A] mb-2">Thank you for your contribution!</h3>
-        <p className="text-[#6B6B5A] mb-6">Your file or document has been submitted and is waiting for review.</p>
+        <p className="text-[#6B6B5A] mb-6">
+          {mode === "direct"
+            ? "Your file or document has been published."
+            : "Your file or document has been submitted and is waiting for review."}
+        </p>
         <button type="button" onClick={onCancel} className="px-4 py-2 bg-[#1A1F3A] text-lg text-white rounded-lg hover:opacity-90">
           Back to course
         </button>
@@ -65,12 +104,17 @@ export default function ResourceForm({onCancel }: Props) {
           </label>
         )}
       </div>
+      {error && (
+        <p role="alert" className="text-base text-red-700 bg-red-50 border border-red-200 rounded-lg px-4 py-3">
+          {error}
+        </p>
+      )}
       <div className="flex justify-end gap-3 pt-2">
         <button type="button" onClick={onCancel} className="px-4 py-2 text-lg text-[#6B6B5A] border border-[#6B6B5A] rounded-lg hover:bg-gray-100">
           Cancel
         </button>
-        <button type="submit" className="px-4 py-2 text-lg bg-[#1A1F3A] text-white rounded-lg hover:opacity-90 disabled:opacity-50">
-          Send for review
+        <button type="submit" disabled={submitting || !file} className="px-4 py-2 text-lg bg-[#1A1F3A] text-white rounded-lg hover:opacity-90 disabled:opacity-50">
+          {submitting ? "Uploading…" : mode === "direct" ? "Publish" : "Send for review"}
         </button>
       </div>
     </form>

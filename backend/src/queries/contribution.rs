@@ -9,13 +9,15 @@ use uuid::Uuid;
 use crate::aggregates::{
     contribution::{
         aggregate::Contribution,
-        command::{ContributionKind, TextContributionKind},
+        command::{ContributionKind, FileContributionKind, TextContributionKind},
         event::ContributionEvent,
     },
     faq::{aggregate::Faq, command::FaqCommand},
     link::{aggregate::Link, command::LinkCommand},
     project_idea::{aggregate::ProjectIdea, command::ProjectIdeaCommand},
+    resource::{aggregate::Resource, command::ResourceCommand},
 };
+use crate::storage::Storage;
 
 pub struct ContributionQuery;
 
@@ -89,12 +91,15 @@ pub struct ContributionProcessManager {
     link: Arc<PostgresCqrs<Link>>,
     faq: Arc<PostgresCqrs<Faq>>,
     project_idea: Arc<PostgresCqrs<ProjectIdea>>,
+    resource: Arc<PostgresCqrs<Resource>>,
+    storage: Storage,
 }
 
 enum AggregateCommand {
     Link(LinkCommand),
     Faq(FaqCommand),
     ProjectIdea(ProjectIdeaCommand),
+    Resource(ResourceCommand),
 }
 
 impl AggregateCommand {
@@ -103,6 +108,7 @@ impl AggregateCommand {
             AggregateCommand::Link(cmd) => cmd.id(),
             AggregateCommand::Faq(cmd) => cmd.id(),
             AggregateCommand::ProjectIdea(cmd) => cmd.id(),
+            AggregateCommand::Resource(cmd) => cmd.id(),
         }
     }
 }
@@ -113,17 +119,23 @@ impl ContributionProcessManager {
         link: Arc<PostgresCqrs<Link>>,
         faq: Arc<PostgresCqrs<Faq>>,
         project_idea: Arc<PostgresCqrs<ProjectIdea>>,
+        resource: Arc<PostgresCqrs<Resource>>,
+        storage: Storage,
     ) -> Self {
         Self {
             pool,
             link,
             faq,
             project_idea,
+            resource,
+            storage,
         }
     }
 
-    async fn handle_approved(&self, contribution_id: &str) {
-        // Fetch the stored contribution row (course_id + contribution JSONB)
+    /// Reads back the projected contribution so a follow-up command can be
+    /// built from it. Returns `None` (after logging) if the row is missing or
+    /// unreadable, since a process manager has no caller to report errors to.
+    async fn load_contribution(&self, contribution_id: &str) -> Option<(Uuid, ContributionKind)> {
         let row = match sqlx::query(
             "SELECT course_id, contribution FROM contribution_list_view WHERE aggregate_id = $1",
         )
@@ -136,25 +148,38 @@ impl ContributionProcessManager {
                 println!(
                     "ContributionProcessManager: no contribution_list_view row for {contribution_id}"
                 );
-                return;
+                return None;
             }
             Err(e) => {
                 println!("ContributionProcessManager: fetch error: {e}");
-                return;
+                return None;
             }
         };
 
         let course_id: String = row.get("course_id");
-        let contribution_json: serde_json::Value = row.get("contribution");
+        let course_id = match Uuid::parse_str(&course_id) {
+            Ok(id) => id,
+            Err(e) => {
+                println!(
+                    "ContributionProcessManager: {contribution_id} has an unparseable course_id: {e}"
+                );
+                return None;
+            }
+        };
 
-        // Deserialize back into your ContributionKind enum.
-        // Adjust the type path to match where ContributionKind actually lives.
-        let kind = match serde_json::from_value(contribution_json) {
-            Ok(k) => k,
+        let contribution_json: serde_json::Value = row.get("contribution");
+        match serde_json::from_value(contribution_json) {
+            Ok(kind) => Some((course_id, kind)),
             Err(e) => {
                 println!("ContributionProcessManager: failed to deserialize kind: {e}");
-                return;
+                None
             }
+        }
+    }
+
+    async fn handle_approved(&self, contribution_id: &str) {
+        let Some((course_id, kind)) = self.load_contribution(contribution_id).await else {
+            return;
         };
 
         let mut metadata = HashMap::new();
@@ -164,7 +189,7 @@ impl ContributionProcessManager {
                 TextContributionKind::AddLink { label, url } => {
                     AggregateCommand::Link(LinkCommand::Create {
                         link_id: Uuid::new_v4(),
-                        course_id: Uuid::parse_str(&course_id).unwrap(),
+                        course_id,
                         label,
                         url,
                     })
@@ -175,20 +200,20 @@ impl ContributionProcessManager {
                     url,
                 } => AggregateCommand::Link(LinkCommand::Update {
                     link_id,
-                    course_id: Uuid::parse_str(&course_id).unwrap(),
+                    course_id,
                     label,
                     url,
                 }),
                 TextContributionKind::RemoveLink { link_id } => {
                     AggregateCommand::Link(LinkCommand::Delete {
                         link_id,
-                        course_id: Uuid::parse_str(&course_id).unwrap(),
+                        course_id,
                     })
                 }
                 TextContributionKind::AddFaqEntry { question, answer } => {
                     AggregateCommand::Faq(FaqCommand::Create {
                         faq_id: Uuid::new_v4(),
-                        course_id: Uuid::parse_str(&course_id).unwrap(),
+                        course_id,
                         question,
                         answer,
                     })
@@ -199,14 +224,14 @@ impl ContributionProcessManager {
                     answer,
                 } => AggregateCommand::Faq(FaqCommand::Update {
                     faq_id,
-                    course_id: Uuid::parse_str(&course_id).unwrap(),
+                    course_id,
                     question,
                     answer,
                 }),
                 TextContributionKind::RemoveFaqEntry { faq_id } => {
                     AggregateCommand::Faq(FaqCommand::Delete {
                         faq_id,
-                        course_id: Uuid::parse_str(&course_id).unwrap(),
+                        course_id,
                     })
                 }
                 TextContributionKind::AddProjectIdea {
@@ -215,7 +240,7 @@ impl ContributionProcessManager {
                     difficulty,
                 } => AggregateCommand::ProjectIdea(ProjectIdeaCommand::Create {
                     idea_id: Uuid::new_v4(),
-                    course_id: Uuid::parse_str(&course_id).unwrap(),
+                    course_id,
                     title,
                     body,
                     difficulty,
@@ -235,11 +260,22 @@ impl ContributionProcessManager {
                     AggregateCommand::ProjectIdea(ProjectIdeaCommand::Delete { idea_id })
                 }
             },
-            _ => {
-                todo!(
-                    "ContributionProcessManager: contribution {contribution_id} has an unhandled kind, skipping"
-                )
-            }
+            ContributionKind::File(f) => match f {
+                FileContributionKind::AddResource { title, key } => {
+                    AggregateCommand::Resource(ResourceCommand::Create {
+                        resource_id: Uuid::new_v4(),
+                        course_id,
+                        title,
+                        key,
+                    })
+                }
+                FileContributionKind::RemoveResource { resource_id } => {
+                    AggregateCommand::Resource(ResourceCommand::Delete {
+                        resource_id,
+                        course_id,
+                    })
+                }
+            },
         };
 
         let id = cmd.id().to_string();
@@ -270,6 +306,29 @@ impl ContributionProcessManager {
                     );
                 }
             }
+            AggregateCommand::Resource(cmd) => {
+                if let Err(e) = self.resource.execute_with_metadata(&id, cmd, metadata).await {
+                    println!(
+                        "ContributionProcessManager: failed to execute resource command for {contribution_id}: {e:?}"
+                    );
+                }
+            }
+        }
+    }
+
+    /// A denied file proposal leaves an orphaned object in Garage that nothing
+    /// will ever point at, so drop it. Text proposals have nothing to clean up.
+    async fn handle_denied(&self, contribution_id: &str) {
+        let Some((_, kind)) = self.load_contribution(contribution_id).await else {
+            return;
+        };
+
+        if let ContributionKind::File(FileContributionKind::AddResource { key, .. }) = kind {
+            if let Err(e) = self.storage.delete(&key).await {
+                println!(
+                    "ContributionProcessManager: failed to delete orphaned object {key} for {contribution_id}: {e}"
+                );
+            }
         }
     }
 }
@@ -288,7 +347,10 @@ impl Query<Contribution> for ContributionProcessManager {
                     let id = &event.aggregate_id;
                     self.handle_approved(id).await;
                 }
-                ContributionEvent::ContributionDenied => (),
+                ContributionEvent::ContributionDenied => {
+                    let id = &event.aggregate_id;
+                    self.handle_denied(id).await;
+                }
             }
         }
     }

@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "\n            SELECT aggregate_id, course_id, contribution, status\n            FROM contribution_list_view\n            ORDER BY aggregate_id\n            ",
+  "query": "\n            SELECT aggregate_id, course_id, contribution, status, comment\n            FROM contribution_list_view\n            ORDER BY aggregate_id\n            ",
   "describe": {
     "columns": [
       {
@@ -22,6 +22,11 @@
         "ordinal": 3,
         "name": "status",
         "type_info": "Text"
+      },
+      {
+        "ordinal": 4,
+        "name": "comment",
+        "type_info": "Text"
       }
     ],
     "parameters": {
@@ -31,8 +36,9 @@
       false,
       false,
       false,
+      false,
       false
     ]
   },
-  "hash": "e1b11182a7f268b1e62c90fba8614c5d156ed57d7e6bb68681599d9d3ab5216a"
+  "hash": "70dd4a269dfeb8a07e490a3463b59a7444d80707bfe520d7cdf6aced69cfa2a3"
 }

@@ -20,6 +20,7 @@ pub fn protected_router(state: AppState) -> Router<AppState> {
         .merge(project_idea::router(state.clone()))
         .merge(contribution::router(state.clone()))
         .merge(resources::router())
+        .merge(files::protected_router())
         .merge(course::protected_router(state.clone()))
         .route_layer(middleware::from_fn_with_state(state.clone(), perm_middleware))
         .route_layer(middleware::from_fn_with_state(state.clone(), jwt_middleware))

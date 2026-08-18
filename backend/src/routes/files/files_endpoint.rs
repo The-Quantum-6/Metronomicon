@@ -1,10 +1,12 @@
 use crate::error::{AppError, RequestError};
+use crate::middleware::jwt::AuthUser;
+use crate::models::user::UserRole;
 use crate::state::AppState;
 use crate::storage::Storage;
 use axum::extract::{DefaultBodyLimit, Multipart, Path, State};
-use axum::http::header;
+use axum::http::{StatusCode, header};
 use axum::response::{IntoResponse, Response};
-use axum::{Json, Router, routing::get};
+use axum::{Json, Router, routing::get, routing::post};
 use serde::Serialize;
 use uuid::Uuid;
 
@@ -25,17 +27,23 @@ struct UploadResponse {
     key: String,
 }
 
-/// File upload/download routes, mounted under `/files`.
+/// Public file routes. Uploading is open because a freshly minted key is an
+/// unguessable UUID that nothing links to until a contribution is approved,
+/// and downloads need to work for anyone who can already see a resource.
 pub fn router() -> Router<AppState> {
     let upload_max_bytes = upload_max_bytes();
     Router::new()
         .route(
             "/files",
-            get(list_files)
-                .post(upload_file)
-                .layer(DefaultBodyLimit::max(upload_max_bytes)),
+            post(upload_file).layer(DefaultBodyLimit::max(upload_max_bytes)),
         )
         .route("/files/{key}", get(download_file))
+}
+
+/// Listing every key is admin-only: it would otherwise expose the keys of
+/// files still awaiting moderation, or already denied.
+pub fn protected_router() -> Router<AppState> {
+    Router::new().route("/files", get(list_files))
 }
 
 /// Uploads a file sent as `multipart/form-data` under the field name `file`,
@@ -80,7 +88,17 @@ async fn download_file(
     Ok(([(header::CONTENT_TYPE, "application/octet-stream")], bytes).into_response())
 }
 
-/// Lists the keys of all stored objects.
-async fn list_files(State(storage): State<Storage>) -> Result<Json<Vec<String>>, AppError> {
-    Ok(Json(storage.list(None).await?))
+/// Lists the keys of all stored objects. Admins only — see `protected_router`.
+async fn list_files(
+    AuthUser(claims): AuthUser,
+    State(storage): State<Storage>,
+) -> Result<Json<Vec<String>>, Response> {
+    if !matches!(claims.role, UserRole::Admin | UserRole::Root) {
+        return Err(StatusCode::FORBIDDEN.into_response());
+    }
+    let keys = storage
+        .list(None)
+        .await
+        .map_err(|e| AppError::from(e).into_response())?;
+    Ok(Json(keys))
 }

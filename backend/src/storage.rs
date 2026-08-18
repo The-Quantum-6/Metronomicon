@@ -118,6 +118,21 @@ impl Storage {
         }
     }
 
+    /// Delete the object stored under `key`.
+    ///
+    /// S3 treats deleting a missing key as a success, so this is safe to call
+    /// more than once for the same key.
+    pub async fn delete(&self, key: &str) -> Result<(), StorageError> {
+        self.client
+            .delete_object()
+            .bucket(self.bucket.clone())
+            .key(key)
+            .send()
+            .await
+            .map_err(|e| StorageError::Sdk(e.to_string()))?;
+        Ok(())
+    }
+
     /// List object keys, optionally restricted to those starting with `prefix`.
     pub async fn list(&self, prefix: Option<&str>) -> Result<Vec<String>, StorageError> {
         let mut keys = Vec::new();

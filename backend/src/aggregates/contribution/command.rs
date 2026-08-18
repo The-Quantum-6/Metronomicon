@@ -41,10 +41,11 @@ pub type ContributionKind = Contribution;
 /// The only file contribution currently available are course resources.
 #[derive(Debug, Serialize, Deserialize, PartialEq, Clone)]
 pub enum FileContributionKind {
-    /// Key refers to the objects key in S3(Garage)
+    /// Key refers to the objects key in S3(Garage). `POST /files` mints it as
+    /// `<uuid>.<ext>`, so it is a string rather than a bare UUID.
     AddResource {
         title: String,
-        key: Uuid,
+        key: String,
     },
     RemoveResource {
         resource_id: Uuid,

@@ -8,6 +8,7 @@ use axum::{
     middleware::Next,
     response::{IntoResponse, Response},
 };
+use sqlx::{Pool, Postgres, Row};
 use std::collections::HashMap;
 use std::sync::OnceLock;
 use uuid::Uuid;
@@ -66,6 +67,37 @@ fn capitalize_singular(s: &str) -> String {
         .collect()
 }
 
+/// Most commands name their course directly in the single command object,
+/// e.g. `{"Create": {"course_id": "…", …}}`.
+fn course_id_from_payload(json: &serde_json::Value) -> String {
+    json.as_object()
+        .and_then(|o| o.values().next())
+        .and_then(|v| v.get("course_id"))
+        .and_then(|v| v.as_str())
+        .unwrap_or_default()
+        .to_string()
+}
+
+/// Reads back the course and the kind ("Text" or "File") of a contribution a
+/// `Moderate` command references by id. `None` means there is no such row.
+async fn contribution_course_and_kind(
+    pool: &Pool<Postgres>,
+    contribution_id: &str,
+) -> Option<(String, String)> {
+    let row = sqlx::query(
+        "SELECT course_id, contribution FROM contribution_list_view WHERE aggregate_id = $1",
+    )
+    .bind(contribution_id)
+    .fetch_optional(pool)
+    .await
+    .ok()??;
+
+    let course_id: String = row.get("course_id");
+    let contribution: serde_json::Value = row.get("contribution");
+    let kind = contribution.as_object()?.keys().next()?.clone();
+    Some((course_id, kind))
+}
+
 pub async fn perm_middleware(State(state): State<AppState>, req: Request, next: Next) -> Response {
     // The permission map is keyed on command bodies, which only exist on POSTs.
     // GET routes under this layer (/me, /contributions) are still guarded by jwt_middleware.
@@ -89,23 +121,43 @@ pub async fn perm_middleware(State(state): State<AppState>, req: Request, next: 
         .and_then(|o| o.keys().next().cloned())
         .unwrap_or_default();
 
-    // Contribution permissions are split by kind (Text/File), taken from the payload:
-    // {"Propose": {"contribution": {"Text": {...}}}} -> "ContributionPropose_Text"
-    let lookup_key = if aggregate == "Contribution" && command_key == "Propose" {
-        let kind = json
-            .get(command_key.as_str())
-            .and_then(|v| v.get("contribution"))
-            .and_then(|v| v.as_object())
-            .and_then(|o| o.keys().next().cloned())
-            .unwrap_or_default();
-        format!("{}{}_{}", aggregate, command_key, kind)
-    } else {
-        format!("{}{}", aggregate, command_key)
-    };
-
     let claims = match parts.extensions.get::<AccessClaim>().cloned() {
         Some(c) => c,
         None => return StatusCode::UNAUTHORIZED.into_response(),
+    };
+
+    // Contribution permissions are split by kind, because uploading a file is
+    // treated as higher risk than proposing text. Propose carries the kind in
+    // its own payload; Moderate references the contribution only by id, so both
+    // the kind and the course have to be read back from the projection.
+    let (lookup_key, course_id) = match (aggregate.as_str(), command_key.as_str()) {
+        ("Contribution", "Propose") => {
+            let kind = json
+                .get("Propose")
+                .and_then(|v| v.get("contribution"))
+                .and_then(|v| v.as_object())
+                .and_then(|o| o.keys().next().cloned())
+                .unwrap_or_default();
+            (
+                format!("ContributionPropose_{kind}"),
+                course_id_from_payload(&json),
+            )
+        }
+        ("Contribution", "Moderate") => {
+            let contribution_id = json
+                .get("Moderate")
+                .and_then(|v| v.get("contribution_id"))
+                .and_then(|v| v.as_str())
+                .unwrap_or_default();
+            match contribution_course_and_kind(&state.pool, contribution_id).await {
+                Some((course, kind)) => (format!("ContributionModerate_{kind}"), course),
+                None => return StatusCode::NOT_FOUND.into_response(),
+            }
+        }
+        _ => (
+            format!("{aggregate}{command_key}"),
+            course_id_from_payload(&json),
+        ),
     };
 
     if lookup_key == "CourseCreate"{
@@ -123,15 +175,6 @@ pub async fn perm_middleware(State(state): State<AppState>, req: Request, next: 
         Ok(id) => id,
         Err(_) => return StatusCode::UNAUTHORIZED.into_response(),
     };
-    
-    let course_id = json
-        .as_object()
-        .and_then(|o| o.values().next())
-        .and_then(|v| v.get("course_id"))
-        .and_then(|v| v.as_str())
-        .unwrap_or_default()
-        .to_string();
-
 
     if let Err(_) = default_permissions(&state.pool, user_id, &course_id).await {
             return StatusCode::INTERNAL_SERVER_ERROR.into_response();
